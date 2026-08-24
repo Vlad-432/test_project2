@@ -1,0 +1,8275 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
+<title>CryptoScr</title>
+
+<meta name="application-name" content="CryptoScr">
+<meta name="apple-mobile-web-app-title" content="CryptoScr">
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+    margin:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#080b10;
+    color:#fff;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+button,input{font:inherit}
+
+header{
+    height:64px;
+    padding:6px 12px 8px;
+    background:rgba(8,11,16,.97);
+    border-bottom:1px solid #202631;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:6px;
+    position:relative;
+    z-index:20;
+}
+
+.header-inner{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+}
+
+.logo{
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:.3px;
+    opacity:0;
+    animation:logoIntro .6s ease forwards;
+}
+
+@keyframes logoIntro{
+    0%{
+        opacity:0;
+        transform:scale(.55) translateY(-4px);
+    }
+    60%{
+        opacity:1;
+        transform:scale(1.12);
+    }
+    100%{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+.logo span{color:#00d68f}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.header-nav{
+    width:100%;
+    display:flex;
+    gap:6px;
+}
+
+.header-nav .nav-btn{
+    flex:1 1 0;
+    text-align:center;
+}
+
+.connection{
+    color:#00d68f;
+    font-size:11px;
+}
+
+.nav-btn{
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#aeb7c6;
+    border-radius:8px;
+    padding:7px 10px;
+    cursor:pointer;
+    font-size:11px;
+}
+
+.nav-btn.active{
+    color:#00d68f;
+    border-color:#00d68f;
+    background:#14221e;
+}
+
+.app{
+    width:100%;
+    height:calc(var(--app-vh,100vh) - 64px);
+    overflow:hidden;
+}
+
+.page{
+    width:100%;
+    height:100%;
+    display:none;
+}
+
+.page.active{display:block}
+
+.main-page{
+    padding:12px;
+    height:100%;
+}
+
+.api-settings-bar{
+    height:26px;
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.settings-btn{
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    border-radius:7px;
+    padding:5px 8px;
+    cursor:pointer;
+    font-size:10px;
+}
+
+.settings-btn:hover{
+    color:#00d68f;
+    border-color:#00d68f;
+}
+
+.api-status{
+    color:#556075;
+    font-size:9px;
+}
+
+.api-status-warn{
+    color:#ffb020;
+}
+
+.main-title{
+    height:42px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.main-title h1{
+    margin:0;
+    font-size:21px;
+}
+
+.main-title p{
+    margin:3px 0 0;
+    color:#687386;
+    font-size:10px;
+}
+
+.cards-grid{
+    height:calc(100% - 42px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    align-content:start;
+}
+
+.card{
+    min-width:0;
+    min-height:0;
+    background:#10141b;
+    border:1px solid #232a35;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+}
+
+.card-sticky-top{
+    position:sticky;
+    top:0;
+    z-index:6;
+    background:#10141b;
+    border-top-left-radius:14px;
+    border-top-right-radius:14px;
+}
+
+.card-top{
+    padding:11px;
+    min-height:0;
+}
+
+.coin-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+}
+
+.coin-name{
+    font-size:16px;
+    font-weight:900;
+}
+
+.coin-symbol{
+    color:#6f7a8d;
+    font-size:10px;
+    margin-top:2px;
+}
+
+.market-badge{
+    display:inline-block;
+    margin-top:4px;
+    padding:3px 6px;
+    border-radius:5px;
+    font-size:8px;
+    font-weight:800;
+    background:#18221f;
+    color:#00d68f;
+}
+
+.market-badge.forex{
+    background:#211e18;
+    color:#ffb020;
+}
+
+.change{
+    padding:5px 7px;
+    border-radius:7px;
+    font-weight:800;
+    font-size:11px;
+}
+
+.positive{
+    color:#00d68f;
+    background:rgba(0,214,143,.1);
+}
+
+.negative{
+    color:#ff536d;
+    background:rgba(255,83,109,.1);
+}
+
+.price{
+    margin-top:8px;
+    font-size:23px;
+    font-weight:900;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:5px;
+    margin-top:8px;
+}
+
+.stat{
+    background:#0b0f15;
+    border:1px solid #1e2530;
+    padding:6px;
+    border-radius:7px;
+    min-width:0;
+}
+
+.stat-label{
+    color:#697487;
+    font-size:8px;
+}
+
+.stat-value{
+    margin-top:3px;
+    font-size:10px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.controls{
+    display:flex;
+    gap:5px;
+    margin-top:8px;
+}
+
+.pair-input{
+    width:100%;
+    min-width:0;
+    background:#0b0f15;
+    color:white;
+    border:1px solid #2a3240;
+    border-radius:7px;
+    padding:7px;
+    outline:none;
+    font-size:11px;
+}
+
+.pair-input:focus{border-color:#00d68f}
+
+.apply-btn{
+    border:0;
+    background:#00d68f;
+    color:#06110d;
+    border-radius:7px;
+    padding:0 10px;
+    font-weight:900;
+    cursor:pointer;
+    font-size:11px;
+}
+
+.timeframes{
+    display:flex;
+    gap:4px;
+    margin-top:6px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+.timeframe{
+    flex:0 0 auto;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    border-radius:5px;
+    padding:5px 7px;
+    cursor:pointer;
+    font-size:9px;
+}
+
+.timeframe.active{
+    background:#1b2925;
+    color:#00d68f;
+    border-color:#00d68f;
+}
+
+.signal-box{
+    margin-top:7px;
+    padding:8px;
+    border-radius:8px;
+    background:#0b0f15;
+    border:1px solid #1e2530;
+}
+
+.signal-title{
+    color:#697487;
+    font-size:8px;
+}
+
+.signal-main{
+    margin-top:2px;
+    font-size:17px;
+    font-weight:900;
+}
+
+.signal-buy{color:#00d68f}
+.signal-sell{color:#ff536d}
+.signal-wait{color:#ffb020}
+
+.signal-info{
+    color:#8993a5;
+    font-size:9px;
+    margin-top:3px;
+}
+
+.signal-factors{
+    display:flex;
+    flex-wrap:wrap;
+    gap:3px;
+    margin-top:5px;
+}
+
+.factor{
+    padding:3px 5px;
+    border-radius:4px;
+    background:#141a22;
+    color:#aeb7c6;
+    font-size:7px;
+}
+
+.factor.good{color:#00d68f}
+.factor.bad{color:#ff536d}
+.factor.neutral{color:#ffb020}
+
+.error{
+    color:#ff536d;
+    font-size:9px;
+    margin-top:4px;
+}
+
+
+/* =========================================================
+   ГРАФИК
+========================================================= */
+
+.chart{
+    flex:1 1 auto;
+    min-height:280px;
+    width:100%;
+    border-top:1px solid #232a35;
+    background:#0b0e13;
+    overflow:hidden;
+    position:relative;
+    border-bottom-left-radius:14px;
+    border-bottom-right-radius:14px;
+}
+
+.chart-widget{
+    width:100%;
+    height:100%;
+    min-height:280px;
+}
+
+.chart-symbol-label{
+    position:absolute;
+    top:6px;
+    left:8px;
+    z-index:5;
+    max-width:60%;
+    font-size:10px;
+    line-height:1.3;
+    font-weight:700;
+    color:#d7dde6;
+    text-shadow:0 1px 2px rgba(0,0,0,.9);
+    letter-spacing:.2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    pointer-events:none;
+    background:none;
+    border:0;
+    padding:0;
+}
+
+.chart-widget > div{
+    width:100% !important;
+    height:100% !important;
+    min-height:280px;
+}
+
+.chart iframe{
+    width:100% !important;
+    height:100% !important;
+    min-height:280px;
+    display:block;
+    border:0;
+}
+
+
+/* =========================================================
+   SIGNALS
+========================================================= */
+
+.signals-page{
+    padding:10px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+}
+
+.signals-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+}
+
+.signals-title{
+    font-size:19px;
+    font-weight:900;
+}
+
+.add-monitor{
+    border:0;
+    background:#00d68f;
+    color:#06110d;
+    border-radius:8px;
+    padding:8px 10px;
+    font-weight:900;
+    font-size:10px;
+}
+
+.monitor-bar{
+    display:flex;
+    gap:5px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    margin-bottom:8px;
+}
+
+.monitor-bar::-webkit-scrollbar{display:none}
+
+.monitor-chip{
+    flex:0 0 auto;
+    padding:6px 8px;
+    background:#10141b;
+    border:1px solid #252d39;
+    border-radius:7px;
+    color:#aeb7c6;
+    font-size:9px;
+}
+
+.monitor-chip button{
+    margin-left:5px;
+    border:0;
+    background:none;
+    color:#ff536d;
+    cursor:pointer;
+}
+
+.signals-columns{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+}
+
+.signal-column{
+    min-height:0;
+    background:#0b0f15;
+    border:1px solid #202733;
+    border-radius:10px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+
+.column-head{
+    padding:8px;
+    border-bottom:1px solid #202733;
+    font-size:10px;
+    font-weight:900;
+    color:#aeb7c6;
+}
+
+.signal-list{
+    flex:1;
+    min-height:0;
+    overflow:auto;
+    padding:6px;
+}
+
+.signal-item{
+    background:#10141b;
+    border:1px solid #242c38;
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:5px;
+}
+
+.signal-item-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:5px;
+}
+
+.signal-pair{
+    font-size:11px;
+    font-weight:900;
+}
+
+.signal-direction{
+    font-size:9px;
+    font-weight:900;
+}
+
+.signal-direction.buy{color:#00d68f}
+.signal-direction.sell{color:#ff536d}
+.signal-direction.flat{color:#ffb020}
+
+.signal-price{
+    margin-top:5px;
+    font-size:11px;
+    font-weight:800;
+}
+
+.signal-meta{
+    margin-top:4px;
+    color:#748095;
+    font-size:8px;
+    display:flex;
+    justify-content:space-between;
+    gap:5px;
+}
+
+.progress{
+    margin-top:6px;
+    height:4px;
+    background:#1b222d;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress-inner{
+    height:100%;
+    background:#00d68f;
+    width:0;
+}
+
+.result{
+    margin-top:5px;
+    font-size:10px;
+    font-weight:900;
+}
+
+.result.win{color:#00d68f}
+.result.loss{color:#ff536d}
+.result.flat{color:#ffb020}
+
+.stats-line{
+    margin-top:7px;
+    padding:6px 8px;
+    background:#10141b;
+    border:1px solid #232a35;
+    border-radius:7px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:6px;
+    font-size:8px;
+    color:#8993a5;
+}
+
+.factor-stats-btn{
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    border-radius:6px;
+    padding:4px 7px;
+    cursor:pointer;
+    font-size:8px;
+    white-space:nowrap;
+}
+
+.factor-stats-btn:hover{
+    color:#00d68f;
+    border-color:#00d68f;
+}
+
+.factor-stats-body{
+    max-height:65vh;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.factor-stat-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:#0b0f15;
+    border:1px solid #1e2530;
+    border-radius:7px;
+    padding:7px 9px;
+}
+
+.factor-stat-name{
+    font-size:10px;
+    color:#d7dde6;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.factor-stat-nums{
+    font-size:9px;
+    color:#8993a5;
+    flex:0 0 auto;
+    text-align:right;
+}
+
+.factor-stat-good .factor-stat-nums{color:#00d68f}
+.factor-stat-bad .factor-stat-nums{color:#ff536d}
+
+.factor-stats-section-title{
+    font-size:10px;
+    font-weight:900;
+    color:#687386;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    margin:10px 0 2px;
+}
+
+.factor-stats-section-title:first-child{
+    margin-top:0;
+}
+
+.empty{
+    color:#555f70;
+    text-align:center;
+    padding:20px 5px;
+    font-size:9px;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    z-index:100;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:15px;
+}
+
+.modal.open{display:flex}
+
+.modal-box{
+    width:min(390px,100%);
+    background:#10141b;
+    border:1px solid #29313e;
+    border-radius:14px;
+    padding:14px;
+}
+
+.modal-title{
+    font-size:16px;
+    font-weight:900;
+    margin-bottom:10px;
+}
+
+.modal-input{
+    width:100%;
+    background:#0b0f15;
+    color:#fff;
+    border:1px solid #2a3240;
+    border-radius:8px;
+    padding:10px;
+    outline:none;
+}
+
+.tf-select{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:9px;
+}
+
+.tf-option{
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    border-radius:6px;
+    padding:6px 8px;
+    font-size:9px;
+}
+
+.tf-option.active{
+    border-color:#00d68f;
+    color:#00d68f;
+    background:#14221e;
+}
+
+.modal-actions{
+    display:flex;
+    gap:6px;
+    margin-top:12px;
+}
+
+.modal-actions button{
+    flex:1;
+    padding:9px;
+    border-radius:7px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#aeb7c6;
+}
+
+.modal-actions .save{
+    background:#00d68f;
+    color:#06110d;
+    border:0;
+    font-weight:900;
+}
+
+.api-settings-box{
+    max-height:85vh;
+    overflow-y:auto;
+}
+
+.api-service-block{
+    margin-top:12px;
+}
+
+.api-service-block:first-of-type{
+    margin-top:2px;
+}
+
+.api-service-title{
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:6px;
+}
+
+.api-service-title span{
+    color:#687386;
+    font-weight:400;
+    font-size:10px;
+}
+
+.api-key-input-row{
+    display:flex;
+    gap:5px;
+}
+
+.api-key-input-row .apply-btn{
+    padding:0 14px;
+}
+
+.api-key-list{
+    margin-top:7px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.api-key-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    background:#0b0f15;
+    border:1px solid #1e2530;
+    border-radius:7px;
+    padding:7px 8px;
+}
+
+.api-key-info{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:0;
+}
+
+.api-key-value{
+    font-size:11px;
+    font-weight:700;
+    font-family:monospace;
+}
+
+.api-key-status{
+    font-size:8px;
+    color:#8993a5;
+}
+
+.api-key-remove{
+    border:0;
+    background:none;
+    color:#ff536d;
+    cursor:pointer;
+    font-size:13px;
+    flex:0 0 auto;
+}
+
+.api-settings-note{
+    margin-top:12px;
+    color:#687386;
+    font-size:9px;
+    line-height:1.4;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px){
+
+    .cards-grid{
+        grid-template-columns:1fr;
+    }
+
+    .cards-grid .card:nth-child(n+2){
+        display:none;
+    }
+
+    .signals-columns{
+        grid-template-columns:1fr 1fr;
+    }
+
+    .price{
+        font-size:20px;
+    }
+
+    .chart{
+        min-height:300px;
+    }
+
+    .chart-widget > div,
+    .chart iframe{
+        min-height:300px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="header-inner">
+
+<div class="logo">
+Crypto<span>Scr</span>
+</div>
+
+<div class="connection" id="connection">
+● Подключение...
+</div>
+
+</div>
+
+<div class="header-nav">
+
+<button
+class="nav-btn active"
+id="mainNav"
+onclick="showPage('main')">
+Графики
+</button>
+
+<button
+class="nav-btn"
+id="signalsNav"
+onclick="showPage('signals')">
+Сигналы
+</button>
+
+</div>
+
+</header>
+
+
+<div class="app">
+
+<section
+class="page active"
+id="mainPage">
+
+<div class="main-page">
+
+<div class="api-settings-bar">
+
+<button
+class="settings-btn"
+onclick="openApiSettingsModal()">
+⚙ Настройки API
+</button>
+
+<span
+class="api-status"
+id="apiStatusBadge">
+</span>
+
+</div>
+
+
+<div class="main-title">
+
+<div>
+
+<h1>Крипто-скринер</h1>
+
+<p>
+Crypto + Forex • графики • анализ • сигналы
+</p>
+
+</div>
+
+</div>
+
+
+<div
+class="cards-grid"
+id="grid">
+</div>
+
+</div>
+
+</section>
+
+
+<section
+class="page"
+id="signalsPage">
+
+<div class="signals-page">
+
+<div class="signals-head">
+
+<div class="signals-title">
+📊 Сигналы
+</div>
+
+<button
+class="add-monitor"
+onclick="openMonitorModal()">
+＋ ДОБАВИТЬ
+</button>
+
+</div>
+
+
+<div
+class="monitor-bar"
+id="monitorBar">
+</div>
+
+
+<div class="stats-line">
+
+<span id="statsOpen">
+Открыто: 0
+</span>
+
+<span id="statsWin">
+✅ 0
+</span>
+
+<span id="statsLoss">
+❌ 0
+</span>
+
+<span id="statsFlat">
+⚪ 0
+</span>
+
+<span id="statsWinrate">
+Win Rate: 0%
+</span>
+
+<button
+class="factor-stats-btn"
+onclick="openFactorStatsModal()">
+📊 По факторам
+</button>
+
+</div>
+
+
+<div class="signals-columns">
+
+<div class="signal-column">
+
+<div class="column-head">
+🟢 ОТКРЫТЫЕ
+</div>
+
+<div
+class="signal-list"
+id="openSignals">
+</div>
+
+</div>
+
+
+<div class="signal-column">
+
+<div class="column-head">
+📁 ЗАВЕРШЁННЫЕ
+</div>
+
+<div
+class="signal-list"
+id="closedSignals">
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<div
+class="modal"
+id="monitorModal">
+
+<div class="modal-box">
+
+<div class="modal-title">
+Добавить пару в мониторинг
+</div>
+
+<input
+class="modal-input"
+id="monitorInput"
+placeholder="BTCUSDT / AUDCAD / EURUSD"
+>
+
+<div
+class="tf-select"
+id="tfSelect">
+
+<button
+class="tf-option"
+data-tf="1">
+1м
+</button>
+
+<button
+class="tf-option"
+data-tf="2">
+2м
+</button>
+
+<button
+class="tf-option"
+data-tf="3">
+3м
+</button>
+
+<button
+class="tf-option"
+data-tf="4">
+4м
+</button>
+
+<button
+class="tf-option"
+data-tf="5">
+5м
+</button>
+
+<button
+class="tf-option active"
+data-tf="15">
+15м
+</button>
+
+<button
+class="tf-option"
+data-tf="30">
+30м
+</button>
+
+<button
+class="tf-option"
+data-tf="60">
+1ч
+</button>
+
+<button
+class="tf-option"
+data-tf="240">
+4ч
+</button>
+
+<button
+class="tf-option"
+data-tf="D">
+1д
+</button>
+
+</div>
+
+
+<div class="modal-actions">
+
+<button onclick="closeMonitorModal()">
+Отмена
+</button>
+
+<button
+class="save"
+onclick="addMonitor()">
+Добавить
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="apiSettingsModal">
+
+<div class="modal-box api-settings-box">
+
+<div class="modal-title">
+⚙ Настройки API
+</div>
+
+<div class="api-service-block">
+
+<div class="api-service-title">
+Finnhub <span>· форекс, реалтайм</span>
+</div>
+
+<div class="api-key-input-row">
+
+<input
+class="modal-input"
+id="finnhubKeyInput"
+placeholder="Вставьте API-ключ Finnhub"
+onkeydown="if(event.key==='Enter'){addApiKey('finnhub');}"
+>
+
+<button
+class="apply-btn"
+onclick="addApiKey('finnhub')">
++
+</button>
+
+</div>
+
+<div
+class="api-key-list"
+id="finnhubKeyList">
+</div>
+
+</div>
+
+
+<div class="api-service-block">
+
+<div class="api-service-title">
+Twelve Data <span>· форекс, свечи</span>
+</div>
+
+<div class="api-key-input-row">
+
+<input
+class="modal-input"
+id="twelvedataKeyInput"
+placeholder="Вставьте API-ключ Twelve Data"
+onkeydown="if(event.key==='Enter'){addApiKey('twelvedata');}"
+>
+
+<button
+class="apply-btn"
+onclick="addApiKey('twelvedata')">
++
+</button>
+
+</div>
+
+<div
+class="api-key-list"
+id="twelvedataKeyList">
+</div>
+
+</div>
+
+
+<div class="api-settings-note">
+Ключи хранятся только в этом браузере. При сбое текущий
+ключ автоматически заменяется следующим по кругу, а через
+5 минут пробуется снова.
+</div>
+
+
+<div class="modal-actions">
+
+<button onclick="closeApiSettingsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="factorStatsModal">
+
+<div class="modal-box api-settings-box">
+
+<div class="modal-title">
+📊 Статистика по факторам
+</div>
+
+<div
+id="factorStatsBody"
+class="factor-stats-body">
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeFactorStatsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="tfStatsModal">
+
+<div class="modal-box api-settings-box">
+
+<div class="modal-title">
+📈 Статистика по таймфреймам
+</div>
+
+<div
+id="tfStatsBody"
+class="factor-stats-body">
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeTfStatsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   FETCH С ПОВТОРНЫМИ ПОПЫТКАМИ
+
+   Если VPN/сеть моргнула на секунду — один неудачный
+   запрос не должен превращаться в кривую цену. Пробуем
+   ещё пару раз с небольшой паузой перед тем как сдаться.
+========================================================= */
+
+function delay(ms){
+
+return new Promise(
+resolve=>setTimeout(resolve,ms)
+);
+
+}
+
+
+async function fetchWithRetry(
+url,
+retries=2,
+retryDelay=700
+){
+
+let lastError;
+
+for(
+let attempt=0;
+attempt<=retries;
+attempt++
+){
+
+try{
+
+const response=
+await fetch(url);
+
+if(!response.ok){
+
+throw new Error(
+"HTTP "+response.status
+);
+
+}
+
+return response;
+
+}
+catch(e){
+
+lastError=e;
+
+if(attempt<retries){
+
+await delay(
+retryDelay*(attempt+1)
+);
+
+}
+
+}
+
+}
+
+throw lastError;
+
+}
+
+
+/* =========================================================
+   НАСТРОЙКИ
+========================================================= */
+
+const ANALYSIS_CANDLES = 250;
+
+const MIN_SIGNAL_SCORE = 75;
+
+const SIGNAL_COOLDOWN = 10 * 60 * 1000;
+
+const MONITOR_INTERVAL = 5000;
+
+/*
+   Колдаун после серии убыточных сделок подряд
+   на одной паре — защита от "ловли ножа" в
+   плохих условиях (ТЗ п.6).
+*/
+
+const LOSS_STREAK_THRESHOLD = 3;
+
+const LOSS_STREAK_COOLDOWN = 3 * 60 * 1000;
+
+
+/*
+   Защита от повторного открытия
+   одного и того же сигнала.
+*/
+const SAME_SIGNAL_BLOCK = true;
+
+
+/* =========================================================
+   API KEYS — ХРАНЕНИЕ И РОТАЦИЯ
+
+   Ключи Finnhub и Twelve Data больше не зашиты в код —
+   хранятся в localStorage и управляются через модалку
+   "Настройки API". Если ключ перестаёт работать (лимит,
+   отозван, любая ошибка запроса) — он молча помечается
+   "слетевшим", и работа продолжается со следующим активным
+   ключом по кругу. Через API_KEY_RETRY_MS слетевший ключ
+   снова становится активным (на случай если лимит уже
+   сбросился).
+========================================================= */
+
+const API_KEY_RETRY_MS = 5 * 60 * 1000;
+
+const API_KEY_STORAGE_KEY = "cryptoScreenApiKeys";
+
+
+function loadApiKeyStore(){
+
+const raw =
+localStorage.getItem(API_KEY_STORAGE_KEY);
+
+let parsed = null;
+
+try{
+parsed = raw ? JSON.parse(raw) : null;
+}catch(e){
+parsed = null;
+}
+
+const empty = () => ({keys:[], currentId:null});
+
+return{
+finnhub: (parsed && parsed.finnhub) || empty(),
+twelvedata: (parsed && parsed.twelvedata) || empty()
+};
+
+}
+
+
+const apiKeyStore = loadApiKeyStore();
+
+
+function persistApiKeyStore(){
+
+localStorage.setItem(
+API_KEY_STORAGE_KEY,
+JSON.stringify(apiKeyStore)
+);
+
+}
+
+
+function makeKeyId(){
+
+return(
+Date.now().toString(36)+
+Math.random().toString(36).slice(2,8)
+);
+
+}
+
+
+function maskApiKey(value){
+
+if(value.length<=8)
+return "••••"+value.slice(-2);
+
+return(
+value.slice(0,4)+
+"••••"+
+value.slice(-4)
+);
+
+}
+
+
+function recoverExpiredKeys(service){
+
+const state=
+apiKeyStore[service];
+
+const now=
+Date.now();
+
+let recovered=false;
+
+state.keys.forEach(k=>{
+
+if(
+k.status==="failed" &&
+now-k.failedAt>=API_KEY_RETRY_MS
+){
+
+k.status="active";
+k.failedAt=null;
+recovered=true;
+
+}
+
+});
+
+if(recovered)
+persistApiKeyStore();
+
+return recovered;
+
+}
+
+
+function getCurrentApiKey(service){
+
+recoverExpiredKeys(service);
+
+const state=
+apiKeyStore[service];
+
+let current=
+state.keys.find(k=>k.id===state.currentId);
+
+if(!current || current.status!=="active"){
+
+current=
+state.keys.find(k=>k.status==="active") || null;
+
+state.currentId=
+current ? current.id : null;
+
+}
+
+return current;
+
+}
+
+
+function markApiKeyFailed(service,keyId){
+
+const state=
+apiKeyStore[service];
+
+const failedIdx=
+state.keys.findIndex(k=>k.id===keyId);
+
+if(failedIdx===-1)
+return;
+
+state.keys[failedIdx].status="failed";
+state.keys[failedIdx].failedAt=Date.now();
+
+let nextIdx=(failedIdx+1)%state.keys.length;
+let found=null;
+
+for(
+let i=0;
+i<state.keys.length;
+i++
+){
+
+if(state.keys[nextIdx].status==="active"){
+found=state.keys[nextIdx];
+break;
+}
+
+nextIdx=(nextIdx+1)%state.keys.length;
+
+}
+
+state.currentId=
+found ? found.id : null;
+
+persistApiKeyStore();
+
+renderApiKeyList(service);
+
+updateApiStatusBadge();
+
+}
+
+
+async function callFinnhubApi(requestFn){
+
+const state=
+apiKeyStore.finnhub;
+
+const attempts=
+Math.max(1,state.keys.length);
+
+let lastError;
+
+for(let i=0;i<attempts;i++){
+
+const key=
+getCurrentApiKey("finnhub");
+
+if(!key){
+
+throw new Error(
+"Нет активных API-ключей Finnhub. Добавьте ключ в настройках API."
+);
+
+}
+
+try{
+
+return await requestFn(key.value);
+
+}catch(e){
+
+lastError=e;
+
+markApiKeyFailed("finnhub",key.id);
+
+}
+
+}
+
+throw lastError || new Error("Finnhub недоступен");
+
+}
+
+
+async function callTwelveDataApi(requestFn){
+
+const state=
+apiKeyStore.twelvedata;
+
+const attempts=
+Math.max(1,state.keys.length);
+
+let lastError;
+
+for(let i=0;i<attempts;i++){
+
+const key=
+getCurrentApiKey("twelvedata");
+
+if(!key){
+
+throw new Error(
+"Нет активных API-ключей Twelve Data. Добавьте ключ в настройках API."
+);
+
+}
+
+try{
+
+return await requestFn(key.value);
+
+}catch(e){
+
+lastError=e;
+
+markApiKeyFailed("twelvedata",key.id);
+
+}
+
+}
+
+throw lastError || new Error("Twelve Data недоступен");
+
+}
+
+
+function addApiKey(service){
+
+const input=
+document.getElementById(service+"KeyInput");
+
+if(!input)
+return;
+
+const value=
+(input.value||"").trim();
+
+if(!value)
+return;
+
+const state=
+apiKeyStore[service];
+
+if(state.keys.some(k=>k.value===value)){
+
+input.value="";
+return;
+
+}
+
+const key={
+id:makeKeyId(),
+value,
+status:"active",
+failedAt:null
+};
+
+state.keys.push(key);
+
+if(!state.currentId)
+state.currentId=key.id;
+
+input.value="";
+
+persistApiKeyStore();
+
+renderApiKeyList(service);
+
+updateApiStatusBadge();
+
+if(service==="finnhub")
+connectFinnhub();
+
+}
+
+
+function removeApiKey(service,keyId){
+
+const state=
+apiKeyStore[service];
+
+state.keys=
+state.keys.filter(k=>k.id!==keyId);
+
+if(state.currentId===keyId){
+
+const next=
+state.keys.find(k=>k.status==="active");
+
+state.currentId=
+next ? next.id : null;
+
+}
+
+persistApiKeyStore();
+
+renderApiKeyList(service);
+
+updateApiStatusBadge();
+
+if(service==="finnhub")
+connectFinnhub();
+
+}
+
+
+function renderApiKeyList(service){
+
+const list=
+document.getElementById(service+"KeyList");
+
+if(!list)
+return;
+
+recoverExpiredKeys(service);
+
+const state=
+apiKeyStore[service];
+
+if(!state.keys.length){
+
+list.innerHTML=
+`<div class="empty">Нет добавленных ключей</div>`;
+
+return;
+
+}
+
+list.innerHTML=
+state.keys.map(k=>{
+
+const isCurrent=
+k.id===state.currentId &&
+k.status==="active";
+
+let statusText;
+
+if(isCurrent){
+
+statusText="🟢 Активен";
+
+}else if(k.status==="active"){
+
+statusText="🔵 Резерв";
+
+}else{
+
+const leftMs=
+Math.max(
+0,
+API_KEY_RETRY_MS-(Date.now()-k.failedAt)
+);
+
+statusText=
+"🔴 Слетел ("+
+Math.ceil(leftMs/60000)+
+"м до повтора)";
+
+}
+
+return `
+<div class="api-key-item">
+<div class="api-key-info">
+<span class="api-key-value">${maskApiKey(k.value)}</span>
+<span class="api-key-status">${statusText}</span>
+</div>
+<button class="api-key-remove" onclick="removeApiKey('${service}','${k.id}')">✕</button>
+</div>
+`;
+
+}).join("");
+
+}
+
+
+function updateApiStatusBadge(){
+
+const badge=
+document.getElementById("apiStatusBadge");
+
+if(!badge)
+return;
+
+const fh=
+apiKeyStore.finnhub.keys.filter(
+k=>k.status==="active"
+).length;
+
+const td=
+apiKeyStore.twelvedata.keys.filter(
+k=>k.status==="active"
+).length;
+
+const warn=
+fh===0 || td===0;
+
+badge.className=
+"api-status"+(warn?" api-status-warn":"");
+
+badge.textContent=
+warn
+?"⚠ Проверьте ключи API"
+:"🔑 Finnhub: "+fh+" • Twelve Data: "+td;
+
+}
+
+
+function openApiSettingsModal(){
+
+renderApiKeyList("finnhub");
+renderApiKeyList("twelvedata");
+
+document
+.getElementById("apiSettingsModal")
+.classList.add("open");
+
+}
+
+
+function closeApiSettingsModal(){
+
+document
+.getElementById("apiSettingsModal")
+.classList.remove("open");
+
+}
+
+
+/*
+   Раз в 30 секунд проверяем, не "ожили" ли
+   слетевшие ключи (вдруг лимит уже сбросился),
+   и если Finnhub был полностью недоступен —
+   пробуем переподключиться на восстановленном ключе.
+*/
+
+setInterval(()=>{
+
+const fhRecovered=
+recoverExpiredKeys("finnhub");
+
+recoverExpiredKeys("twelvedata");
+
+updateApiStatusBadge();
+
+const modal=
+document.getElementById("apiSettingsModal");
+
+if(modal && modal.classList.contains("open")){
+
+renderApiKeyList("finnhub");
+renderApiKeyList("twelvedata");
+
+}
+
+if(
+fhRecovered &&
+getCurrentApiKey("finnhub") &&
+(!finnhubSocket || finnhubSocket.readyState!==WebSocket.OPEN)
+){
+
+connectFinnhub();
+
+}
+
+},30000);
+
+
+/* =========================================================
+   DEFAULT CARDS
+========================================================= */
+
+const defaultCoins =
+JSON.parse(
+localStorage.getItem("cryptoScreenCards")
+) || [
+"BTCUSDT"
+];
+
+
+const grid =
+document.getElementById("grid");
+
+const connection =
+document.getElementById("connection");
+
+const cards = {};
+
+let socket = null;
+
+
+/* =========================================================
+   FOREX
+========================================================= */
+
+const forexPairs = new Set([
+
+"EURUSD","GBPUSD","USDJPY",
+"USDCHF","USDCAD","AUDUSD",
+"NZDUSD",
+
+"EURGBP","EURJPY","EURCHF",
+"EURAUD","EURCAD","EURNZD",
+
+"GBPJPY","GBPCHF","GBPAUD",
+"GBPCAD","GBPNZD",
+
+"AUDJPY","AUDCAD","AUDNZD",
+"AUDCHF",
+
+"NZDJPY","NZDCAD","NZDCHF",
+
+"CADJPY","CADCHF","CHFJPY"
+
+]);
+
+
+/* =========================================================
+   NORMALIZE
+========================================================= */
+
+function normalizeInput(value){
+
+return value
+.trim()
+.toUpperCase()
+.replace(/\s+/g,"")
+.replace("/","");
+
+}
+
+
+function isForexSymbol(symbol){
+
+return forexPairs.has(
+normalizeInput(symbol)
+);
+
+}
+
+
+function normalizeForex(symbol){
+
+const clean =
+normalizeInput(symbol);
+
+return (
+clean.substring(0,3)+
+"/"+
+clean.substring(3,6)
+);
+
+}
+
+
+function normalizeCrypto(symbol){
+
+let clean =
+normalizeInput(symbol);
+
+if(!clean.endsWith("USDT"))
+clean+="USDT";
+
+return clean;
+
+}
+
+
+/* =========================================================
+   TIMEFRAMES
+========================================================= */
+
+function timeframeMinutes(tf){
+
+const map={
+
+"1":1,
+"2":2,
+"3":3,
+"4":4,
+"5":5,
+"15":15,
+"30":30,
+"60":60,
+"240":240,
+"D":1440
+
+};
+
+return map[tf] || 5;
+
+}
+
+
+function timeframeLabel(tf){
+
+const map={
+
+"1":"1м",
+"2":"2м",
+"3":"3м",
+"4":"4м",
+"5":"5м",
+"15":"15м",
+"30":"30м",
+"60":"1ч",
+"240":"4ч",
+"D":"1д"
+
+};
+
+return map[tf] || tf;
+
+}
+
+
+/* =========================================================
+   STORAGE
+========================================================= */
+
+function saveCards(){
+
+const symbols =
+Object.values(cards)
+.map(c=>{
+
+if(c.type==="forex")
+return c.symbol.replace("/","");
+
+return c.symbol;
+
+});
+
+localStorage.setItem(
+"cryptoScreenCards",
+JSON.stringify(symbols)
+);
+
+}
+
+
+/* =========================================================
+   CREATE CARDS
+========================================================= */
+
+function createCards(){
+
+grid.innerHTML="";
+
+defaultCoins
+.forEach((symbol,index)=>{
+
+const clean =
+normalizeInput(symbol);
+
+const forex =
+isForexSymbol(clean);
+
+const actualSymbol =
+forex
+?normalizeForex(clean)
+:normalizeCrypto(clean);
+
+const card =
+document.createElement("div");
+
+card.className="card";
+
+card.innerHTML=`
+
+<div class="card-sticky-top">
+
+<div class="card-top">
+
+<div class="coin-row">
+
+<div>
+
+<div
+class="coin-name"
+id="name-${index}">
+${forex
+?actualSymbol
+:actualSymbol.replace("USDT","")}
+</div>
+
+<div
+class="coin-symbol"
+id="symbol-${index}">
+${actualSymbol}
+</div>
+
+<div
+class="market-badge ${forex?"forex":""}"
+id="market-${index}">
+${forex?"FOREX":"CRYPTO"}
+</div>
+
+</div>
+
+<div
+class="change positive"
+id="change-${index}">
+0.00%
+</div>
+
+</div>
+
+
+<div
+class="price"
+id="price-${index}">
+---
+</div>
+
+
+<div class="stats">
+
+<div class="stat">
+
+<div class="stat-label">
+Максимум
+</div>
+
+<div
+class="stat-value"
+id="high-${index}">
+---
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+Минимум
+</div>
+
+<div
+class="stat-value"
+id="low-${index}">
+---
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-label">
+Объём
+</div>
+
+<div
+class="stat-value"
+id="volume-${index}">
+---
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="controls">
+
+<input
+class="pair-input"
+id="input-${index}"
+value="${actualSymbol}"
+placeholder="BTC / AUDCAD"
+onkeydown="if(event.key==='Enter'){changePair(${index});}"
+>
+
+<button
+class="apply-btn"
+onclick="changePair(${index})">
+OK
+</button>
+
+</div>
+
+</div>
+
+
+<div class="timeframes">
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'1',this)">
+1м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'2',this)">
+2м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'3',this)">
+3м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'4',this)">
+4м
+</button>
+
+<button
+class="timeframe active"
+onclick="changeTimeframe(${index},'5',this)">
+5м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'15',this)">
+15м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'30',this)">
+30м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'60',this)">
+1ч
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'240',this)">
+4ч
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'D',this)">
+1д
+</button>
+
+</div>
+
+
+<div class="signal-box">
+
+<div class="signal-title">
+Торговый сигнал
+</div>
+
+<div
+class="signal-main signal-wait"
+id="signal-${index}">
+АНАЛИЗ...
+</div>
+
+<div
+class="signal-info"
+id="signal-info-${index}">
+Получение 250 свечей...
+</div>
+
+<div
+class="signal-factors"
+id="factors-${index}">
+</div>
+
+</div>
+
+
+<div
+class="error"
+id="error-${index}">
+</div>
+
+</div>
+
+
+<div
+class="chart"
+id="chart-${index}">
+
+<div
+class="chart-symbol-label"
+id="chart-symbol-${index}"
+style="position:absolute;top:6px;left:8px;z-index:5;max-width:60%;font-size:10px;line-height:1.3;font-weight:700;color:#d7dde6;text-shadow:0 1px 2px rgba(0,0,0,.9);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;background:none;border:0;padding:0;">
+</div>
+
+<div
+class="chart-widget"
+id="chart-widget-${index}">
+</div>
+
+</div>
+
+`;
+
+grid.appendChild(card);
+
+cards[index]={
+
+symbol:actualSymbol,
+
+type:
+forex
+?"forex"
+:"crypto",
+
+interval:"5",
+
+lastCandles:null,
+lastResult:null,
+lastPrice:null
+
+};
+
+});
+
+}
+
+
+/* =========================================================
+   BINANCE
+========================================================= */
+
+function connectBinance(){
+
+if(socket){
+
+try{
+socket.close();
+}catch(e){}
+
+socket=null;
+
+}
+
+
+const symbols =
+Object.values(cards)
+.filter(c=>c.type==="crypto")
+.map(c=>c.symbol.toLowerCase());
+
+
+if(!symbols.length){
+
+connection.textContent=
+"● Forex режим";
+
+connection.style.color=
+"#ffb020";
+
+return;
+
+}
+
+
+const streams =
+symbols
+.map(s=>s+"@ticker")
+.join("/");
+
+
+socket =
+new WebSocket(
+"wss://stream.binance.com:9443/stream?streams="+streams
+);
+
+
+socket.onopen=()=>{
+
+connection.textContent=
+"● Binance: онлайн";
+
+connection.style.color=
+"#00d68f";
+
+};
+
+
+socket.onmessage=event=>{
+
+try{
+
+const message =
+JSON.parse(event.data);
+
+const data =
+message.data;
+
+if(!data || !data.s)
+return;
+
+
+Object.keys(cards)
+.forEach(index=>{
+
+if(
+cards[index].type==="crypto" &&
+cards[index].symbol===data.s
+){
+
+updateCard(index,data);
+
+updateOpenTradePrice(
+cards[index].symbol,
+parseFloat(data.c)
+);
+
+}
+
+});
+
+}catch(e){}
+
+};
+
+
+socket.onerror=()=>{
+
+connection.textContent=
+"● Binance: ошибка";
+
+connection.style.color=
+"#ff536d";
+
+};
+
+
+socket.onclose=()=>{
+
+connection.textContent=
+"● Переподключение...";
+
+connection.style.color=
+"#ffb020";
+
+
+setTimeout(
+connectBinance,
+3000
+);
+
+};
+
+}
+
+
+/* =========================================================
+   UPDATE CRYPTO
+========================================================= */
+
+function updateCard(index,data){
+
+const price =
+parseFloat(data.c);
+
+const change =
+parseFloat(data.P);
+
+
+document.getElementById(
+`price-${index}`
+).textContent =
+formatPrice(price);
+
+
+const changeElement =
+document.getElementById(
+`change-${index}`
+);
+
+
+changeElement.textContent =
+(change>=0?"+":"")+
+change.toFixed(2)+
+"%";
+
+
+changeElement.className =
+"change "+
+(
+change>=0
+?"positive"
+:"negative"
+);
+
+
+document.getElementById(
+`high-${index}`
+).textContent =
+formatPrice(
+parseFloat(data.h)
+);
+
+
+document.getElementById(
+`low-${index}`
+).textContent =
+formatPrice(
+parseFloat(data.l)
+);
+
+
+document.getElementById(
+`volume-${index}`
+).textContent =
+formatVolume(
+parseFloat(data.v),
+"crypto"
+);
+
+}
+
+
+/* =========================================================
+   АКТУАЛЬНАЯ ЦЕНА КРИПТО
+========================================================= */
+
+async function getCryptoCurrentPrice(symbol){
+
+const url =
+"https://api.binance.com/api/v3/ticker/price"+
+"?symbol="+
+encodeURIComponent(symbol);
+
+
+const response =
+await fetch(url);
+
+
+if(!response.ok){
+
+throw new Error(
+"Не удалось получить текущую цену Binance"
+);
+
+}
+
+
+const data =
+await response.json();
+
+
+const price=
+parseFloat(data.price);
+
+
+if(!isFinite(price)){
+
+throw new Error(
+"Некорректная цена Binance"
+);
+
+}
+
+
+return price;
+
+}
+
+
+/* =========================================================
+   FINNHUB — ФОРЕКС
+
+   Живая цена приходит через WebSocket (как у Binance
+   для крипты) — тик за тиком, без опроса.
+   Свечи для расчёта сигнала берём через REST
+   /forex/candle (лимит бесплатного тарифа — 60 запросов
+   в минуту, гораздо щедрее Twelve Data).
+========================================================= */
+
+function finnhubReady(){
+
+return !!getCurrentApiKey("finnhub");
+
+}
+
+
+/*
+   "EURUSD" -> "OANDA:EUR_USD"
+*/
+
+function toFinnhubSymbol(symbol){
+
+const clean=
+normalizeInput(symbol);
+
+return (
+"OANDA:"+
+clean.substring(0,3)+
+"_"+
+clean.substring(3,6)
+);
+
+}
+
+
+/*
+   "OANDA:EUR_USD" -> "EURUSD"
+*/
+
+function fromFinnhubSymbol(finnhubSymbol){
+
+return finnhubSymbol
+.replace("OANDA:","")
+.replace("_","/");
+
+}
+
+
+const forexLivePrices = {};
+
+const FOREX_PRICE_MAX_AGE = 15000;
+
+
+function getLiveForexPrice(symbol){
+
+const entry=
+forexLivePrices[symbol];
+
+if(
+entry &&
+Date.now()-entry.time<FOREX_PRICE_MAX_AGE
+){
+
+return entry.price;
+
+}
+
+return null;
+
+}
+
+
+let finnhubSocket=null;
+
+const finnhubSubscribed=
+new Set();
+
+let finnhubReconnectTimer=null;
+
+
+function collectForexSymbols(){
+
+const fromMonitors=
+monitors
+.filter(m=>m.enabled && m.type==="forex")
+.map(m=>m.symbol);
+
+const fromCards=
+Object.values(cards)
+.filter(c=>c.type==="forex")
+.map(c=>c.symbol);
+
+return [...new Set([
+...fromMonitors,
+...fromCards
+])];
+
+}
+
+
+function connectFinnhub(){
+
+const activeKey=
+getCurrentApiKey("finnhub");
+
+if(!activeKey){
+
+updateApiStatusBadge();
+
+return;
+
+}
+
+if(finnhubReconnectTimer){
+
+clearTimeout(finnhubReconnectTimer);
+finnhubReconnectTimer=null;
+
+}
+
+if(finnhubSocket){
+
+try{
+finnhubSocket.close();
+}catch(e){}
+
+finnhubSocket=null;
+
+}
+
+finnhubSubscribed.clear();
+
+const usedKeyId=
+activeKey.id;
+
+const openedAt=
+Date.now();
+
+let gotMessage=
+false;
+
+finnhubSocket=
+new WebSocket(
+"wss://ws.finnhub.io?token="+
+encodeURIComponent(activeKey.value)
+);
+
+
+finnhubSocket.onopen=()=>{
+
+refreshFinnhubSubscriptions();
+
+};
+
+
+finnhubSocket.onmessage=event=>{
+
+gotMessage=true;
+
+try{
+
+const message=
+JSON.parse(event.data);
+
+if(
+message.type!=="trade" ||
+!message.data
+)
+return;
+
+message.data.forEach(tick=>{
+
+if(
+!tick.s ||
+!tick.s.startsWith("OANDA:")
+)
+return;
+
+const symbol=
+fromFinnhubSymbol(tick.s);
+
+const price=
+parseFloat(tick.p);
+
+if(!isFinite(price))
+return;
+
+forexLivePrices[symbol]={
+price,
+time:Date.now()
+};
+
+updateOpenTradePrice(
+symbol,
+price
+);
+
+Object.keys(cards)
+.forEach(index=>{
+
+if(
+cards[index].type==="forex" &&
+cards[index].symbol===symbol
+){
+
+const el=
+document.getElementById(
+`price-${index}`
+);
+
+if(el){
+
+el.textContent=
+formatPrice(price,"forex");
+
+}
+
+}
+
+});
+
+});
+
+}catch(e){}
+
+};
+
+
+finnhubSocket.onclose=()=>{
+
+if(finnhubReconnectTimer)
+clearTimeout(finnhubReconnectTimer);
+
+const aliveMs=
+Date.now()-openedAt;
+
+/*
+   Сокет закрылся почти сразу и не прислал
+   ни одного тика — похоже на нерабочий ключ.
+   Помечаем его слетевшим и пробуем следующий.
+*/
+
+if(!gotMessage && aliveMs<5000){
+
+markApiKeyFailed(
+"finnhub",
+usedKeyId
+);
+
+finnhubReconnectTimer=
+setTimeout(
+connectFinnhub,
+800
+);
+
+}else{
+
+finnhubReconnectTimer=
+setTimeout(
+connectFinnhub,
+3000
+);
+
+}
+
+};
+
+
+finnhubSocket.onerror=()=>{
+
+console.log(
+"Finnhub WS ошибка"
+);
+
+};
+
+}
+
+
+function refreshFinnhubSubscriptions(){
+
+if(
+!finnhubSocket ||
+finnhubSocket.readyState!==WebSocket.OPEN
+)
+return;
+
+const wanted=
+new Set(
+collectForexSymbols()
+);
+
+
+wanted.forEach(symbol=>{
+
+if(!finnhubSubscribed.has(symbol)){
+
+finnhubSocket.send(
+JSON.stringify({
+type:"subscribe",
+symbol:toFinnhubSymbol(symbol)
+})
+);
+
+finnhubSubscribed.add(symbol);
+
+}
+
+});
+
+
+finnhubSubscribed.forEach(symbol=>{
+
+if(!wanted.has(symbol)){
+
+finnhubSocket.send(
+JSON.stringify({
+type:"unsubscribe",
+symbol:toFinnhubSymbol(symbol)
+})
+);
+
+finnhubSubscribed.delete(symbol);
+
+}
+
+});
+
+}
+
+
+/* =========================================================
+   АКТУАЛЬНАЯ ЦЕНА FOREX (разовый запрос —
+   используется как запасной вариант, если WS ещё не
+   успел прислать тик по этой паре)
+========================================================= */
+
+async function getForexCurrentPrice(symbol){
+
+const live=
+getLiveForexPrice(symbol);
+
+if(live!==null)
+return live;
+
+return callFinnhubApi(async(apiKey)=>{
+
+const url=
+"https://finnhub.io/api/v1/quote"+
+"?symbol="+
+encodeURIComponent(
+toFinnhubSymbol(symbol)
+)+
+"&token="+
+encodeURIComponent(apiKey);
+
+const response=
+await fetchWithRetry(url);
+
+const data=
+await response.json();
+
+const price=
+parseFloat(data.c);
+
+if(!isFinite(price) || price<=0){
+
+throw new Error(
+"Цена Forex недоступна"
+);
+
+}
+
+return price;
+
+});
+
+}
+
+
+/* =========================================================
+   UPDATE OPEN TRADE PRICE
+========================================================= */
+
+function updateOpenTradePrice(
+symbol,
+price
+){
+
+if(
+!isFinite(price)
+)
+return;
+
+
+trades.forEach(trade=>{
+
+if(
+!trade.closed &&
+trade.symbol===symbol
+){
+
+trade.current=price;
+
+}
+
+});
+
+}
+
+
+/* =========================================================
+   TWELVE DATA — СВЕЧИ ДЛЯ СИГНАЛА
+
+   Live-цену для входа/сопровождения сделки даёт Finnhub
+   (см. выше), а вот сами свечи для расчёта сигнала —
+   отсюда: у Twelve Data бесплатный тариф их отдаёт без
+   проблем, просто с лимитом 8 запросов в минуту.
+
+   Чтобы не словить 429/бан по лимиту, ВСЕ запросы к
+   Twelve Data идут через единую очередь с гарантированным
+   интервалом между вызовами — независимо от того, сколько
+   мониторов/карточек одновременно просят данные.
+========================================================= */
+
+const TWELVE_DATA_MIN_GAP = 8000;
+
+let twelveDataQueue =
+Promise.resolve();
+
+let twelveDataLastCall = 0;
+
+
+function scheduleTwelveDataCall(fn){
+
+const run=
+async ()=>{
+
+const wait=
+Math.max(
+0,
+TWELVE_DATA_MIN_GAP-
+(Date.now()-twelveDataLastCall)
+);
+
+if(wait>0){
+
+await delay(wait);
+
+}
+
+twelveDataLastCall=
+Date.now();
+
+return fn();
+
+};
+
+const result=
+twelveDataQueue.then(run,run);
+
+twelveDataQueue=
+result.catch(()=>{});
+
+return result;
+
+}
+
+
+function twelveInterval(interval){
+
+const map={
+
+"1":"1min",
+"5":"5min",
+"15":"15min",
+"30":"30min",
+"60":"1h",
+"240":"4h",
+"D":"1day"
+
+};
+
+return map[interval] || "5min";
+
+}
+
+
+async function getForexKlines(
+symbol,
+interval,
+outputsizeOverride
+){
+
+const resampleFactor=
+({"2":2,"3":3,"4":4})[interval];
+
+if(resampleFactor){
+
+const desired=
+outputsizeOverride||ANALYSIS_CANDLES;
+
+const baseSize=
+Math.min(
+5000,
+desired*resampleFactor+resampleFactor
+);
+
+const base=
+await getForexKlines(
+symbol,
+"1",
+baseSize
+);
+
+return resampleCandles(
+base,
+resampleFactor
+).slice(-desired);
+
+}
+
+return scheduleTwelveDataCall(
+async ()=>
+
+callTwelveDataApi(async(apiKey)=>{
+
+const pair=
+normalizeForex(symbol);
+
+const url=
+"https://api.twelvedata.com/time_series"+
+"?symbol="+
+encodeURIComponent(pair)+
+"&interval="+
+twelveInterval(interval)+
+"&outputsize="+
+(outputsizeOverride||ANALYSIS_CANDLES)+
+"&apikey="+
+encodeURIComponent(apiKey);
+
+const response=
+await fetchWithRetry(url);
+
+const json=
+await response.json();
+
+if(
+json.status==="error" ||
+!json.values ||
+!json.values.length
+){
+
+throw new Error(
+(json.message)||
+"Forex-пара не найдена"
+);
+
+}
+
+return json.values
+.slice()
+.reverse()
+.map(v=>({
+
+time:
+new Date(v.datetime).getTime(),
+
+open:parseFloat(v.open),
+high:parseFloat(v.high),
+low:parseFloat(v.low),
+close:parseFloat(v.close),
+volume:
+v.volume
+?parseFloat(v.volume)
+:0
+
+}));
+
+})
+
+);
+
+}
+
+
+/* =========================================================
+   СИНТЕТИЧЕСКИЕ ТФ (2М / 3М / 4М)
+
+   Ни у Binance, ни у Twelve Data нет таких интервалов
+   напрямую (Binance умеет 1/3/5/15..., Twelve Data вообще
+   только 1/5/15/30...). Берём минутные свечи и склеиваем
+   их по N штук в одну — стандартный ресемплинг OHLCV.
+   Анализ (calculateSignal и все допфакторы) после этого
+   работает точно так же, как с обычными свечами — разницы
+   для движка нет.
+========================================================= */
+
+const SYNTHETIC_TF_FACTORS={
+"2":2,
+"3":3,
+"4":4
+};
+
+
+async function getSmartKlines(type,symbol,interval){
+
+const factor=
+SYNTHETIC_TF_FACTORS[interval];
+
+if(!factor){
+
+return type==="forex"
+?await getForexKlines(symbol,interval)
+:await getCryptoKlines(symbol,interval);
+
+}
+
+const needed=
+ANALYSIS_CANDLES*factor;
+
+const base1m=
+type==="forex"
+?await getForexKlines(symbol,"1",needed)
+:await getCryptoKlines(symbol,"1",needed);
+
+return resampleCandles(base1m,factor);
+
+}
+
+
+/* =========================================================
+   BINANCE CANDLES
+========================================================= */
+
+/* =========================================================
+   РЕСЕМПЛИНГ СВЕЧЕЙ
+
+   Ни у Binance (для крипты), ни тем более у Twelve Data
+   (для форекса) нет "родных" 2- и 4-минутных свечей — у
+   Binance только 1м/3м/5м, у Twelve Data вообще только
+   1м/5м и крупнее. Поэтому 2м/3м/4м мы всегда собираем
+   сами из 1-минутных свечей, склеивая их в блоки по
+   реальным часовым границам (00:00, 00:02, 00:04...),
+   как это делают настоящие биржевые агрегаторы.
+========================================================= */
+
+function resampleCandles(source,factor){
+
+if(!source || !source.length)
+return [];
+
+const bucketMs=
+factor*60000;
+
+const buckets=
+new Map();
+
+source.forEach(c=>{
+
+const bucketTime=
+Math.floor(c.time/bucketMs)*bucketMs;
+
+let b=
+buckets.get(bucketTime);
+
+if(!b){
+
+b={
+
+time:bucketTime,
+
+open:c.open,
+high:c.high,
+low:c.low,
+close:c.close,
+
+volume:c.volume||0
+
+};
+
+buckets.set(bucketTime,b);
+
+}else{
+
+b.high=
+Math.max(b.high,c.high);
+
+b.low=
+Math.min(b.low,c.low);
+
+b.close=
+c.close;
+
+b.volume+=
+(c.volume||0);
+
+}
+
+});
+
+return Array.from(buckets.values())
+.sort((a,b)=>a.time-b.time);
+
+}
+
+
+function binanceInterval(interval){
+
+const map={
+
+"1":"1m",
+"5":"5m",
+"15":"15m",
+"30":"30m",
+"60":"1h",
+"240":"4h",
+"D":"1d"
+
+};
+
+return map[interval] || "5m";
+
+}
+
+
+async function getCryptoKlines(
+symbol,
+interval,
+limitOverride
+){
+
+const resampleFactor=
+({"2":2,"3":3,"4":4})[interval];
+
+if(resampleFactor){
+
+const desired=
+limitOverride||ANALYSIS_CANDLES;
+
+const baseLimit=
+Math.min(
+1000,
+desired*resampleFactor+resampleFactor
+);
+
+const base=
+await getCryptoKlines(
+symbol,
+"1",
+baseLimit
+);
+
+return resampleCandles(
+base,
+resampleFactor
+).slice(-desired);
+
+}
+
+const url =
+"https://api.binance.com/api/v3/klines"+
+"?symbol="+
+encodeURIComponent(symbol)+
+"&interval="+
+binanceInterval(interval)+
+"&limit="+
+(limitOverride||ANALYSIS_CANDLES);
+
+
+const response =
+await fetchWithRetry(url);
+
+
+if(!response.ok){
+
+throw new Error(
+"Пара не найдена на Binance"
+);
+
+}
+
+
+const data =
+await response.json();
+
+
+return data.map(c=>({
+
+time:c[0],
+
+open:parseFloat(c[1]),
+high:parseFloat(c[2]),
+low:parseFloat(c[3]),
+close:parseFloat(c[4]),
+volume:parseFloat(c[5])
+
+}));
+
+}
+
+
+/* =========================================================
+   EMA
+========================================================= */
+
+function ema(values,period){
+
+if(values.length<period)
+return null;
+
+
+const multiplier=
+2/(period+1);
+
+
+let result=
+values
+.slice(0,period)
+.reduce((a,b)=>a+b,0)
+/period;
+
+
+for(
+let i=period;
+i<values.length;
+i++
+){
+
+result=
+(values[i]-result)*
+multiplier+
+result;
+
+}
+
+
+return result;
+
+}
+
+
+/* =========================================================
+   RSI
+========================================================= */
+
+function rsi(
+values,
+period=14
+){
+
+if(values.length<=period)
+return 50;
+
+
+let gains=0;
+let losses=0;
+
+
+for(
+let i=1;
+i<=period;
+i++
+){
+
+const diff=
+values[i]-values[i-1];
+
+
+if(diff>=0)
+gains+=diff;
+else
+losses-=diff;
+
+}
+
+
+let avgGain=
+gains/period;
+
+let avgLoss=
+losses/period;
+
+
+for(
+let i=period+1;
+i<values.length;
+i++
+){
+
+const diff=
+values[i]-values[i-1];
+
+
+const gain=
+Math.max(diff,0);
+
+const loss=
+Math.max(-diff,0);
+
+
+avgGain=
+(
+avgGain*(period-1)+
+gain
+)/period;
+
+
+avgLoss=
+(
+avgLoss*(period-1)+
+loss
+)/period;
+
+}
+
+
+if(avgLoss===0)
+return 100;
+
+
+const rs=
+avgGain/avgLoss;
+
+
+return 100-
+100/(1+rs);
+
+}
+
+
+/* =========================================================
+   ATR
+========================================================= */
+
+function atr(
+candles,
+period=14
+){
+
+if(candles.length<=period)
+return 0;
+
+
+const trs=[];
+
+
+for(
+let i=1;
+i<candles.length;
+i++
+){
+
+const c=candles[i];
+const p=candles[i-1];
+
+
+trs.push(
+Math.max(
+c.high-c.low,
+Math.abs(
+c.high-p.close
+),
+Math.abs(
+c.low-p.close
+)
+)
+);
+
+}
+
+
+return trs
+.slice(-period)
+.reduce((a,b)=>a+b,0)
+/period;
+
+}
+
+
+/* =========================================================
+   AVERAGE VOLUME
+========================================================= */
+
+function averageVolume(
+candles,
+period=20
+){
+
+const values=
+candles
+.slice(-period)
+.map(c=>c.volume||0);
+
+
+if(!values.length)
+return 0;
+
+
+return values.reduce(
+(a,b)=>a+b,0
+)/values.length;
+
+}
+
+
+/* =========================================================
+   MACD
+========================================================= */
+
+function macd(values){
+
+if(values.length<35){
+
+return{
+macd:0,
+signal:0
+};
+
+}
+
+
+const fast=
+ema(values,12);
+
+const slow=
+ema(values,26);
+
+const line=
+fast-slow;
+
+
+const previous=
+values.slice(
+0,
+values.length-1
+);
+
+
+const prevFast=
+ema(previous,12);
+
+const prevSlow=
+ema(previous,26);
+
+
+return{
+
+macd:line,
+
+signal:
+prevFast-prevSlow
+
+};
+
+}
+
+
+/* =========================================================
+   SUPPORT / RESISTANCE
+========================================================= */
+
+function findLevels(candles){
+
+const recent=
+candles.slice(
+Math.max(
+0,
+candles.length-100
+)
+);
+
+
+const highs=
+recent.map(c=>c.high);
+
+const lows=
+recent.map(c=>c.low);
+
+
+const resistance=
+Math.max(...highs);
+
+const support=
+Math.min(...lows);
+
+
+return{
+support,
+resistance
+};
+
+}
+
+
+/* =========================================================
+   STRUCTURE
+========================================================= */
+
+function marketStructure(candles){
+
+if(candles.length<30){
+
+return{
+direction:"NEUTRAL",
+score:0,
+text:"Структура: нет данных"
+};
+
+}
+
+
+const recent=
+candles.slice(-30);
+
+
+const first=
+recent.slice(0,10);
+
+const middle=
+recent.slice(10,20);
+
+const last=
+recent.slice(20,30);
+
+
+const firstHigh=
+Math.max(
+...first.map(c=>c.high)
+);
+
+const middleHigh=
+Math.max(
+...middle.map(c=>c.high)
+);
+
+const lastHigh=
+Math.max(
+...last.map(c=>c.high)
+);
+
+
+const firstLow=
+Math.min(
+...first.map(c=>c.low)
+);
+
+const middleLow=
+Math.min(
+...middle.map(c=>c.low)
+);
+
+const lastLow=
+Math.min(
+...last.map(c=>c.low)
+);
+
+
+if(
+lastHigh>middleHigh &&
+middleHigh>=firstHigh &&
+lastLow>middleLow
+){
+
+return{
+direction:"BULL",
+score:10,
+text:"Структура: HH/HL"
+};
+
+}
+
+
+if(
+lastLow<middleLow &&
+middleLow<=firstLow &&
+lastHigh<middleHigh
+){
+
+return{
+direction:"BEAR",
+score:-10,
+text:"Структура: LH/LL"
+};
+
+}
+
+
+return{
+direction:"NEUTRAL",
+score:0,
+text:"Структура: боковик"
+};
+
+}
+
+
+/* =========================================================
+   MOMENTUM
+========================================================= */
+
+function momentumAnalysis(candles){
+
+if(candles.length<20)
+return{
+score:0,
+text:"Импульс: нет данных"
+};
+
+
+const current=
+candles[candles.length-1].close;
+
+
+const previous=
+candles[candles.length-11].close;
+
+
+const change=
+(current-previous)/
+previous*100;
+
+
+if(change>1){
+
+return{
+score:8,
+text:"Импульс: сильный рост"
+};
+
+}
+
+
+if(change>0.25){
+
+return{
+score:4,
+text:"Импульс: рост"
+};
+
+}
+
+
+if(change<-1){
+
+return{
+score:-8,
+text:"Импульс: сильное падение"
+};
+
+}
+
+
+if(change<-0.25){
+
+return{
+score:-4,
+text:"Импульс: падение"
+};
+
+}
+
+
+return{
+score:0,
+text:"Импульс: слабый"
+};
+
+}
+
+
+/* =========================================================
+   CANDLE
+========================================================= */
+
+function candleAnalysis(candles){
+
+const a=
+candles[candles.length-2];
+
+const b=
+candles[candles.length-1];
+
+
+if(!a || !b){
+
+return{
+score:0,
+text:"Свечи: нет данных"
+};
+
+}
+
+
+const body=
+Math.abs(
+b.close-b.open
+);
+
+const range=
+b.high-b.low;
+
+
+if(range<=0){
+
+return{
+score:0,
+text:"Свечи: нейтрально"
+};
+
+}
+
+
+const bodyRatio=
+body/range;
+
+
+const bullish=
+b.close>b.open;
+
+
+if(bodyRatio>.65){
+
+return{
+
+score:
+bullish?6:-6,
+
+text:
+bullish
+?"Свеча: сильный рост"
+:"Свеча: сильное падение"
+
+};
+
+}
+
+
+return{
+
+score:
+bullish?1:-1,
+
+text:
+bullish
+?"Свеча: бычья"
+:"Свеча: медвежья"
+
+};
+
+}
+
+
+/* =========================================================
+   ORDER BLOCK
+========================================================= */
+
+function orderBlockAnalysis(candles){
+
+if(candles.length<30){
+
+return{
+score:0,
+text:"OB: нет данных"
+};
+
+}
+
+
+const last=
+candles[candles.length-1];
+
+
+const lookback=
+candles.slice(
+-25,
+-3
+);
+
+
+let bullishZone=false;
+let bearishZone=false;
+
+
+for(let i=0;i<lookback.length-3;i++){
+
+const c=
+lookback[i];
+
+const next1=
+lookback[i+1];
+
+const next2=
+lookback[i+2];
+
+
+const moveUp=
+next2.close-c.close;
+
+const moveDown=
+c.close-next2.close;
+
+
+const range=
+c.high-c.low;
+
+
+if(range<=0)
+continue;
+
+
+if(
+c.close<c.open &&
+moveUp>range*1.5
+){
+
+if(
+last.close>=c.low &&
+last.close<=c.high*1.003
+){
+
+bullishZone=true;
+
+}
+
+}
+
+
+if(
+c.close>c.open &&
+moveDown>range*1.5
+){
+
+if(
+last.close<=c.high &&
+last.close>=c.low*0.997
+){
+
+bearishZone=true;
+
+}
+
+}
+
+}
+
+
+if(bullishZone){
+
+return{
+score:8,
+text:"Зона: бычий OB"
+};
+
+}
+
+
+if(bearishZone){
+
+return{
+score:-8,
+text:"Зона: медвежий OB"
+};
+
+}
+
+
+return{
+score:0,
+text:"Зона: OB не найден"
+};
+
+}
+
+
+/* =========================================================
+   SIGNAL
+========================================================= */
+
+function calculateSignal(candles){
+
+if(
+!candles ||
+candles.length<100
+){
+
+return{
+
+signal:"WAIT",
+score:50,
+
+info:"Недостаточно данных",
+
+factors:[]
+
+};
+
+}
+
+
+const data=
+candles.slice(-ANALYSIS_CANDLES);
+
+
+const closes=
+data.map(c=>c.close);
+
+
+const last=
+closes[closes.length-1];
+
+
+const ema20=
+ema(closes,20);
+
+const ema50=
+ema(closes,50);
+
+const ema200=
+ema(closes,200);
+
+
+const rsiValue=
+rsi(closes,14);
+
+const atrValue=
+atr(data,14);
+
+const macdValue=
+macd(closes);
+
+const avgVol=
+averageVolume(data,20);
+
+const currentVol=
+data[data.length-1].volume||0;
+
+
+const structure=
+marketStructure(data);
+
+const momentum=
+momentumAnalysis(data);
+
+const candle=
+candleAnalysis(data);
+
+const orderBlock=
+orderBlockAnalysis(data);
+
+const levels=
+findLevels(data);
+
+
+let score=50;
+
+const factors=[];
+
+
+/* EMA */
+
+if(
+ema20!==null &&
+ema50!==null
+){
+
+if(ema20>ema50){
+
+score+=10;
+
+factors.push({
+text:"EMA20 > EMA50",
+type:"good"
+});
+
+}else{
+
+score-=10;
+
+factors.push({
+text:"EMA20 < EMA50",
+type:"bad"
+});
+
+}
+
+}
+
+
+/* EMA 200 */
+
+if(ema200!==null){
+
+if(last>ema200){
+
+score+=10;
+
+factors.push({
+text:"Цена выше EMA200",
+type:"good"
+});
+
+}else{
+
+score-=10;
+
+factors.push({
+text:"Цена ниже EMA200",
+type:"bad"
+});
+
+}
+
+}
+
+
+/* RSI */
+
+if(rsiValue<30){
+
+score+=8;
+
+factors.push({
+text:"RSI: перепродан",
+type:"good"
+});
+
+}
+else if(rsiValue>70){
+
+score-=8;
+
+factors.push({
+text:"RSI: перекуплен",
+type:"bad"
+});
+
+}
+else if(rsiValue>=52){
+
+score+=5;
+
+factors.push({
+text:"RSI: бычий",
+type:"good"
+});
+
+}
+else if(rsiValue<=48){
+
+score-=5;
+
+factors.push({
+text:"RSI: медвежий",
+type:"bad"
+});
+
+}
+else{
+
+factors.push({
+text:"RSI: нейтральный",
+type:"neutral"
+});
+
+}
+
+
+/* MACD */
+
+if(
+macdValue.macd>
+macdValue.signal
+){
+
+score+=8;
+
+factors.push({
+text:"MACD: бычий",
+type:"good"
+});
+
+}else{
+
+score-=8;
+
+factors.push({
+text:"MACD: медвежий",
+type:"bad"
+});
+
+}
+
+
+/* STRUCTURE */
+
+score+=structure.score;
+
+factors.push({
+
+text:structure.text,
+
+type:
+structure.score>0
+?"good"
+:structure.score<0
+?"bad"
+:"neutral"
+
+});
+
+
+/* MOMENTUM */
+
+score+=momentum.score;
+
+factors.push({
+
+text:momentum.text,
+
+type:
+momentum.score>0
+?"good"
+:momentum.score<0
+?"bad"
+:"neutral"
+
+});
+
+
+/* ORDER BLOCK */
+
+score+=orderBlock.score;
+
+factors.push({
+
+text:orderBlock.text,
+
+type:
+orderBlock.score>0
+?"good"
+:orderBlock.score<0
+?"bad"
+:"neutral"
+
+});
+
+
+/* LEVELS */
+
+const distanceSupport=
+Math.abs(
+last-levels.support
+)/last*100;
+
+
+const distanceResistance=
+Math.abs(
+levels.resistance-last
+)/last*100;
+
+
+if(
+distanceResistance<0.4
+){
+
+score-=7;
+
+factors.push({
+text:"Цена у сопротивления",
+type:"bad"
+});
+
+}
+else if(
+distanceSupport<0.4
+){
+
+score+=7;
+
+factors.push({
+text:"Цена у поддержки",
+type:"good"
+});
+
+}
+else{
+
+factors.push({
+text:"Уровни: свободная зона",
+type:"neutral"
+});
+
+}
+
+
+/* VOLUME */
+
+if(
+avgVol>0 &&
+currentVol>avgVol*1.25
+){
+
+const lastCandle=
+data[data.length-1];
+
+
+if(
+lastCandle.close>
+lastCandle.open
+){
+
+score+=6;
+
+factors.push({
+text:"Объём: покупки",
+type:"good"
+});
+
+}else{
+
+score-=6;
+
+factors.push({
+text:"Объём: продажи",
+type:"bad"
+});
+
+}
+
+}else{
+
+factors.push({
+text:"Объём: обычный",
+type:"neutral"
+});
+
+}
+
+
+/* VOLATILITY */
+
+const volatility=
+last>0
+?atrValue/last*100
+:0;
+
+
+factors.push({
+
+text:
+volatility>=1
+?"ATR: высокая волатильность"
+:"ATR: нормальная",
+
+type:"neutral"
+
+});
+
+
+/* CANDLE */
+
+score+=candle.score;
+
+factors.push({
+
+text:candle.text,
+
+type:
+candle.score>0
+?"good"
+:candle.score<0
+?"bad"
+:"neutral"
+
+});
+
+
+score=
+Math.max(
+0,
+Math.min(
+100,
+Math.round(score)
+)
+);
+
+
+let signal="WAIT";
+
+
+if(
+score>=MIN_SIGNAL_SCORE &&
+structure.direction!=="BEAR" &&
+ema20>ema50
+){
+
+signal="BUY";
+
+}
+else if(
+score<=100-MIN_SIGNAL_SCORE &&
+structure.direction!=="BULL" &&
+ema20<ema50
+){
+
+signal="SELL";
+
+}
+
+
+return{
+
+signal,
+
+score,
+
+info:
+`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей`,
+
+factors
+
+};
+
+}
+
+
+/* =========================================================
+   МУЛЬТИТАЙМФРЕЙМ-АНАЛИЗ ДЛЯ СДЕЛОК (только вкладка "Сигналы")
+
+   Используется ИСКЛЮЧИТЕЛЬНО в мониторах, которые реально
+   открывают сделки. Карточки на главной ("Графики") по-прежнему
+   считают сигнал через обычный calculateSignal() на одном ТФ —
+   их эта логика не касается.
+
+   При мелком базовом ТФ (M1 или M5) сигнал дополнительно
+   сверяется со старшими ТФ (например M5+M15 для базового M1,
+   M15+M30 для базового M5). Если старшие ТФ согласны с
+   направлением — сделка держится дольше (до 15 минут), если
+   согласен только один из двух — держится ближе к базовому
+   ТФ, если оба против — сделка не открывается вовсе.
+========================================================= */
+
+const mtfCandleCache = {};
+
+const MTF_CANDLE_REFRESH = 60000;
+
+
+const MTF_CONFIRM_MAP={
+"1":{mid:"5",high:"15"},
+"2":{mid:"15",high:"30"},
+"3":{mid:"15",high:"30"},
+"4":{mid:"15",high:"30"},
+"5":{mid:"15",high:"30"}
+};
+
+
+function nextTimeframes(baseInterval){
+
+return MTF_CONFIRM_MAP[baseInterval]||null;
+
+}
+
+
+async function getCachedMtfKlines(monitor,interval){
+
+const key=
+monitor.id+"_"+interval;
+
+const cached=
+mtfCandleCache[key];
+
+if(
+cached &&
+Date.now()-cached.time<MTF_CANDLE_REFRESH
+){
+
+return cached.candles;
+
+}
+
+const candles=
+monitor.type==="forex"
+?await getForexKlines(monitor.symbol,interval)
+:await getCryptoKlines(monitor.symbol,interval);
+
+mtfCandleCache[key]={
+candles,
+time:Date.now()
+};
+
+return candles;
+
+}
+
+
+async function calculateTradeSignalMTF(monitor,baseCandles){
+
+const baseResult=
+calculateSignal(baseCandles);
+
+const baseMinutes=
+timeframeMinutes(monitor.interval);
+
+const fallback={
+...baseResult,
+duration:
+baseMinutes*60*1000
+};
+
+const isSmallTF=
+monitor.interval==="1" ||
+monitor.interval==="2" ||
+monitor.interval==="3" ||
+monitor.interval==="4" ||
+monitor.interval==="5";
+
+if(
+!isSmallTF ||
+baseResult.signal==="WAIT"
+){
+
+return fallback;
+
+}
+
+const tfs=
+nextTimeframes(monitor.interval);
+
+if(!tfs)
+return fallback;
+
+let midCandles,highCandles;
+
+try{
+
+midCandles=
+await getCachedMtfKlines(
+monitor,tfs.mid
+);
+
+highCandles=
+await getCachedMtfKlines(
+monitor,tfs.high
+);
+
+}catch(e){
+
+/*
+   Не удалось получить старшие ТФ —
+   работаем по базовому сигналу
+   с минимальной длительностью,
+   а не блокируем сделку целиком.
+*/
+
+return fallback;
+
+}
+
+const midResult=
+calculateSignal(midCandles);
+
+const highResult=
+calculateSignal(highCandles);
+
+const direction=
+baseResult.signal;
+
+const midAgrees=
+direction==="BUY"
+?midResult.score>50
+:midResult.score<50;
+
+const highAgrees=
+direction==="BUY"
+?highResult.score>50
+:highResult.score<50;
+
+const agreeCount=
+(midAgrees?1:0)+
+(highAgrees?1:0);
+
+
+if(agreeCount===0){
+
+return{
+...baseResult,
+signal:"WAIT",
+duration:0,
+info:
+baseResult.info+
+` • отменено: ${tfs.mid}м и ${tfs.high}м против`
+};
+
+}
+
+
+let durationMinutes;
+
+if(agreeCount===1){
+
+durationMinutes=
+Math.max(baseMinutes,5);
+
+}else{
+
+const avgStrength=
+(
+Math.abs(midResult.score-50)+
+Math.abs(highResult.score-50)
+)/2;
+
+const extra=
+Math.min(
+5,
+Math.max(0,(avgStrength-25)/25*5)
+);
+
+durationMinutes=
+10+extra;
+
+}
+
+durationMinutes=
+Math.min(
+15,
+Math.max(baseMinutes,durationMinutes)
+);
+
+
+return{
+
+...baseResult,
+
+duration:
+Math.round(durationMinutes)*60*1000,
+
+info:
+baseResult.info+
+` • MTF ${tfs.mid}м/${tfs.high}м: ${agreeCount}/2 согласны (${Math.round(durationMinutes)} мин)`
+
+};
+
+}
+
+
+/* =========================================================
+   ДОПОЛНИТЕЛЬНЫЕ ФАКТОРЫ ДЛЯ СДЕЛОК (ТЗ п.2-3-5-7-8)
+
+   Тоже только для мониторов из "Сигналы" — calculateSignal()
+   на главной странице этот блок не вызывает и не использует.
+========================================================= */
+
+function volumeFactorScore(data){
+
+const avgVol=
+averageVolume(data,20);
+
+const currentVol=
+data[data.length-1].volume||0;
+
+if(
+avgVol>0 &&
+currentVol>avgVol*1.25
+){
+
+const lastCandle=
+data[data.length-1];
+
+return(
+lastCandle.close>lastCandle.open
+?6
+:-6
+);
+
+}
+
+return 0;
+
+}
+
+
+function calculateADX(data,period=14){
+
+if(
+!data ||
+data.length<period*2
+)
+return null;
+
+const plusDM=[];
+const minusDM=[];
+const trList=[];
+
+for(
+let i=1;
+i<data.length;
+i++
+){
+
+const upMove=
+data[i].high-data[i-1].high;
+
+const downMove=
+data[i-1].low-data[i].low;
+
+plusDM.push(
+(upMove>downMove && upMove>0)
+?upMove
+:0
+);
+
+minusDM.push(
+(downMove>upMove && downMove>0)
+?downMove
+:0
+);
+
+const highLow=
+data[i].high-data[i].low;
+
+const highClose=
+Math.abs(data[i].high-data[i-1].close);
+
+const lowClose=
+Math.abs(data[i].low-data[i-1].close);
+
+trList.push(
+Math.max(highLow,highClose,lowClose)
+);
+
+}
+
+
+function wilderSmooth(values,p){
+
+const smoothed=[];
+
+let sum=0;
+
+for(let i=0;i<p;i++)
+sum+=values[i];
+
+smoothed.push(sum);
+
+for(let i=p;i<values.length;i++){
+
+const prev=
+smoothed[smoothed.length-1];
+
+smoothed.push(
+prev-(prev/p)+values[i]
+);
+
+}
+
+return smoothed;
+
+}
+
+
+const smoothedTR=
+wilderSmooth(trList,period);
+
+const smoothedPlusDM=
+wilderSmooth(plusDM,period);
+
+const smoothedMinusDM=
+wilderSmooth(minusDM,period);
+
+
+const dxList=[];
+
+for(
+let i=0;
+i<smoothedTR.length;
+i++
+){
+
+const trVal=
+smoothedTR[i]||1e-9;
+
+const plusDI=
+100*(smoothedPlusDM[i]/trVal);
+
+const minusDI=
+100*(smoothedMinusDM[i]/trVal);
+
+const sum=
+plusDI+minusDI;
+
+dxList.push(
+sum===0
+?0
+:100*Math.abs(plusDI-minusDI)/sum
+);
+
+}
+
+if(dxList.length<period)
+return null;
+
+let adxValue=
+dxList
+.slice(0,period)
+.reduce((a,b)=>a+b,0)/period;
+
+for(
+let i=period;
+i<dxList.length;
+i++
+){
+
+adxValue=
+(adxValue*(period-1)+dxList[i])/period;
+
+}
+
+return adxValue;
+
+}
+
+
+function findSwingPoints(data,lookback=40){
+
+const slice=
+data.slice(-lookback);
+
+const offset=
+data.length-slice.length;
+
+const lows=
+slice
+.map((c,i)=>({i,v:c.low}))
+.sort((a,b)=>a.v-b.v);
+
+const highs=
+slice
+.map((c,i)=>({i,v:c.high}))
+.sort((a,b)=>b.v-a.v);
+
+const swingLows=[];
+
+for(const p of lows){
+
+if(
+swingLows.every(
+s=>Math.abs(s.i-p.i)>=3
+)
+){
+
+swingLows.push(p);
+
+}
+
+if(swingLows.length===2)
+break;
+
+}
+
+const swingHighs=[];
+
+for(const p of highs){
+
+if(
+swingHighs.every(
+s=>Math.abs(s.i-p.i)>=3
+)
+){
+
+swingHighs.push(p);
+
+}
+
+if(swingHighs.length===2)
+break;
+
+}
+
+swingLows.sort((a,b)=>a.i-b.i);
+swingHighs.sort((a,b)=>a.i-b.i);
+
+return{swingLows,swingHighs,offset};
+
+}
+
+
+function detectRsiDivergence(data){
+
+if(
+!data ||
+data.length<60
+)
+return null;
+
+const closes=
+data.map(c=>c.close);
+
+const{
+swingLows,
+swingHighs,
+offset
+}=findSwingPoints(data,40);
+
+if(swingLows.length===2){
+
+const[a,b]=swingLows;
+
+const rsiA=
+rsi(
+closes.slice(0,offset+a.i+1),
+14
+);
+
+const rsiB=
+rsi(
+closes.slice(0,offset+b.i+1),
+14
+);
+
+if(
+b.v<a.v &&
+rsiB>rsiA+3
+){
+
+return"bullish";
+
+}
+
+}
+
+if(swingHighs.length===2){
+
+const[a,b]=swingHighs;
+
+const rsiA=
+rsi(
+closes.slice(0,offset+a.i+1),
+14
+);
+
+const rsiB=
+rsi(
+closes.slice(0,offset+b.i+1),
+14
+);
+
+if(
+b.v>a.v &&
+rsiB<rsiA-3
+){
+
+return"bearish";
+
+}
+
+}
+
+return null;
+
+}
+
+
+function isAtrSpike(data){
+
+if(
+!data ||
+data.length<40
+)
+return false;
+
+const currentAtr=
+atr(data,14);
+
+const priorData=
+data.slice(0,-14);
+
+if(priorData.length<20)
+return false;
+
+const priorAtr=
+atr(priorData,14);
+
+if(!priorAtr || priorAtr<=0)
+return false;
+
+return currentAtr>priorAtr*2.2;
+
+}
+
+
+function applyAdvancedFactors(
+monitor,
+baseCandles,
+result
+){
+
+if(
+result.signal!=="BUY" &&
+result.signal!=="SELL"
+){
+
+return{
+...result,
+confidence:"нет сигнала"
+};
+
+}
+
+const data=
+baseCandles.slice(-ANALYSIS_CANDLES);
+
+let score=
+result.score;
+
+let signal=
+result.signal;
+
+let info=
+result.info;
+
+
+/* Нейтрализация тикового объёма форекс (ТЗ п.4) */
+
+if(monitor.type==="forex"){
+
+const volContribution=
+volumeFactorScore(data);
+
+if(volContribution!==0){
+
+score-=volContribution;
+
+info+=
+" • объём форекс не учитывался";
+
+}
+
+}
+
+
+/* Режим рынка: тренд/флэт через ADX (ТЗ п.2) */
+
+const adxValue=
+calculateADX(data,14);
+
+if(adxValue!==null){
+
+const deviation=
+score-50;
+
+if(adxValue>=25){
+
+score=50+deviation*1.15;
+
+}else if(adxValue<20){
+
+score=50+deviation*0.75;
+
+}
+
+score=
+Math.max(0,Math.min(100,score));
+
+}
+
+
+/* Дивергенция RSI (ТЗ п.3) */
+
+const divergence=
+detectRsiDivergence(data);
+
+if(
+divergence==="bullish"
+){
+
+if(signal==="SELL"){
+
+signal="WAIT";
+
+info+=
+" • отменено: бычья дивергенция против SELL";
+
+}else if(signal==="BUY"){
+
+score=
+Math.min(100,score+8);
+
+info+=
+" • подтверждено бычьей дивергенцией";
+
+}
+
+}else if(
+divergence==="bearish"
+){
+
+if(signal==="BUY"){
+
+signal="WAIT";
+
+info+=
+" • отменено: медвежья дивергенция против BUY";
+
+}else if(signal==="SELL"){
+
+score=
+Math.max(0,score-8);
+
+info+=
+" • подтверждено медвежьей дивергенцией";
+
+}
+
+}
+
+
+/* Всплеск волатильности — не входим (ТЗ п.7) */
+
+if(
+(signal==="BUY" || signal==="SELL") &&
+isAtrSpike(data)
+){
+
+signal="WAIT";
+
+info+=
+" • отменено: аномальный всплеск волатильности";
+
+}
+
+
+/* Подтверждение сигнала 2 проверки подряд (ТЗ п.5) */
+
+if(signal==="BUY" || signal==="SELL"){
+
+if(monitor.pendingSignal===signal){
+
+monitor.pendingConfirmed=true;
+
+}else{
+
+monitor.pendingSignal=signal;
+monitor.pendingConfirmed=false;
+
+}
+
+if(!monitor.pendingConfirmed){
+
+const pending=signal;
+
+signal="WAIT";
+
+info+=
+` • ${pending} ждёт подтверждения на след. проверке`;
+
+}
+
+}else{
+
+monitor.pendingSignal=null;
+monitor.pendingConfirmed=false;
+
+}
+
+
+/* Колдаун после серии убытков — отражаем в инфо (ТЗ п.6) */
+
+if(
+(signal==="BUY" || signal==="SELL") &&
+isInLossStreakCooldown(monitor.id)
+){
+
+signal="WAIT";
+
+info+=
+" • пауза после серии убытков (3 мин)";
+
+}
+
+
+/* Уверенность сигнала (ТЗ п.8) */
+
+const confidence=
+Math.abs(score-50)>=35
+?"сильный"
+:Math.abs(score-50)>=20
+?"средний"
+:"слабый";
+
+
+return{
+
+...result,
+
+score:Math.round(score),
+
+signal,
+
+info,
+
+confidence,
+
+adx:
+adxValue!==null
+?Math.round(adxValue)
+:null,
+
+adxRegime:
+adxValue===null
+?null
+:adxValue>=25
+?"тренд"
+:adxValue<20
+?"флэт"
+:"нейтрально",
+
+divergence:
+divergence||"нет"
+
+};
+
+}
+
+
+async function calculateTradeSignal(monitor,baseCandles){
+
+const mtfResult=
+await calculateTradeSignalMTF(
+monitor,
+baseCandles
+);
+
+return applyAdvancedFactors(
+monitor,
+baseCandles,
+mtfResult
+);
+
+}
+
+
+/* =========================================================
+   SHOW SIGNAL
+========================================================= */
+
+function showSignal(index,result){
+
+const signal=
+document.getElementById(
+`signal-${index}`
+);
+
+const info=
+document.getElementById(
+`signal-info-${index}`
+);
+
+const factors=
+document.getElementById(
+`factors-${index}`
+);
+
+
+signal.textContent=
+result.signal;
+
+
+signal.className=
+"signal-main "+
+(
+result.signal==="BUY"
+?"signal-buy"
+:
+result.signal==="SELL"
+?"signal-sell"
+:"signal-wait"
+);
+
+
+info.textContent=
+result.info;
+
+
+factors.innerHTML=
+result.factors
+.map(f=>`
+
+<div class="factor ${f.type}">
+${f.text}
+</div>
+
+`)
+.join("");
+
+}
+
+
+/* =========================================================
+   LOAD SIGNAL
+========================================================= */
+
+async function loadSignal(index){
+
+const card=
+cards[index];
+
+
+try{
+
+let candles;
+
+
+candles=
+await getSmartKlines(
+card.type,
+card.symbol,
+card.interval
+);
+
+
+if(!candles.length)
+throw new Error(
+"Нет свечей"
+);
+
+
+const last=
+candles[candles.length-1];
+
+
+document.getElementById(
+`price-${index}`
+).textContent=
+formatPrice(
+last.close,
+card.type
+);
+
+
+document.getElementById(
+`high-${index}`
+).textContent=
+formatPrice(
+last.high,
+card.type
+);
+
+
+document.getElementById(
+`low-${index}`
+).textContent=
+formatPrice(
+last.low,
+card.type
+);
+
+
+document.getElementById(
+`volume-${index}`
+).textContent=
+formatVolume(
+last.volume,
+card.type
+);
+
+
+const result=
+calculateSignal(candles);
+
+
+showSignal(
+index,
+result
+);
+
+
+card.lastCandles=
+candles;
+
+card.lastResult=
+result;
+
+card.lastPrice=
+last.close;
+
+
+document.getElementById(
+`error-${index}`
+).textContent="";
+
+
+}
+catch(e){
+
+document.getElementById(
+`signal-${index}`
+).textContent=
+"НЕТ ДАННЫХ";
+
+
+document.getElementById(
+`signal-${index}`
+).className=
+"signal-main signal-wait";
+
+
+document.getElementById(
+`signal-info-${index}`
+).textContent=
+e.message;
+
+
+document.getElementById(
+`error-${index}`
+).textContent=
+e.message;
+
+}
+
+}
+
+
+/* =========================================================
+   TRADINGVIEW
+========================================================= */
+
+function loadTradingView(index){
+
+const container=
+document.getElementById(
+`chart-widget-${index}`
+);
+
+
+container.innerHTML="";
+
+
+/*
+   Даём браузеру один кадр, чтобы старый
+   iframe TradingView гарантированно успел
+   выгрузиться, прежде чем вставляем новый —
+   иначе на месте старого графика на долю
+   секунды остаётся визуальный мусор от
+   недоснесённого предыдущего виджета.
+*/
+
+requestAnimationFrame(()=>{
+
+buildTradingViewWidget(
+index,
+container
+);
+
+});
+
+}
+
+
+function buildTradingViewWidget(index,container){
+
+const wrapper=
+document.createElement("div");
+
+
+wrapper.style.width="100%";
+wrapper.style.height="100%";
+wrapper.style.minHeight="280px";
+
+
+const script=
+document.createElement("script");
+
+
+script.type=
+"text/javascript";
+
+
+script.src=
+"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+
+
+script.async=true;
+
+
+let tvSymbol;
+
+
+if(
+cards[index].type==="forex"
+){
+
+tvSymbol=
+"OANDA:"+
+cards[index]
+.symbol
+.replace("/","");
+
+}else{
+
+tvSymbol=
+"BINANCE:"+
+cards[index].symbol;
+
+}
+
+
+const label=
+document.getElementById(
+`chart-symbol-${index}`
+);
+
+if(label){
+
+label.textContent=
+cards[index].type==="forex"
+?cards[index].symbol
+:cards[index]
+.symbol
+.replace("USDT","")+
+"/USDT";
+
+/*
+   Стили задаём прямо тут, в JS,
+   а не только через CSS-класс —
+   так подпись гарантированно
+   останется маленьким бейджем
+   независимо от каскада стилей.
+*/
+
+label.style.cssText=
+"position:absolute;"+
+"top:6px;"+
+"left:8px;"+
+"z-index:5;"+
+"max-width:60%;"+
+"font-size:10px;"+
+"line-height:1.3;"+
+"font-weight:700;"+
+"font-family:inherit;"+
+"color:#d7dde6;"+
+"text-shadow:0 1px 2px rgba(0,0,0,.9);"+
+"letter-spacing:.2px;"+
+"white-space:nowrap;"+
+"overflow:hidden;"+
+"text-overflow:ellipsis;"+
+"pointer-events:none;"+
+"background:none;"+
+"border:0;"+
+"padding:0;";
+
+}
+
+
+script.innerHTML=
+JSON.stringify({
+
+autosize:true,
+
+symbol:tvSymbol,
+
+interval:
+cards[index].interval,
+
+timezone:
+"Europe/Amsterdam",
+
+theme:"dark",
+
+style:"1",
+
+locale:"ru",
+
+enable_publishing:false,
+
+allow_symbol_change:false,
+
+hide_top_toolbar:true,
+
+hide_side_toolbar:true,
+
+hide_legend:true,
+
+save_image:false,
+
+calendar:false,
+
+support_host:
+"https://www.tradingview.com"
+
+});
+
+
+wrapper.appendChild(script);
+
+container.appendChild(wrapper);
+
+
+/*
+   Даём TradingView время на
+   расчёт размеров контейнера.
+*/
+
+setTimeout(()=>{
+
+window.dispatchEvent(
+new Event("resize")
+);
+
+},300);
+
+
+setTimeout(()=>{
+
+window.dispatchEvent(
+new Event("resize")
+);
+
+},1000);
+
+}
+
+
+/* =========================================================
+   CHANGE PAIR
+========================================================= */
+
+async function changePair(index){
+
+const input=
+document.getElementById(
+`input-${index}`
+);
+
+
+const value=
+normalizeInput(
+input.value
+);
+
+
+if(!value)
+return;
+
+
+const forex=
+isForexSymbol(value);
+
+
+cards[index].type=
+forex
+?"forex"
+:"crypto";
+
+
+cards[index].symbol=
+forex
+?normalizeForex(value)
+:normalizeCrypto(value);
+
+
+document.getElementById(
+`name-${index}`
+).textContent=
+forex
+?cards[index].symbol
+:cards[index].symbol.replace(
+"USDT",
+""
+);
+
+
+document.getElementById(
+`symbol-${index}`
+).textContent=
+cards[index].symbol;
+
+
+const badge=
+document.getElementById(
+`market-${index}`
+);
+
+
+badge.textContent=
+forex
+?"FOREX"
+:"CRYPTO";
+
+
+badge.className=
+"market-badge"+
+(
+forex
+?" forex"
+:""
+);
+
+
+saveCards();
+
+
+resetCard(index);
+
+
+loadTradingView(index);
+
+
+await loadSignal(index);
+
+
+connectBinance();
+
+refreshFinnhubSubscriptions();
+
+}
+
+
+/* =========================================================
+   CHANGE TIMEFRAME
+========================================================= */
+
+async function changeTimeframe(
+index,
+interval,
+button
+){
+
+cards[index].interval=
+interval;
+
+
+const card=
+document.getElementById(
+`chart-${index}`
+).parentElement;
+
+
+card.querySelectorAll(
+".timeframe"
+)
+.forEach(
+b=>b.classList.remove(
+"active"
+)
+);
+
+
+button.classList.add(
+"active"
+);
+
+
+loadTradingView(index);
+
+
+await loadSignal(index);
+
+}
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetCard(index){
+
+[
+"price",
+"high",
+"low",
+"volume"
+]
+.forEach(id=>{
+
+document.getElementById(
+`${id}-${index}`
+).textContent=
+"---";
+
+});
+
+
+document.getElementById(
+`signal-${index}`
+).textContent=
+"АНАЛИЗ...";
+
+
+document.getElementById(
+`signal-${index}`
+).className=
+"signal-main signal-wait";
+
+
+document.getElementById(
+`signal-info-${index}`
+).textContent=
+"Получение 250 свечей...";
+
+
+document.getElementById(
+`factors-${index}`
+).innerHTML="";
+
+
+document.getElementById(
+`error-${index}`
+).textContent="";
+
+}
+
+
+/* =========================================================
+   FORMAT PRICE
+========================================================= */
+
+function formatPrice(
+number,
+type="crypto"
+){
+
+if(
+number===undefined ||
+number===null ||
+isNaN(number)
+)
+return "---";
+
+
+if(type==="forex"){
+
+return number.toLocaleString(
+"en-US",
+{
+minimumFractionDigits:4,
+maximumFractionDigits:5
+}
+);
+
+}
+
+
+return number.toLocaleString(
+"en-US",
+{
+
+minimumFractionDigits:
+number<1?4:2,
+
+maximumFractionDigits:
+number<1?8:2
+
+}
+)+" USDT";
+
+}
+
+
+/* =========================================================
+   FORMAT VOLUME
+========================================================= */
+
+function formatVolume(
+number,
+type
+){
+
+if(
+!number ||
+isNaN(number)
+){
+
+return type==="forex"
+?"Tick volume"
+:"---";
+
+}
+
+
+if(number>=1000000000)
+return(
+number/1000000000
+).toFixed(2)+"B";
+
+
+if(number>=1000000)
+return(
+number/1000000
+).toFixed(2)+"M";
+
+
+if(number>=1000)
+return(
+number/1000
+).toFixed(2)+"K";
+
+
+return number.toFixed(2);
+
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+function showPage(page){
+
+document
+.getElementById("mainPage")
+.classList.toggle(
+"active",
+page==="main"
+);
+
+
+document
+.getElementById("signalsPage")
+.classList.toggle(
+"active",
+page==="signals"
+);
+
+
+document
+.getElementById("mainNav")
+.classList.toggle(
+"active",
+page==="main"
+);
+
+
+document
+.getElementById("signalsNav")
+.classList.toggle(
+"active",
+page==="signals"
+);
+
+}
+
+
+/* =========================================================
+   MONITORS
+========================================================= */
+
+const monitorStorageKey=
+"cryptoScreenMonitors";
+
+const tradeStorageKey=
+"cryptoScreenTrades";
+
+
+let monitors=
+JSON.parse(
+localStorage.getItem(
+monitorStorageKey
+)
+)||[];
+
+
+let trades=
+JSON.parse(
+localStorage.getItem(
+tradeStorageKey
+)
+)||[];
+
+
+/*
+   Есть ли у монитора серия из
+   LOSS_STREAK_THRESHOLD убытков подряд,
+   закрывшаяся менее LOSS_STREAK_COOLDOWN назад.
+*/
+
+function isInLossStreakCooldown(monitorId){
+
+const closedTrades=
+trades
+.filter(
+t=>
+t.monitorId===monitorId &&
+t.closed
+)
+.sort(
+(a,b)=>
+b.closedAt-a.closedAt
+);
+
+if(closedTrades.length<LOSS_STREAK_THRESHOLD)
+return false;
+
+const recent=
+closedTrades.slice(
+0,
+LOSS_STREAK_THRESHOLD
+);
+
+const allLosses=
+recent.every(
+t=>t.result==="LOSS"
+);
+
+if(!allLosses)
+return false;
+
+return(
+Date.now()-recent[0].closedAt<
+LOSS_STREAK_COOLDOWN
+);
+
+}
+
+
+function saveMonitors(){
+
+localStorage.setItem(
+monitorStorageKey,
+JSON.stringify(monitors)
+);
+
+}
+
+
+function saveTrades(){
+
+localStorage.setItem(
+tradeStorageKey,
+JSON.stringify(trades)
+);
+
+}
+
+
+/* =========================================================
+   MONITOR MODAL
+========================================================= */
+
+let selectedTF="15";
+
+
+document
+.querySelectorAll(".tf-option")
+.forEach(button=>{
+
+button.onclick=()=>{
+
+document
+.querySelectorAll(".tf-option")
+.forEach(
+b=>b.classList.remove(
+"active"
+)
+);
+
+
+button.classList.add(
+"active"
+);
+
+
+selectedTF=
+button.dataset.tf;
+
+};
+
+});
+
+
+function openMonitorModal(){
+
+document
+.getElementById(
+"monitorModal"
+)
+.classList.add(
+"open"
+);
+
+}
+
+
+function closeMonitorModal(){
+
+document
+.getElementById(
+"monitorModal"
+)
+.classList.remove(
+"open"
+);
+
+}
+
+
+/* =========================================================
+   ADD MONITOR
+========================================================= */
+
+function addMonitor(){
+
+const input=
+document.getElementById(
+"monitorInput"
+);
+
+
+const value=
+normalizeInput(
+input.value
+);
+
+
+if(!value)
+return;
+
+
+const forex=
+isForexSymbol(value);
+
+
+const symbol=
+forex
+?normalizeForex(value)
+:normalizeCrypto(value);
+
+
+const exists=
+monitors.some(
+m=>
+m.symbol===symbol &&
+m.interval===selectedTF
+);
+
+
+if(exists){
+
+closeMonitorModal();
+
+return;
+
+}
+
+
+monitors.push({
+
+id:
+Date.now()+"_"+Math.random(),
+
+symbol,
+
+type:
+forex
+?"forex"
+:"crypto",
+
+interval:selectedTF,
+
+enabled:true,
+
+lastSignal:null,
+
+lastSignalTime:0,
+
+lastSignalDetected:null
+
+});
+
+
+saveMonitors();
+
+
+input.value="";
+
+
+closeMonitorModal();
+
+
+renderMonitorBar();
+
+refreshFinnhubSubscriptions();
+
+}
+
+
+/* =========================================================
+   REMOVE MONITOR
+========================================================= */
+
+function removeMonitor(id){
+
+monitors=
+monitors.filter(
+m=>m.id!==id
+);
+
+
+saveMonitors();
+
+
+renderMonitorBar();
+
+refreshFinnhubSubscriptions();
+
+}
+
+
+/* =========================================================
+   MONITOR BAR
+========================================================= */
+
+function renderMonitorBar(){
+
+const bar=
+document.getElementById(
+"monitorBar"
+);
+
+
+if(!monitors.length){
+
+bar.innerHTML=`
+
+<div class="monitor-chip">
+Нет пар в мониторинге
+</div>
+
+`;
+
+return;
+
+}
+
+
+bar.innerHTML=
+monitors
+.map(m=>`
+
+<div class="monitor-chip">
+
+${m.symbol}
+•
+${timeframeLabel(m.interval)}
+
+<button
+onclick="removeMonitor('${m.id}')">
+×
+</button>
+
+</div>
+
+`)
+.join("");
+
+}
+
+
+/* =========================================================
+   CREATE TRADE
+========================================================= */
+
+function createTrade(
+monitor,
+result,
+price
+){
+
+if(
+result.signal!=="BUY" &&
+result.signal!=="SELL"
+)
+return;
+
+
+if(
+!isFinite(price) ||
+price<=0
+)
+return;
+
+
+/*
+   Если уже есть открытая сделка
+   этой пары — новую не создаём.
+*/
+
+const existing=
+trades.find(
+t=>
+!t.closed &&
+t.monitorId===monitor.id
+);
+
+
+if(existing){
+
+return;
+
+}
+
+
+/*
+   Не открываем сделку на каждом
+   повторном обновлении одного сигнала.
+
+   Новая сделка должна появиться
+   только после нового сигнала.
+*/
+
+if(
+SAME_SIGNAL_BLOCK &&
+monitor.lastSignalDetected===
+result.signal
+){
+
+return;
+
+}
+
+
+/*
+   Дополнительный cooldown.
+*/
+
+const lastTrade=
+trades.find(
+t=>
+t.monitorId===monitor.id
+);
+
+
+if(
+lastTrade &&
+Date.now()-lastTrade.start<
+SIGNAL_COOLDOWN
+){
+
+return;
+
+}
+
+
+/*
+   Колдаун после серии убытков (ТЗ п.6).
+*/
+
+if(
+isInLossStreakCooldown(monitor.id)
+){
+
+return;
+
+}
+
+
+const duration=
+(isFinite(result.duration) && result.duration>0)
+?result.duration
+:timeframeMinutes(monitor.interval)*60*1000;
+
+
+const now=
+Date.now();
+
+
+const trade={
+
+id:
+now+"_"+Math.random(),
+
+monitorId:
+monitor.id,
+
+symbol:
+monitor.symbol,
+
+type:
+monitor.type,
+
+interval:
+monitor.interval,
+
+direction:
+result.signal,
+
+score:
+result.score,
+
+confidence:
+result.confidence||null,
+
+factorsSnapshot:{
+
+factors:
+result.factors||[],
+
+adx:
+result.adx!==undefined
+?result.adx
+:null,
+
+adxRegime:
+result.adxRegime||null,
+
+divergence:
+result.divergence||null,
+
+confidence:
+result.confidence||null
+
+},
+
+entry:
+price,
+
+current:
+price,
+
+start:
+now,
+
+end:
+now+duration,
+
+closed:false,
+
+exit:null,
+
+result:null,
+
+resultValue:null
+
+};
+
+
+trades.unshift(trade);
+
+
+/*
+   Запоминаем именно сигнал,
+   на котором открыли сделку.
+*/
+
+monitor.lastSignal=
+result.signal;
+
+monitor.lastSignalDetected=
+result.signal;
+
+monitor.lastSignalTime=
+now;
+
+
+if(trades.length>500){
+
+trades=
+trades.slice(0,500);
+
+}
+
+
+saveTrades();
+
+saveMonitors();
+
+
+renderSignals();
+
+}
+
+
+/* =========================================================
+   UPDATE MONITOR
+========================================================= */
+
+const forexCandleCache={};
+
+const FOREX_CANDLE_REFRESH=8000;
+
+const cryptoCandleCache={};
+
+const CRYPTO_CANDLE_REFRESH=8000;
+
+
+async function updateMonitor(monitor){
+
+try{
+
+let candles;
+
+
+if(
+monitor.type==="forex"
+){
+
+const cached=
+forexCandleCache[monitor.id];
+
+if(
+cached &&
+Date.now()-cached.time<FOREX_CANDLE_REFRESH
+){
+
+candles=
+cached.candles;
+
+}else{
+
+candles=
+await getSmartKlines(
+"forex",
+monitor.symbol,
+monitor.interval
+);
+
+forexCandleCache[monitor.id]={
+candles,
+time:Date.now()
+};
+
+}
+
+}else{
+
+const cached=
+cryptoCandleCache[monitor.id];
+
+if(
+cached &&
+Date.now()-cached.time<CRYPTO_CANDLE_REFRESH
+){
+
+candles=
+cached.candles;
+
+}else{
+
+candles=
+await getSmartKlines(
+"crypto",
+monitor.symbol,
+monitor.interval
+);
+
+cryptoCandleCache[monitor.id]={
+candles,
+time:Date.now()
+};
+
+}
+
+}
+
+
+if(!candles.length)
+return;
+
+
+const last=
+candles[candles.length-1];
+
+
+/*
+   Для форекса цену входа/сопровождения
+   сделки берём из лёгкого live-кэша
+   (обновляется отдельно, каждые
+   FOREX_PRICE_INTERVAL мс), а не из
+   close последней (возможно устаревшей)
+   свечи time_series.
+*/
+
+let livePrice=
+last.close;
+
+if(monitor.type==="forex"){
+
+const live=
+getLiveForexPrice(monitor.symbol);
+
+if(live!==null){
+
+livePrice=live;
+
+}
+
+}
+
+
+const result=
+await calculateTradeSignal(
+monitor,
+candles
+);
+
+
+/*
+   Если сигнал изменился с BUY
+   на SELL или наоборот —
+   разрешаем новое открытие.
+*/
+
+if(
+monitor.lastSignalDetected!==result.signal
+){
+
+if(
+result.signal==="BUY" ||
+result.signal==="SELL"
+){
+
+createTrade(
+monitor,
+result,
+livePrice
+);
+
+}
+
+monitor.lastSignalDetected=
+result.signal;
+
+}
+
+
+const openTrade=
+trades.find(
+t=>
+!t.closed &&
+t.monitorId===monitor.id
+);
+
+
+if(openTrade){
+
+openTrade.current=
+livePrice;
+
+}
+
+
+monitor.lastPrice=
+livePrice;
+
+monitor.lastScore=
+result.score;
+
+
+}
+catch(e){
+
+console.log(
+"Monitor error:",
+monitor.symbol,
+e
+);
+
+}
+
+}
+
+
+/* =========================================================
+   ЗАКРЫТИЕ ОДНОЙ СДЕЛКИ
+========================================================= */
+
+async function closeTradeNow(trade){
+
+if(
+trade.closed
+)
+return;
+
+
+let exit=
+trade.current;
+
+
+/*
+   Для крипты всегда пытаемся
+   взять САМУЮ АКТУАЛЬНУЮ цену Binance.
+*/
+
+try{
+
+if(trade.type==="crypto"){
+
+exit=
+await getCryptoCurrentPrice(
+trade.symbol
+);
+
+}else{
+
+exit=
+await getForexCurrentPrice(
+trade.symbol
+);
+
+}
+
+}
+catch(e){
+
+console.log(
+"Цена закрытия недоступна:",
+trade.symbol,
+e
+);
+
+
+/*
+   Если API временно недоступно,
+   используем последнюю известную цену.
+*/
+
+if(
+!isFinite(exit) ||
+exit<=0
+){
+
+exit=trade.current;
+
+}
+
+}
+
+
+if(
+!isFinite(exit) ||
+exit<=0
+){
+
+return false;
+
+}
+
+
+trade.exit=
+exit;
+
+
+trade.current=
+exit;
+
+
+const difference=
+trade.direction==="BUY"
+?exit-trade.entry
+:trade.entry-exit;
+
+
+trade.resultValue=
+difference;
+
+
+const tolerance=
+Math.max(
+Math.abs(trade.entry)*0.000001,
+1e-12
+);
+
+
+if(
+Math.abs(difference)<tolerance
+){
+
+trade.result="FLAT";
+
+}
+else if(
+difference>0
+){
+
+trade.result="WIN";
+
+}
+else{
+
+trade.result="LOSS";
+
+}
+
+
+trade.closed=true;
+
+
+/*
+   Время фактического закрытия.
+*/
+
+trade.closedAt=
+Date.now();
+
+
+return true;
+
+}
+
+
+/* =========================================================
+   CLOSE EXPIRED TRADES
+========================================================= */
+
+async function closeExpiredTrades(){
+
+const now=
+Date.now();
+
+
+const expired=
+trades.filter(
+trade=>
+!trade.closed &&
+now>=trade.end
+);
+
+
+if(!expired.length)
+return;
+
+
+for(
+const trade of expired
+){
+
+await closeTradeNow(
+trade
+);
+
+}
+
+
+saveTrades();
+
+
+renderSignals();
+
+}
+
+
+/* =========================================================
+   RENDER TRADE
+========================================================= */
+
+function renderTrade(
+trade,
+open
+){
+
+const directionClass=
+trade.direction==="BUY"
+?"buy"
+:"sell";
+
+
+const directionIcon=
+trade.direction==="BUY"
+?"🟢"
+:"🔴";
+
+
+const current=
+trade.current ??
+trade.entry;
+
+
+const difference=
+trade.direction==="BUY"
+?current-trade.entry
+:trade.entry-current;
+
+
+if(open){
+
+const total=
+trade.end-
+trade.start;
+
+
+const remaining=
+Math.max(
+0,
+trade.end-
+Date.now()
+);
+
+
+const progress=
+Math.max(
+0,
+Math.min(
+100,
+(
+1-
+remaining/total
+)*100
+)
+);
+
+
+return `
+
+<div class="signal-item">
+
+<div class="signal-item-top">
+
+<div class="signal-pair">
+
+${directionIcon}
+${trade.symbol}
+•
+${timeframeLabel(
+trade.interval
+)}
+
+</div>
+
+<div
+class="signal-direction ${directionClass}">
+
+${trade.direction}
+
+</div>
+
+</div>
+
+
+<div class="signal-price">
+
+${formatTradePrice(
+trade.entry,
+trade.type
+)}
+
+→
+
+${formatTradePrice(
+current,
+trade.type
+)}
+
+</div>
+
+
+<div class="signal-meta">
+
+<span>
+Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""}
+</span>
+
+<span>
+${formatRemaining(
+remaining
+)}
+</span>
+
+</div>
+
+
+<div class="progress">
+
+<div
+class="progress-inner"
+style="width:${progress}%">
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+const resultClass=
+trade.result==="WIN"
+?"win"
+:
+trade.result==="LOSS"
+?"loss"
+:"flat";
+
+
+const resultText=
+trade.result==="WIN"
+?"ПРИБЫЛЬ"
+:
+trade.result==="LOSS"
+?"УБЫТОК"
+:"FLAT";
+
+
+const sign=
+difference>0
+?"+"
+:"";
+
+
+return `
+
+<div class="signal-item">
+
+<div class="signal-item-top">
+
+<div class="signal-pair">
+
+${directionIcon}
+${trade.symbol}
+•
+${timeframeLabel(
+trade.interval
+)}
+
+</div>
+
+<div
+class="signal-direction ${directionClass}">
+
+${trade.direction}
+
+</div>
+
+</div>
+
+
+<div class="signal-price">
+
+${formatTradePrice(
+trade.entry,
+trade.type
+)}
+
+→
+
+${formatTradePrice(
+trade.exit,
+trade.type
+)}
+
+</div>
+
+
+<div class="signal-meta">
+
+<span>
+Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""}
+</span>
+
+<span>
+${new Date(
+trade.start
+).toLocaleTimeString(
+"ru-RU",
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+)}
+</span>
+
+</div>
+
+
+<div class="result ${resultClass}">
+
+${resultText}
+
+${
+trade.result==="FLAT"
+?""
+:
+` ${sign}${formatDifference(
+difference,
+trade.type
+)}`
+}
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* =========================================================
+   RENDER SIGNALS
+========================================================= */
+
+function renderSignals(){
+
+const open=
+trades.filter(
+t=>!t.closed
+);
+
+
+const closed=
+trades.filter(
+t=>t.closed
+);
+
+
+document.getElementById(
+"openSignals"
+).innerHTML=
+
+open.length
+
+?open
+.slice(0,100)
+.map(
+t=>
+renderTrade(t,true)
+)
+.join("")
+
+:
+
+`
+<div class="empty">
+Нет открытых сигналов
+</div>
+`;
+
+
+document.getElementById(
+"closedSignals"
+).innerHTML=
+
+closed.length
+
+?closed
+.slice(0,100)
+.map(
+t=>
+renderTrade(t,false)
+)
+.join("")
+
+:
+
+`
+<div class="empty">
+История пуста
+</div>
+`;
+
+
+updateStatistics();
+
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+function updateStatistics(){
+
+const open=
+trades.filter(
+t=>!t.closed
+).length;
+
+
+const win=
+trades.filter(
+t=>
+t.closed &&
+t.result==="WIN"
+).length;
+
+
+const loss=
+trades.filter(
+t=>
+t.closed &&
+t.result==="LOSS"
+).length;
+
+
+const flat=
+trades.filter(
+t=>
+t.closed &&
+t.result==="FLAT"
+).length;
+
+
+const completed=
+win+loss;
+
+
+const winrate=
+completed
+?Math.round(
+win/completed*100
+)
+:0;
+
+
+document.getElementById(
+"statsOpen"
+).textContent=
+"Открыто: "+open;
+
+
+document.getElementById(
+"statsWin"
+).textContent=
+"✅ "+win;
+
+
+document.getElementById(
+"statsLoss"
+).textContent=
+"❌ "+loss;
+
+
+document.getElementById(
+"statsFlat"
+).textContent=
+"⚪ "+flat;
+
+
+document.getElementById(
+"statsWinrate"
+).textContent=
+"Win Rate: "+winrate+"%";
+
+}
+
+
+/* =========================================================
+   СТАТИСТИКА ПО ФАКТОРАМ
+
+   Считаем по всем закрытым сделкам, у которых есть
+   сохранённый снимок факторов (factorsSnapshot) — то
+   есть по сделкам, открытым после появления этой фичи.
+   Для каждого фактора (текст из calculateSignal, плюс
+   режим ADX и дивергенция) — сколько раз встречался
+   и какой винрейт был у сделок, где он присутствовал.
+========================================================= */
+
+function computeFactorStats(){
+
+const closedWithSnapshot=
+trades.filter(
+t=>
+t.closed &&
+t.factorsSnapshot &&
+(t.result==="WIN" || t.result==="LOSS")
+);
+
+const buckets={};
+
+function addToBucket(name,isWin){
+
+if(!buckets[name]){
+
+buckets[name]={
+wins:0,
+losses:0
+};
+
+}
+
+if(isWin)
+buckets[name].wins++;
+else
+buckets[name].losses++;
+
+}
+
+closedWithSnapshot.forEach(t=>{
+
+const isWin=
+t.result==="WIN";
+
+const snap=
+t.factorsSnapshot;
+
+(snap.factors||[]).forEach(f=>{
+
+if(f.type==="good" || f.type==="bad"){
+
+addToBucket(f.text,isWin);
+
+}
+
+});
+
+if(snap.adxRegime){
+
+addToBucket(
+"ADX режим: "+snap.adxRegime,
+isWin
+);
+
+}
+
+if(
+snap.divergence &&
+snap.divergence!=="нет"
+){
+
+addToBucket(
+"Дивергенция: "+snap.divergence,
+isWin
+);
+
+}
+
+if(snap.confidence){
+
+addToBucket(
+"Уверенность: "+snap.confidence,
+isWin
+);
+
+}
+
+});
+
+
+return Object.keys(buckets)
+.map(name=>{
+
+const b=buckets[name];
+
+const total=
+b.wins+b.losses;
+
+const winrate=
+total
+?Math.round(b.wins/total*100)
+:0;
+
+return{
+name,
+total,
+wins:b.wins,
+losses:b.losses,
+winrate
+};
+
+})
+.filter(x=>x.total>=3)
+.sort((a,b)=>b.winrate-a.winrate);
+
+}
+
+
+function computeTimeframeStats(){
+
+const closed=
+trades.filter(
+t=>
+t.closed &&
+(t.result==="WIN" || t.result==="LOSS")
+);
+
+const buckets={};
+
+closed.forEach(t=>{
+
+const tf=
+t.interval||"?";
+
+if(!buckets[tf]){
+
+buckets[tf]={
+wins:0,
+losses:0
+};
+
+}
+
+if(t.result==="WIN")
+buckets[tf].wins++;
+else
+buckets[tf].losses++;
+
+});
+
+const order=
+["1","2","3","4","5","15","30","60","240","D"];
+
+return Object.keys(buckets)
+.map(tf=>{
+
+const b=
+buckets[tf];
+
+const total=
+b.wins+b.losses;
+
+const winrate=
+total
+?Math.round(b.wins/total*100)
+:0;
+
+return{
+tf,
+label:
+timeframeLabel(tf),
+total,
+wins:b.wins,
+losses:b.losses,
+winrate
+};
+
+})
+.sort(
+(a,b)=>
+order.indexOf(a.tf)-
+order.indexOf(b.tf)
+);
+
+}
+
+
+function openFactorStatsModal(){
+
+const body=
+document.getElementById(
+"factorStatsBody"
+);
+
+const tfStats=
+computeTimeframeStats();
+
+const factorStats=
+computeFactorStats();
+
+let html="";
+
+html+=
+`<div class="factor-stats-section-title">По таймфреймам</div>`;
+
+if(!tfStats.length){
+
+html+=
+`<div class="empty">Пока нет закрытых сделок.</div>`;
+
+}else{
+
+html+=
+tfStats.map(s=>{
+
+const cls=
+s.winrate>=55
+?"factor-stat-good"
+:s.winrate<=40
+?"factor-stat-bad"
+:"";
+
+return `
+<div class="factor-stat-item ${cls}">
+<span class="factor-stat-name">${s.label}</span>
+<span class="factor-stat-nums">${s.winrate}% • ${s.wins}/${s.losses}</span>
+</div>
+`;
+
+}).join("");
+
+}
+
+html+=
+`<div class="factor-stats-section-title">По факторам</div>`;
+
+if(!factorStats.length){
+
+html+=
+`<div class="empty">Пока мало закрытых сделок для статистики — нужно минимум 3 повторения одного фактора.</div>`;
+
+}else{
+
+html+=
+factorStats.map(s=>{
+
+const cls=
+s.winrate>=55
+?"factor-stat-good"
+:s.winrate<=40
+?"factor-stat-bad"
+:"";
+
+return `
+<div class="factor-stat-item ${cls}">
+<span class="factor-stat-name">${s.name}</span>
+<span class="factor-stat-nums">${s.winrate}% • ${s.wins}/${s.losses}</span>
+</div>
+`;
+
+}).join("");
+
+}
+
+body.innerHTML=html;
+
+document.getElementById(
+"factorStatsModal"
+).classList.add("open");
+
+}
+
+
+function closeFactorStatsModal(){
+
+document.getElementById(
+"factorStatsModal"
+).classList.remove("open");
+
+}
+
+
+/* =========================================================
+   СТАТИСТИКА ПО ТАЙМФРЕЙМАМ
+
+   Считаем по trade.interval (уже сохраняется в каждой
+   сделке) — сколько сделок, винрейт и суммарный результат
+   отдельно по каждому выбранному ТФ (2м/3м/4м/5м/15м...),
+   чтобы сразу видеть, какой таймфрейм реально работает.
+========================================================= */
+
+function computeTfStats(){
+
+const closed=
+trades.filter(
+t=>
+t.closed &&
+(t.result==="WIN" || t.result==="LOSS" || t.result==="FLAT")
+);
+
+const buckets={};
+
+closed.forEach(t=>{
+
+const tf=
+t.interval||"?";
+
+if(!buckets[tf]){
+
+buckets[tf]={
+wins:0,
+losses:0,
+flat:0
+};
+
+}
+
+if(t.result==="WIN")
+buckets[tf].wins++;
+else if(t.result==="LOSS")
+buckets[tf].losses++;
+else
+buckets[tf].flat++;
+
+});
+
+return Object.keys(buckets)
+.map(tf=>{
+
+const b=
+buckets[tf];
+
+const completed=
+b.wins+b.losses;
+
+const winrate=
+completed
+?Math.round(b.wins/completed*100)
+:0;
+
+return{
+
+tf,
+
+label:
+timeframeLabel(tf),
+
+total:
+b.wins+b.losses+b.flat,
+
+wins:b.wins,
+losses:b.losses,
+flat:b.flat,
+
+winrate
+
+};
+
+})
+.sort(
+(a,b)=>
+timeframeMinutes(a.tf)-
+timeframeMinutes(b.tf)
+);
+
+}
+
+
+function openTfStatsModal(){
+
+const body=
+document.getElementById(
+"tfStatsBody"
+);
+
+const stats=
+computeTfStats();
+
+if(!stats.length){
+
+body.innerHTML=
+`<div class="empty">Пока нет закрытых сделок для статистики по ТФ.</div>`;
+
+}else{
+
+body.innerHTML=
+stats.map(s=>{
+
+const cls=
+s.winrate>=55
+?"factor-stat-good"
+:s.winrate<=40
+?"factor-stat-bad"
+:"";
+
+return `
+<div class="factor-stat-item ${cls}">
+<span class="factor-stat-name">${s.label}</span>
+<span class="factor-stat-nums">${s.winrate}% • ✅${s.wins} ❌${s.losses} ⚪${s.flat}</span>
+</div>
+`;
+
+}).join("");
+
+}
+
+document.getElementById(
+"tfStatsModal"
+).classList.add("open");
+
+}
+
+
+function closeTfStatsModal(){
+
+document.getElementById(
+"tfStatsModal"
+).classList.remove("open");
+
+}
+
+
+/* =========================================================
+   FORMAT TRADE PRICE
+========================================================= */
+
+function formatTradePrice(
+value,
+type
+){
+
+if(
+value===undefined ||
+value===null ||
+isNaN(value)
+)
+return "---";
+
+
+if(type==="forex"){
+
+return Number(value)
+.toFixed(5);
+
+}
+
+
+if(value<1){
+
+return Number(value)
+.toFixed(6);
+
+}
+
+
+return Number(value)
+.toFixed(2);
+
+}
+
+
+/* =========================================================
+   FORMAT DIFFERENCE
+========================================================= */
+
+function formatDifference(
+value,
+type
+){
+
+const abs=
+Math.abs(value);
+
+
+if(type==="forex")
+return abs.toFixed(5);
+
+
+if(abs<1)
+return abs.toFixed(4);
+
+
+return abs.toFixed(2);
+
+}
+
+
+/* =========================================================
+   REMAINING
+========================================================= */
+
+function formatRemaining(ms){
+
+const total=
+Math.max(
+0,
+Math.ceil(ms/1000)
+);
+
+
+const hours=
+Math.floor(
+total/3600
+);
+
+
+const minutes=
+Math.floor(
+(total%3600)/60
+);
+
+
+const seconds=
+total%60;
+
+
+if(hours>0){
+
+return(
+
+String(hours)
+.padStart(2,"0")+
+":"+
+String(minutes)
+.padStart(2,"0")+
+":"+
+String(seconds)
+.padStart(2,"0")
+
+);
+
+}
+
+
+return(
+
+String(minutes)
+.padStart(2,"0")+
+":"+
+String(seconds)
+.padStart(2,"0")
+
+);
+
+}
+
+
+/* =========================================================
+   MONITOR LOOP
+========================================================= */
+
+let monitorBusy=false;
+
+
+async function monitorLoop(){
+
+if(monitorBusy)
+return;
+
+
+monitorBusy=true;
+
+
+try{
+
+
+/*
+   САМОЕ ПЕРВОЕ:
+
+   закрываем сделки,
+   которым уже истёк срок.
+*/
+
+await closeExpiredTrades();
+
+
+/*
+   Потом обновляем мониторинг.
+*/
+
+for(
+const monitor of monitors
+){
+
+if(
+!monitor.enabled
+)
+continue;
+
+
+await updateMonitor(
+monitor
+);
+
+}
+
+
+saveTrades();
+
+saveMonitors();
+
+renderSignals();
+
+}
+catch(e){
+
+console.log(e);
+
+}
+finally{
+
+monitorBusy=false;
+
+}
+
+}
+
+
+/* =========================================================
+   ПОДСТРОЙКА ПОД КЛАВИАТУРУ
+
+   html/body/.app сделаны с overflow:hidden, поэтому браузер
+   не может сам проскроллить страницу к полю ввода, когда
+   выезжает клавиатура — поле просто остаётся под ней.
+   Тут вручную: (1) подгоняем высоту .app под реально видимую
+   область (без клавиатуры) через visualViewport, (2) при
+   фокусе на любое поле — доскролливаем его в видимую зону.
+========================================================= */
+
+function setupKeyboardFix(){
+
+const root=
+document.documentElement;
+
+function scrollActiveIntoView(){
+
+const active=
+document.activeElement;
+
+if(
+!active ||
+(active.tagName!=="INPUT" &&
+active.tagName!=="TEXTAREA")
+)
+return;
+
+active.scrollIntoView({
+block:"center",
+behavior:"smooth"
+});
+
+}
+
+
+if(window.visualViewport){
+
+/*
+   Событие resize у visualViewport срабатывает,
+   когда клавиатура УЖЕ полностью открылась/закрылась
+   и известна её реальная высота — в отличие от
+   фиксированной задержки, тут не приходится гадать
+   с таймингом, поэтому скролл к полю не промахивается.
+*/
+
+function applyViewportHeight(){
+
+root.style.setProperty(
+"--app-vh",
+window.visualViewport.height+"px"
+);
+
+scrollActiveIntoView();
+
+}
+
+window.visualViewport.addEventListener(
+"resize",
+applyViewportHeight
+);
+
+window.visualViewport.addEventListener(
+"scroll",
+applyViewportHeight
+);
+
+applyViewportHeight();
+
+}else{
+
+/*
+   Резервный вариант для WebView без
+   поддержки visualViewport.
+*/
+
+document.addEventListener(
+"focusin",
+e=>{
+
+const tag=
+e.target.tagName;
+
+if(tag!=="INPUT" && tag!=="TEXTAREA")
+return;
+
+setTimeout(
+scrollActiveIntoView,
+300
+);
+
+}
+
+);
+
+}
+
+}
+
+
+setupKeyboardFix();
+
+
+/* =========================================================
+   START
+========================================================= */
+
+updateApiStatusBadge();
+
+
+createCards();
+
+
+/*
+   Загружаем графики.
+*/
+
+for(
+let i=0;
+i<defaultCoins.length;
+i++
+){
+
+loadTradingView(i);
+
+}
+
+
+/*
+   Первый анализ.
+*/
+
+for(
+let i=0;
+i<defaultCoins.length;
+i++
+){
+
+loadSignal(i);
+
+}
+
+
+/*
+   Binance real-time.
+*/
+
+connectBinance();
+
+
+/*
+   Finnhub real-time (форекс).
+*/
+
+connectFinnhub();
+
+
+/*
+   Мониторинг.
+*/
+
+renderMonitorBar();
+
+renderSignals();
+
+
+monitorLoop();
+
+
+/*
+   Проверка каждые 5 секунд.
+*/
+
+setInterval(
+monitorLoop,
+MONITOR_INTERVAL
+);
+
+
+/*
+   Обновляем таймеры
+   открытых сделок каждую секунду.
+*/
+
+setInterval(
+async ()=>{
+
+await closeExpiredTrades();
+
+renderSignals();
+
+},
+1000
+);
+
+
+/* =========================================================
+   RESIZE CHART
+========================================================= */
+
+window.addEventListener(
+"resize",
+()=>{
+
+setTimeout(()=>{
+
+document
+.querySelectorAll(".chart")
+.forEach(chart=>{
+
+const wrapper=
+chart.querySelector("div");
+
+if(wrapper){
+
+wrapper.style.width="100%";
+wrapper.style.height="100%";
+
+}
+
+});
+
+},100);
+
+});
+
+
+/* =========================================================
+   ВОССТАНОВЛЕНИЕ
+========================================================= */
+
+window.addEventListener(
+"beforeunload",
+()=>{
+
+saveCards();
+
+saveMonitors();
+
+saveTrades();
+
+}
+);
+
+</script>
+
+</body>
+</html>
