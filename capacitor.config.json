@@ -1,0 +1,6 @@
+{
+  "appId": "com.myapp.generated",
+  "appName": "Signals",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
