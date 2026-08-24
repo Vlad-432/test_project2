@@ -7069,6 +7069,10 @@ remaining/total
 );
 
 
+const durationMinutes=
+Math.round(total/60000);
+
+
 return `
 
 <div class="signal-item">
@@ -7116,7 +7120,7 @@ trade.type
 <div class="signal-meta">
 
 <span>
-Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""}
+Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""} • ${durationMinutes}м
 </span>
 
 <span>
@@ -7168,6 +7172,15 @@ difference>0
 :"";
 
 
+const closedDurationMinutes=
+Math.round(
+(
+(trade.closedAt||trade.end)-
+trade.start
+)/60000
+);
+
+
 return `
 
 <div class="signal-item">
@@ -7215,7 +7228,7 @@ trade.type
 <div class="signal-meta">
 
 <span>
-Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""}
+Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""} • ${closedDurationMinutes}м
 </span>
 
 <span>
