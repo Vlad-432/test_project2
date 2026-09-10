@@ -819,6 +819,13 @@ header{
     font-size:9px;
 }
 
+.rec-reason{
+    color:#8993a5;
+    font-size:10px;
+    line-height:1.5;
+    padding:6px 4px 14px;
+}
+
 
 /* =========================================================
    MODAL
@@ -836,6 +843,8 @@ header{
 }
 
 .modal.open{display:flex}
+
+.modal-nested{z-index:200}
 
 .modal-box{
     width:min(390px,100%);
@@ -1459,7 +1468,7 @@ class="factor-stats-body">
 
 
 <div
-class="modal"
+class="modal modal-nested"
 id="tradeMenuModal">
 
 <div class="modal-box">
@@ -1469,6 +1478,10 @@ id="tradeMenuModal">
 </div>
 
 <div class="trade-menu-actions">
+
+<button onclick="openTradeRecommendationFromMenu()">
+💡 Рекомендация по сделке
+</button>
 
 <button onclick="openTradeFactorsFromMenu()">
 📊 Факторы сделки
@@ -1496,7 +1509,7 @@ onclick="deleteActiveTrade()">
 
 
 <div
-class="modal"
+class="modal modal-nested"
 id="tradeFactorsModal">
 
 <div class="modal-box api-settings-box">
@@ -1515,6 +1528,36 @@ class="factor-stats-body">
 <div class="modal-actions">
 
 <button onclick="closeTradeFactorsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal modal-nested"
+id="tradeRecommendationModal">
+
+<div class="modal-box api-settings-box">
+
+<div
+class="modal-title"
+id="tradeRecommendationTitle">
+💡 Рекомендация по сделке
+</div>
+
+<div
+id="tradeRecommendationBody"
+class="factor-stats-body">
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeTradeRecommendationModal()">
 Закрыть
 </button>
 
@@ -4835,7 +4878,13 @@ score,
 info:
 `Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей`,
 
-factors
+factors,
+
+price:last,
+
+atrValue,
+
+levels
 
 };
 
@@ -5618,6 +5667,156 @@ c=>(c.open-c.close)>=minMove
 return recent.some(
 c=>(c.close-c.open)>=minMove
 );
+
+}
+
+
+/*
+   Рекомендация по сделке: более выгодная точка
+   входа и более реалистичная длительность,
+   с объяснением почему.
+
+   Точка входа: если рядом (в пределах 1.5×ATR)
+   есть недавняя поддержка/сопротивление —
+   рекомендуем входить ближе к нему (лучше
+   соотношение прибыль/риск). Если ничего
+   значимого рядом нет — рекомендуем небольшой
+   откат (~0.3×ATR) от текущей цены, а не вход
+   прямо на локальном пике импульса.
+
+   Длительность: оценивается по расстоянию
+   до ближайшего целевого уровня (сопротивление
+   для BUY, поддержка для SELL) и текущей
+   волатильности (ATR на одну свечу базового ТФ) —
+   сколько "средних свечей" нужно пройти, чтобы
+   реально достать до цели, вместо фиксированной
+   цифры по одному лишь совпадению старших ТФ.
+*/
+
+function computeTradeRecommendation(
+direction,
+livePrice,
+atrValue,
+levels,
+plannedDurationMs,
+baseCandleMinutes
+){
+
+if(
+!atrValue ||
+atrValue<=0 ||
+!isFinite(livePrice)
+){
+
+return null;
+
+}
+
+const plannedMinutes=
+Math.max(
+1,
+Math.round(plannedDurationMs/60000)
+);
+
+let entryPrice,entryReason;
+
+if(direction==="BUY"){
+
+const pullbackTarget=
+livePrice-atrValue*0.3;
+
+const nearSupport=
+levels &&
+isFinite(levels.support) &&
+(livePrice-levels.support)<=atrValue*1.5;
+
+entryPrice=
+nearSupport
+?Math.max(levels.support,pullbackTarget)
+:pullbackTarget;
+
+entryReason=
+nearSupport
+?"Рядом недавняя сильная поддержка — вход ближе к ней даёт лучшее соотношение прибыль/риск, чем покупка по рынку на локальном импульсе."
+:"Текущая цена уже близка к пику локального импульса. Небольшой откат (≈0.3×ATR) даёт более выгодную точку входа с меньшим риском мгновенного отката против позиции.";
+
+}else{
+
+const pullbackTarget=
+livePrice+atrValue*0.3;
+
+const nearResistance=
+levels &&
+isFinite(levels.resistance) &&
+(levels.resistance-livePrice)<=atrValue*1.5;
+
+entryPrice=
+nearResistance
+?Math.min(levels.resistance,pullbackTarget)
+:pullbackTarget;
+
+entryReason=
+nearResistance
+?"Рядом недавнее сильное сопротивление — вход ближе к нему даёт лучшее соотношение прибыль/риск, чем продажа по рынку на локальном импульсе."
+:"Текущая цена уже близка к пику локального импульса вниз. Небольшой отскок (≈0.3×ATR) даёт более выгодную точку входа с меньшим риском мгновенного отката против позиции.";
+
+}
+
+const targetLevel=
+direction==="BUY"
+?(levels?levels.resistance:null)
+:(levels?levels.support:null);
+
+let durationMinutes=
+plannedMinutes;
+
+let durationReason=
+`Длительность рассчитана по согласию старших таймфреймов из выбранного набора (${plannedMinutes} мин).`;
+
+if(
+targetLevel!==null &&
+isFinite(targetLevel) &&
+baseCandleMinutes>0
+){
+
+const distance=
+Math.abs(targetLevel-livePrice);
+
+if(distance>0){
+
+const estByVolatility=
+Math.max(
+baseCandleMinutes,
+Math.round(
+(distance/atrValue)*baseCandleMinutes
+)
+);
+
+const cap=
+Math.max(
+plannedMinutes*3,
+baseCandleMinutes*6
+);
+
+durationMinutes=
+Math.min(estByVolatility,cap);
+
+durationReason=
+`С учётом текущей волатильности (ATR на ${baseCandleMinutes}-мин свечу) и расстояния до ближайшего ${direction==="BUY"?"сопротивления":"уровня поддержки"} движение к цели может занять примерно ${durationMinutes} мин — против ${plannedMinutes} мин по стандартному расчёту.`;
+
+}
+
+}
+
+return{
+
+entryPrice,
+entryReason,
+durationMinutes,
+durationReason,
+plannedMinutes
+
+};
 
 }
 
@@ -7079,6 +7278,17 @@ const duration=
 :timeframeMinutes(monitor.interval)*60*1000;
 
 
+const recommendation=
+computeTradeRecommendation(
+result.signal,
+price,
+result.atrValue,
+result.levels,
+duration,
+timeframeMinutes(monitor.interval)
+);
+
+
 const now=
 Date.now();
 
@@ -7111,6 +7321,9 @@ result.score,
 
 confidence:
 result.confidence||null,
+
+recommendation:
+recommendation,
 
 factorsSnapshot:{
 
@@ -8139,33 +8352,33 @@ const buckets={};
 
 closed.forEach(t=>{
 
-const tf=
-t.interval||"?";
+const label=
+t.comboLabel||
+timeframeLabel(t.interval);
 
-if(!buckets[tf]){
+if(!buckets[label]){
 
-buckets[tf]={
+buckets[label]={
 wins:0,
-losses:0
+losses:0,
+sortMinutes:
+timeframeMinutes(t.interval)
 };
 
 }
 
 if(t.result==="WIN")
-buckets[tf].wins++;
+buckets[label].wins++;
 else
-buckets[tf].losses++;
+buckets[label].losses++;
 
 });
 
-const order=
-["1","2","3","4","5","10","15","30","60","240","D"];
-
 return Object.keys(buckets)
-.map(tf=>{
+.map(label=>{
 
 const b=
-buckets[tf];
+buckets[label];
 
 const total=
 b.wins+b.losses;
@@ -8176,20 +8389,18 @@ total
 :0;
 
 return{
-tf,
-label:
-timeframeLabel(tf),
+label,
 total,
 wins:b.wins,
 losses:b.losses,
-winrate
+winrate,
+sortMinutes:b.sortMinutes
 };
 
 })
 .sort(
 (a,b)=>
-order.indexOf(a.tf)-
-order.indexOf(b.tf)
+a.sortMinutes-b.sortMinutes
 );
 
 }
@@ -8322,6 +8533,96 @@ function closeTradeMenuModal(){
 
 document.getElementById(
 "tradeMenuModal"
+).classList.remove("open");
+
+}
+
+
+function openTradeRecommendationFromMenu(){
+
+const trade=
+trades.find(
+t=>t.id===activeTradeMenuId
+);
+
+closeTradeMenuModal();
+
+if(!trade)
+return;
+
+const title=
+document.getElementById(
+"tradeRecommendationTitle"
+);
+
+title.textContent=
+`💡 ${trade.symbol} • ${trade.comboLabel||timeframeLabel(trade.interval)} • ${trade.direction}`;
+
+const body=
+document.getElementById(
+"tradeRecommendationBody"
+);
+
+const rec=
+trade.recommendation;
+
+if(!rec){
+
+body.innerHTML=
+`<div class="empty">Для этой сделки нет сохранённых данных для рекомендации (запись создана до появления этой функции).</div>`;
+
+}else{
+
+const actualDuration=
+Math.round(
+(trade.end-trade.start)/60000
+);
+
+body.innerHTML=`
+
+<div class="factor-stats-section-title">Точка входа</div>
+
+<div class="factor-stat-item">
+<span class="factor-stat-name">Фактический вход</span>
+<span class="factor-stat-nums">${formatTradePrice(trade.entry,trade.type)}</span>
+</div>
+
+<div class="factor-stat-item factor-stat-good">
+<span class="factor-stat-name">Рекомендация</span>
+<span class="factor-stat-nums">${formatTradePrice(rec.entryPrice,trade.type)}</span>
+</div>
+
+<div class="rec-reason">${rec.entryReason}</div>
+
+<div class="factor-stats-section-title">Длительность</div>
+
+<div class="factor-stat-item">
+<span class="factor-stat-name">По расчёту ТФ</span>
+<span class="factor-stat-nums">${actualDuration} мин</span>
+</div>
+
+<div class="factor-stat-item factor-stat-good">
+<span class="factor-stat-name">Рекомендация</span>
+<span class="factor-stat-nums">${rec.durationMinutes} мин</span>
+</div>
+
+<div class="rec-reason">${rec.durationReason}</div>
+
+`;
+
+}
+
+document.getElementById(
+"tradeRecommendationModal"
+).classList.add("open");
+
+}
+
+
+function closeTradeRecommendationModal(){
+
+document.getElementById(
+"tradeRecommendationModal"
 ).classList.remove("open");
 
 }
