@@ -537,6 +537,55 @@ header{
     gap:8px;
 }
 
+.journal-category-tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:8px;
+}
+
+.journal-tab{
+    flex:1;
+    padding:9px;
+    border-radius:8px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    font-weight:800;
+    font-size:12px;
+}
+
+.journal-tab.active{
+    border-color:#00d68f;
+    color:#00d68f;
+    background:#14221e;
+}
+
+.journal-pair-list{
+    flex:1;
+    min-height:0;
+    overflow:auto;
+}
+
+.journal-pair-item{
+    background:#10141b;
+    border:1px solid #242c38;
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:6px;
+    cursor:pointer;
+}
+
+.journal-pair-name{
+    font-size:13px;
+    font-weight:900;
+    margin-bottom:4px;
+}
+
+.journal-pair-stats{
+    font-size:10px;
+    color:#8993a5;
+}
+
 .signal-column{
     min-height:0;
     background:#0b0f15;
@@ -568,6 +617,39 @@ header{
     border-radius:8px;
     padding:8px;
     margin-bottom:5px;
+    position:relative;
+}
+
+.trade-menu-btn{
+    background:none;
+    border:none;
+    color:#748095;
+    font-size:16px;
+    line-height:1;
+    padding:2px 8px;
+    cursor:pointer;
+}
+
+.trade-menu-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-top:9px;
+}
+
+.trade-menu-actions button{
+    padding:11px;
+    border-radius:7px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#dfe4ea;
+    font-size:13px;
+    text-align:left;
+}
+
+.trade-menu-actions button.danger{
+    color:#ff536d;
+    border-color:#3a232a;
 }
 
 .signal-item-top{
@@ -575,6 +657,12 @@ header{
     justify-content:space-between;
     align-items:center;
     gap:5px;
+}
+
+.signal-item-right{
+    display:flex;
+    align-items:center;
+    gap:4px;
 }
 
 .signal-pair{
@@ -659,6 +747,18 @@ header{
 .factor-stats-btn:hover{
     color:#00d68f;
     border-color:#00d68f;
+}
+
+.journal-pair-factors-btn{
+    display:block;
+    width:100%;
+    margin-top:8px;
+    text-align:center;
+}
+
+.journal-pair-columns{
+    height:50vh;
+    margin-top:10px;
 }
 
 .factor-stats-body{
@@ -959,6 +1059,13 @@ onclick="showPage('signals')">
 Сигналы
 </button>
 
+<button
+class="nav-btn"
+id="journalNav"
+onclick="showPage('journal')">
+Журнал
+</button>
+
 </div>
 
 </header>
@@ -1106,6 +1213,50 @@ id="closedSignals">
 
 </section>
 
+
+<section
+class="page"
+id="journalPage">
+
+<div class="signals-page">
+
+<div class="signals-head">
+
+<div class="signals-title">
+📁 Журнал сделок
+</div>
+
+</div>
+
+
+<div class="journal-category-tabs">
+
+<button
+class="journal-tab active"
+id="journalTabForex"
+onclick="showJournalCategory('forex')">
+Форекс
+</button>
+
+<button
+class="journal-tab"
+id="journalTabCrypto"
+onclick="showJournalCategory('crypto')">
+Крипто
+</button>
+
+</div>
+
+
+<div
+class="journal-pair-list"
+id="journalPairList">
+</div>
+
+</div>
+
+</section>
+
 </div>
 
 
@@ -1131,62 +1282,38 @@ id="tfSelect">
 
 <button
 class="tf-option"
-data-tf="1">
-1м
-</button>
-
-<button
-class="tf-option"
-data-tf="2">
-2м
-</button>
-
-<button
-class="tf-option"
-data-tf="3">
-3м
-</button>
-
-<button
-class="tf-option"
-data-tf="4">
-4м
-</button>
-
-<button
-class="tf-option"
-data-tf="5">
-5м
+data-combo="5-10-30">
+5м-10м-30м
 </button>
 
 <button
 class="tf-option active"
-data-tf="15">
-15м
+data-combo="5-15-30">
+5м-15м-30м
 </button>
 
 <button
 class="tf-option"
-data-tf="30">
-30м
+data-combo="5-15-60">
+5м-15м-1ч
 </button>
 
 <button
 class="tf-option"
-data-tf="60">
-1ч
+data-combo="10-30-60">
+10м-30м-1ч
 </button>
 
 <button
 class="tf-option"
-data-tf="240">
-4ч
+data-combo="30-60-240">
+30м-1ч-4ч
 </button>
 
 <button
 class="tf-option"
-data-tf="D">
-1д
+data-combo="60-240-D">
+1ч-4ч-1д
 </button>
 
 </div>
@@ -1321,6 +1448,141 @@ class="factor-stats-body">
 <div class="modal-actions">
 
 <button onclick="closeFactorStatsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="tradeMenuModal">
+
+<div class="modal-box">
+
+<div class="modal-title">
+Действия со сделкой
+</div>
+
+<div class="trade-menu-actions">
+
+<button onclick="openTradeFactorsFromMenu()">
+📊 Факторы сделки
+</button>
+
+<button
+class="danger"
+onclick="deleteActiveTrade()">
+🗑 Удалить сделку
+</button>
+
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeTradeMenuModal()">
+Отмена
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="tradeFactorsModal">
+
+<div class="modal-box api-settings-box">
+
+<div
+class="modal-title"
+id="tradeFactorsTitle">
+📊 Факторы сделки
+</div>
+
+<div
+id="tradeFactorsBody"
+class="factor-stats-body">
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeTradeFactorsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="journalPairModal">
+
+<div class="modal-box api-settings-box">
+
+<div
+class="modal-title"
+id="journalPairTitle">
+Пара
+</div>
+
+<div
+class="stats-line"
+id="journalPairStatsLine">
+</div>
+
+<button
+class="factor-stats-btn journal-pair-factors-btn"
+onclick="openJournalPairFactors()">
+📊 По факторам (пара)
+</button>
+
+<div class="signals-columns journal-pair-columns">
+
+<div class="signal-column">
+
+<div class="column-head">
+🟢 ОТКРЫТЫЕ
+</div>
+
+<div
+class="signal-list"
+id="journalPairOpen">
+</div>
+
+</div>
+
+
+<div class="signal-column">
+
+<div class="column-head">
+📁 ЗАВЕРШЁННЫЕ
+</div>
+
+<div
+class="signal-list"
+id="journalPairClosed">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="modal-actions">
+
+<button onclick="closeJournalPairModal()">
 Закрыть
 </button>
 
@@ -2077,6 +2339,7 @@ const map={
 "3":3,
 "4":4,
 "5":5,
+"10":10,
 "15":15,
 "30":30,
 "60":60,
@@ -2099,6 +2362,7 @@ const map={
 "3":"3м",
 "4":"4м",
 "5":"5м",
+"10":"10м",
 "15":"15м",
 "30":"30м",
 "60":"1ч",
@@ -2290,24 +2554,6 @@ OK
 class="timeframe"
 onclick="changeTimeframe(${index},'1',this)">
 1м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'2',this)">
-2м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'3',this)">
-3м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'4',this)">
-4м
 </button>
 
 <button
@@ -3163,7 +3409,7 @@ outputsizeOverride
 ){
 
 const resampleFactor=
-({"2":2,"3":3,"4":4})[interval];
+({"2":2,"3":3,"4":4,"10":10})[interval];
 
 if(resampleFactor){
 
@@ -3269,7 +3515,8 @@ v.volume
 const SYNTHETIC_TF_FACTORS={
 "2":2,
 "3":3,
-"4":4
+"4":4,
+"10":10
 };
 
 
@@ -3401,7 +3648,7 @@ limitOverride
 ){
 
 const resampleFactor=
-({"2":2,"3":3,"4":4})[interval];
+({"2":2,"3":3,"4":4,"10":10})[interval];
 
 if(resampleFactor){
 
@@ -4678,6 +4925,157 @@ duration:
 baseMinutes*60*1000
 };
 
+if(baseResult.signal==="WAIT"){
+
+return fallback;
+
+}
+
+
+/*
+   Новые комбо-мониторы: пользователь выбирает
+   один из 6 фиксированных наборов ("5-15-30" и т.д.),
+   и сигнал считается согласованным только если
+   старшие 2 ТФ из этого набора подтверждают
+   направление младшего. Одна пара = один монитор =
+   максимум одна открытая сделка, вместо отдельного
+   монитора на каждый ТФ.
+*/
+
+if(
+monitor.comboTfs &&
+monitor.comboTfs.length===3
+){
+
+const midTf=
+monitor.comboTfs[1];
+
+const highTf=
+monitor.comboTfs[2];
+
+const midMinutes=
+timeframeMinutes(midTf);
+
+const highMinutes=
+timeframeMinutes(highTf);
+
+let midCandles,highCandles;
+
+try{
+
+midCandles=
+await getCachedMtfKlines(
+monitor,midTf
+);
+
+highCandles=
+await getCachedMtfKlines(
+monitor,highTf
+);
+
+}catch(e){
+
+return fallback;
+
+}
+
+const midResult=
+calculateSignal(midCandles);
+
+const highResult=
+calculateSignal(highCandles);
+
+const direction=
+baseResult.signal;
+
+const midAgrees=
+direction==="BUY"
+?midResult.score>50
+:midResult.score<50;
+
+const highAgrees=
+direction==="BUY"
+?highResult.score>50
+:highResult.score<50;
+
+const agreeCount=
+(midAgrees?1:0)+
+(highAgrees?1:0);
+
+
+if(agreeCount===0){
+
+return{
+...baseResult,
+signal:"WAIT",
+duration:0,
+info:
+baseResult.info+
+` • отменено: ${timeframeLabel(midTf)} и ${timeframeLabel(highTf)} против`
+};
+
+}
+
+
+let durationMinutes;
+
+if(agreeCount===1){
+
+durationMinutes=
+baseMinutes;
+
+}else{
+
+const avgStrength=
+(
+Math.abs(midResult.score-50)+
+Math.abs(highResult.score-50)
+)/2;
+
+const range=
+Math.max(0,highMinutes-midMinutes);
+
+const extra=
+Math.min(
+range,
+Math.max(0,(avgStrength-25)/25*range)
+);
+
+durationMinutes=
+midMinutes+extra;
+
+}
+
+durationMinutes=
+Math.min(
+highMinutes,
+Math.max(baseMinutes,durationMinutes)
+);
+
+
+return{
+
+...baseResult,
+
+duration:
+Math.round(durationMinutes)*60*1000,
+
+info:
+baseResult.info+
+` • ${monitor.comboLabel||""}: ${agreeCount}/2 согласны (${Math.round(durationMinutes)} мин)`
+
+};
+
+}
+
+
+/*
+   Легаси-путь: старые мониторы, созданные до
+   появления комбо-пресетов (один ТФ на монитор).
+   Оставлено для обратной совместимости с уже
+   сохранёнными мониторами.
+*/
+
 const isSmallTF=
 monitor.interval==="1" ||
 monitor.interval==="2" ||
@@ -4685,10 +5083,7 @@ monitor.interval==="3" ||
 monitor.interval==="4" ||
 monitor.interval==="5";
 
-if(
-!isSmallTF ||
-baseResult.signal==="WAIT"
-){
+if(!isSmallTF){
 
 return fallback;
 
@@ -4765,11 +5160,11 @@ baseResult.info+
 }
 
 
-let durationMinutes;
+let legacyDurationMinutes;
 
 if(agreeCount===1){
 
-durationMinutes=
+legacyDurationMinutes=
 Math.max(baseMinutes,5);
 
 }else{
@@ -4786,15 +5181,15 @@ Math.min(
 Math.max(0,(avgStrength-25)/25*5)
 );
 
-durationMinutes=
+legacyDurationMinutes=
 10+extra;
 
 }
 
-durationMinutes=
+legacyDurationMinutes=
 Math.min(
 15,
-Math.max(baseMinutes,durationMinutes)
+Math.max(baseMinutes,legacyDurationMinutes)
 );
 
 
@@ -4803,11 +5198,11 @@ return{
 ...baseResult,
 
 duration:
-Math.round(durationMinutes)*60*1000,
+Math.round(legacyDurationMinutes)*60*1000,
 
 info:
 baseResult.info+
-` • MTF ${tfs.mid}м/${tfs.high}м: ${agreeCount}/2 согласны (${Math.round(durationMinutes)} мин)`
+` • MTF ${tfs.mid}м/${tfs.high}м: ${agreeCount}/2 согласны (${Math.round(legacyDurationMinutes)} мин)`
 
 };
 
@@ -5159,6 +5554,74 @@ return currentAtr>priorAtr*2.2;
 }
 
 
+/*
+   Проверка отката: не входим строго
+   на пике импульса. Требуем, чтобы
+   среди последних свечей (не считая
+   текущую) хотя бы одна была против
+   направления сигнала — то есть цена
+   уже успела чуть отступить, прежде
+   чем мы заходим следом за трендом.
+
+   Откат должен быть заметным
+   относительно текущей волатильности
+   (ATR), а не любой микроскопической
+   свечой-доджи против движения —
+   иначе фильтр слишком легко
+   "проходится" шумом и не даёт
+   реальной защиты от входа на пике.
+*/
+
+function hasPullback(data,direction){
+
+if(!data || data.length<4)
+return true;
+
+const recent=
+data.slice(-4,-1);
+
+if(!recent.length)
+return true;
+
+const atrVal=
+data.length>=20
+?atr(data,14)
+:null;
+
+if(!atrVal || atrVal<=0){
+
+if(direction==="BUY"){
+
+return recent.some(
+c=>c.close<c.open
+);
+
+}
+
+return recent.some(
+c=>c.close>c.open
+);
+
+}
+
+const minMove=
+atrVal*0.15;
+
+if(direction==="BUY"){
+
+return recent.some(
+c=>(c.open-c.close)>=minMove
+);
+
+}
+
+return recent.some(
+c=>(c.close-c.open)>=minMove
+);
+
+}
+
+
 function applyAdvancedFactors(
 monitor,
 baseCandles,
@@ -5296,6 +5759,21 @@ signal="WAIT";
 
 info+=
 " • отменено: аномальный всплеск волатильности";
+
+}
+
+
+/* Ждём откат — не входим на самом пике импульса */
+
+if(
+(signal==="BUY" || signal==="SELL") &&
+!hasPullback(data,signal)
+){
+
+signal="WAIT";
+
+info+=
+" • ждём откат перед входом";
 
 }
 
@@ -6094,6 +6572,14 @@ page==="signals"
 
 
 document
+.getElementById("journalPage")
+.classList.toggle(
+"active",
+page==="journal"
+);
+
+
+document
 .getElementById("mainNav")
 .classList.toggle(
 "active",
@@ -6107,6 +6593,24 @@ document
 "active",
 page==="signals"
 );
+
+
+document
+.getElementById("journalNav")
+.classList.toggle(
+"active",
+page==="journal"
+);
+
+
+if(
+page==="journal" &&
+typeof renderJournalPairList==="function"
+){
+
+renderJournalPairList();
+
+}
 
 }
 
@@ -6207,7 +6711,41 @@ JSON.stringify(trades)
    MONITOR MODAL
 ========================================================= */
 
-let selectedTF="15";
+const TF_COMBO_PRESETS={
+
+"5-10-30":{
+tfs:["5","10","30"],
+label:"5м-10м-30м"
+},
+
+"5-15-30":{
+tfs:["5","15","30"],
+label:"5м-15м-30м"
+},
+
+"5-15-60":{
+tfs:["5","15","60"],
+label:"5м-15м-1ч"
+},
+
+"10-30-60":{
+tfs:["10","30","60"],
+label:"10м-30м-1ч"
+},
+
+"30-60-240":{
+tfs:["30","60","240"],
+label:"30м-1ч-4ч"
+},
+
+"60-240-D":{
+tfs:["60","240","D"],
+label:"1ч-4ч-1д"
+}
+
+};
+
+let selectedCombo="5-15-30";
 
 
 document
@@ -6230,8 +6768,8 @@ button.classList.add(
 );
 
 
-selectedTF=
-button.dataset.tf;
+selectedCombo=
+button.dataset.combo;
 
 };
 
@@ -6296,11 +6834,18 @@ forex
 :normalizeCrypto(value);
 
 
+const combo=
+TF_COMBO_PRESETS[selectedCombo];
+
+
 const exists=
 monitors.some(
 m=>
 m.symbol===symbol &&
-m.interval===selectedTF
+(
+(m.comboLabel && m.comboLabel===combo.label) ||
+(!m.comboLabel && m.interval===combo.tfs[0])
+)
 );
 
 
@@ -6325,7 +6870,11 @@ forex
 ?"forex"
 :"crypto",
 
-interval:selectedTF,
+interval:combo.tfs[0],
+
+comboTfs:combo.tfs,
+
+comboLabel:combo.label,
 
 enabled:true,
 
@@ -6411,7 +6960,7 @@ monitors
 
 ${m.symbol}
 •
-${timeframeLabel(m.interval)}
+${m.comboLabel||timeframeLabel(m.interval)}
 
 <button
 onclick="removeMonitor('${m.id}')">
@@ -6550,6 +7099,9 @@ monitor.type,
 
 interval:
 monitor.interval,
+
+comboLabel:
+monitor.comboLabel||null,
 
 direction:
 result.signal,
@@ -6775,8 +7327,8 @@ monitor.lastSignalDetected!==result.signal
 ){
 
 if(
-result.signal==="BUY" ||
-result.signal==="SELL"
+(result.signal==="BUY" || result.signal==="SELL") &&
+monitors.some(m=>m.id===monitor.id)
 ){
 
 createTrade(
@@ -7084,16 +7636,26 @@ return `
 ${directionIcon}
 ${trade.symbol}
 •
-${timeframeLabel(
+${trade.comboLabel||timeframeLabel(
 trade.interval
 )}
 
 </div>
 
+<div class="signal-item-right">
+
 <div
 class="signal-direction ${directionClass}">
 
 ${trade.direction}
+
+</div>
+
+<button
+class="trade-menu-btn"
+onclick="openTradeMenu('${trade.id}',event)">
+⋮
+</button>
 
 </div>
 
@@ -7127,6 +7689,15 @@ Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""} • ${du
 ${formatRemaining(
 remaining
 )}
+</span>
+
+</div>
+
+
+<div class="signal-meta">
+
+<span>
+Открыта: ${formatTradeDateTime(trade.start)}
 </span>
 
 </div>
@@ -7192,16 +7763,26 @@ return `
 ${directionIcon}
 ${trade.symbol}
 •
-${timeframeLabel(
+${trade.comboLabel||timeframeLabel(
 trade.interval
 )}
 
 </div>
 
+<div class="signal-item-right">
+
 <div
 class="signal-direction ${directionClass}">
 
 ${trade.direction}
+
+</div>
+
+<button
+class="trade-menu-btn"
+onclick="openTradeMenu('${trade.id}',event)">
+⋮
+</button>
 
 </div>
 
@@ -7231,16 +7812,17 @@ trade.type
 Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""} • ${closedDurationMinutes}м
 </span>
 
+</div>
+
+
+<div class="signal-meta">
+
 <span>
-${new Date(
-trade.start
-).toLocaleTimeString(
-"ru-RU",
-{
-hour:"2-digit",
-minute:"2-digit"
-}
-)}
+Откр: ${formatTradeDateTime(trade.start)}
+</span>
+
+<span>
+Закр: ${formatTradeDateTime(trade.closedAt||trade.end)}
 </span>
 
 </div>
@@ -7334,6 +7916,12 @@ renderTrade(t,false)
 
 
 updateStatistics();
+
+if(typeof renderJournal==="function"){
+
+renderJournal();
+
+}
 
 }
 
@@ -7571,7 +8159,7 @@ buckets[tf].losses++;
 });
 
 const order=
-["1","2","3","4","5","15","30","60","240","D"];
+["1","2","3","4","5","10","15","30","60","240","D"];
 
 return Object.keys(buckets)
 .map(tf=>{
@@ -7698,6 +8286,601 @@ function closeFactorStatsModal(){
 document.getElementById(
 "factorStatsModal"
 ).classList.remove("open");
+
+}
+
+
+/* =========================================================
+   МЕНЮ СДЕЛКИ (3 точки): факторы / удаление
+
+   trades — единый массив-источник правды для всех
+   списков (открытые/завершённые, журнал по парам).
+   Удаление по id убирает сделку сразу везде.
+========================================================= */
+
+let activeTradeMenuId=null;
+
+
+function openTradeMenu(id,event){
+
+if(event){
+
+event.stopPropagation();
+
+}
+
+activeTradeMenuId=id;
+
+document.getElementById(
+"tradeMenuModal"
+).classList.add("open");
+
+}
+
+
+function closeTradeMenuModal(){
+
+document.getElementById(
+"tradeMenuModal"
+).classList.remove("open");
+
+}
+
+
+function openTradeFactorsFromMenu(){
+
+const trade=
+trades.find(
+t=>t.id===activeTradeMenuId
+);
+
+closeTradeMenuModal();
+
+if(!trade)
+return;
+
+const title=
+document.getElementById(
+"tradeFactorsTitle"
+);
+
+title.textContent=
+`📊 ${trade.symbol} • ${trade.comboLabel||timeframeLabel(trade.interval)} • ${trade.direction}`;
+
+const body=
+document.getElementById(
+"tradeFactorsBody"
+);
+
+const snapshot=
+trade.factorsSnapshot||{};
+
+const factorsList=
+snapshot.factors||[];
+
+let html="";
+
+if(!factorsList.length){
+
+html=
+`<div class="empty">Нет сохранённых факторов для этой сделки.</div>`;
+
+}else{
+
+html=
+factorsList.map(f=>{
+
+const cls=
+f.type==="good"
+?"factor-stat-good"
+:f.type==="bad"
+?"factor-stat-bad"
+:"";
+
+return `
+<div class="factor-stat-item ${cls}">
+<span class="factor-stat-name">${f.text}</span>
+</div>
+`;
+
+}).join("");
+
+}
+
+if(snapshot.adx!==null && snapshot.adx!==undefined){
+
+html+=
+`
+<div class="factor-stat-item">
+<span class="factor-stat-name">ADX ${snapshot.adx} (${snapshot.adxRegime||"?"})</span>
+</div>
+`;
+
+}
+
+if(snapshot.divergence && snapshot.divergence!=="нет"){
+
+html+=
+`
+<div class="factor-stat-item">
+<span class="factor-stat-name">Дивергенция: ${snapshot.divergence}</span>
+</div>
+`;
+
+}
+
+body.innerHTML=html;
+
+document.getElementById(
+"tradeFactorsModal"
+).classList.add("open");
+
+}
+
+
+function closeTradeFactorsModal(){
+
+document.getElementById(
+"tradeFactorsModal"
+).classList.remove("open");
+
+}
+
+
+function deleteActiveTrade(){
+
+if(!activeTradeMenuId){
+
+closeTradeMenuModal();
+
+return;
+
+}
+
+trades=
+trades.filter(
+t=>t.id!==activeTradeMenuId
+);
+
+saveTrades();
+
+activeTradeMenuId=null;
+
+closeTradeMenuModal();
+
+renderSignals();
+
+if(typeof renderJournal==="function"){
+
+renderJournal();
+
+}
+
+}
+
+
+/* =========================================================
+   ЖУРНАЛ СДЕЛОК ПО ПАРАМ (Форекс / Крипто отдельно)
+
+   Источник данных — тот же массив trades, что и на
+   странице "Сигналы". Ничего не дублируется: удаление
+   сделки через меню "⋮" в любом месте убирает её
+   отовсюду, включая журнал, потому что все списки
+   читают один и тот же массив.
+========================================================= */
+
+let currentJournalCategory="forex";
+
+let activeJournalPairSymbol=null;
+
+let activeJournalPairType=null;
+
+
+function computeJournalPairs(type){
+
+const relevant=
+trades.filter(
+t=>t.type===type
+);
+
+const bySymbol={};
+
+relevant.forEach(t=>{
+
+if(!bySymbol[t.symbol]){
+
+bySymbol[t.symbol]={
+
+symbol:t.symbol,
+open:0,
+wins:0,
+losses:0,
+flat:0
+
+};
+
+}
+
+const b=
+bySymbol[t.symbol];
+
+if(!t.closed){
+
+b.open++;
+
+}else if(t.result==="WIN"){
+
+b.wins++;
+
+}else if(t.result==="LOSS"){
+
+b.losses++;
+
+}else{
+
+b.flat++;
+
+}
+
+});
+
+return Object.values(bySymbol)
+.sort((a,b)=>
+
+(b.open+b.wins+b.losses+b.flat)-
+(a.open+a.wins+a.losses+a.flat)
+
+);
+
+}
+
+
+function showJournalCategory(type){
+
+currentJournalCategory=type;
+
+document.getElementById(
+"journalTabForex"
+).classList.toggle(
+"active",type==="forex"
+);
+
+document.getElementById(
+"journalTabCrypto"
+).classList.toggle(
+"active",type==="crypto"
+);
+
+renderJournalPairList();
+
+}
+
+
+function renderJournalPairList(){
+
+const list=
+document.getElementById(
+"journalPairList"
+);
+
+if(!list)
+return;
+
+const pairs=
+computeJournalPairs(
+currentJournalCategory
+);
+
+if(!pairs.length){
+
+list.innerHTML=
+`<div class="empty">Пока нет сделок в этой категории.</div>`;
+
+return;
+
+}
+
+list.innerHTML=
+pairs.map(p=>{
+
+const closedTotal=
+p.wins+p.losses;
+
+const winrate=
+closedTotal
+?Math.round(p.wins/closedTotal*100)
+:0;
+
+return `
+
+<div
+class="journal-pair-item"
+onclick="openJournalPairModal('${p.symbol}','${currentJournalCategory}')">
+
+<div class="journal-pair-name">
+${p.symbol}
+</div>
+
+<div class="journal-pair-stats">
+Открыто: ${p.open} • ✅ ${p.wins} • ❌ ${p.losses} • ⚪ ${p.flat} • Win Rate: ${winrate}%
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+
+function openJournalPairModal(symbol,type){
+
+activeJournalPairSymbol=symbol;
+
+activeJournalPairType=type;
+
+renderJournalPairModal();
+
+document.getElementById(
+"journalPairModal"
+).classList.add("open");
+
+}
+
+
+function closeJournalPairModal(){
+
+document.getElementById(
+"journalPairModal"
+).classList.remove("open");
+
+activeJournalPairSymbol=null;
+
+activeJournalPairType=null;
+
+}
+
+
+function renderJournalPairModal(){
+
+if(!activeJournalPairSymbol)
+return;
+
+const symbol=
+activeJournalPairSymbol;
+
+const type=
+activeJournalPairType;
+
+document.getElementById(
+"journalPairTitle"
+).textContent=
+symbol;
+
+const pairTrades=
+trades.filter(
+t=>
+t.symbol===symbol &&
+t.type===type
+);
+
+const open=
+pairTrades.filter(
+t=>!t.closed
+);
+
+const closed=
+pairTrades.filter(
+t=>t.closed
+);
+
+const wins=
+closed.filter(
+t=>t.result==="WIN"
+).length;
+
+const losses=
+closed.filter(
+t=>t.result==="LOSS"
+).length;
+
+const flat=
+closed.filter(
+t=>t.result==="FLAT"
+).length;
+
+const winrate=
+(wins+losses)
+?Math.round(wins/(wins+losses)*100)
+:0;
+
+document.getElementById(
+"journalPairStatsLine"
+).innerHTML=`
+
+<span>Открыто: ${open.length}</span>
+<span>✅ ${wins}</span>
+<span>❌ ${losses}</span>
+<span>⚪ ${flat}</span>
+<span>Win Rate: ${winrate}%</span>
+
+`;
+
+document.getElementById(
+"journalPairOpen"
+).innerHTML=
+
+open.length
+
+?open.map(
+t=>renderTrade(t,true)
+).join("")
+
+:
+`<div class="empty">Нет открытых сигналов</div>`;
+
+document.getElementById(
+"journalPairClosed"
+).innerHTML=
+
+closed.length
+
+?closed.map(
+t=>renderTrade(t,false)
+).join("")
+
+:
+`<div class="empty">История пуста</div>`;
+
+}
+
+
+function openJournalPairFactors(){
+
+if(!activeJournalPairSymbol)
+return;
+
+const symbol=
+activeJournalPairSymbol;
+
+const type=
+activeJournalPairType;
+
+const closed=
+trades.filter(
+t=>
+t.symbol===symbol &&
+t.type===type &&
+t.closed &&
+(t.result==="WIN" || t.result==="LOSS")
+);
+
+const buckets={};
+
+closed.forEach(t=>{
+
+const list=
+(t.factorsSnapshot &&
+t.factorsSnapshot.factors)||[];
+
+list.forEach(f=>{
+
+if(!buckets[f.text]){
+
+buckets[f.text]={
+wins:0,
+losses:0
+};
+
+}
+
+if(t.result==="WIN")
+buckets[f.text].wins++;
+else
+buckets[f.text].losses++;
+
+});
+
+});
+
+const stats=
+Object.keys(buckets)
+.map(name=>{
+
+const b=
+buckets[name];
+
+const total=
+b.wins+b.losses;
+
+return{
+name,
+total,
+wins:b.wins,
+losses:b.losses,
+winrate:
+total
+?Math.round(b.wins/total*100)
+:0
+};
+
+})
+.filter(s=>s.total>=2)
+.sort((a,b)=>b.winrate-a.winrate);
+
+const body=
+document.getElementById(
+"tradeFactorsBody"
+);
+
+document.getElementById(
+"tradeFactorsTitle"
+).textContent=
+`📊 Факторы по ${symbol}`;
+
+body.innerHTML=
+
+stats.length
+
+?stats.map(s=>{
+
+const cls=
+s.winrate>=55
+?"factor-stat-good"
+:s.winrate<=40
+?"factor-stat-bad"
+:"";
+
+return `
+<div class="factor-stat-item ${cls}">
+<span class="factor-stat-name">${s.name}</span>
+<span class="factor-stat-nums">${s.winrate}% • ${s.wins}/${s.losses}</span>
+</div>
+`;
+
+}).join("")
+
+:
+`<div class="empty">Пока мало закрытых сделок по этой паре для статистики.</div>`;
+
+document.getElementById(
+"tradeFactorsModal"
+).classList.add("open");
+
+}
+
+
+function renderJournal(){
+
+const journalPage=
+document.getElementById(
+"journalPage"
+);
+
+if(
+journalPage &&
+journalPage.classList.contains("active")
+){
+
+renderJournalPairList();
+
+}
+
+const pairModal=
+document.getElementById(
+"journalPairModal"
+);
+
+if(
+pairModal &&
+pairModal.classList.contains("open") &&
+activeJournalPairSymbol
+){
+
+renderJournalPairModal();
+
+}
 
 }
 
@@ -7963,6 +9146,33 @@ String(seconds)
 .padStart(2,"0")
 
 );
+
+}
+
+
+function formatTradeDateTime(ts){
+
+const d=
+new Date(ts);
+
+const day=
+String(d.getDate())
+.padStart(2,"0");
+
+const month=
+String(d.getMonth()+1)
+.padStart(2,"0");
+
+const time=
+d.toLocaleTimeString(
+"ru-RU",
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+return `${day}.${month} ${time}`;
 
 }
 
