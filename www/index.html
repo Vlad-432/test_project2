@@ -537,6 +537,13 @@ header{
     gap:8px;
 }
 
+.journal-factors-btn{
+    display:block;
+    width:100%;
+    text-align:center;
+    margin-bottom:8px;
+}
+
 .journal-category-tabs{
     display:flex;
     gap:6px;
@@ -1257,6 +1264,13 @@ onclick="showJournalCategory('crypto')">
 </div>
 
 
+<button
+class="factor-stats-btn journal-factors-btn"
+onclick="openFactorStatsModal(currentJournalCategory)">
+📊 По факторам
+</button>
+
+
 <div
 class="journal-pair-list"
 id="journalPairList">
@@ -1445,7 +1459,9 @@ id="factorStatsModal">
 
 <div class="modal-box api-settings-box">
 
-<div class="modal-title">
+<div
+class="modal-title"
+id="factorStatsTitle">
 📊 Статистика по факторам
 </div>
 
@@ -4512,6 +4528,112 @@ const levels=
 findLevels(data);
 
 
+/*
+   Определение режима рынка: тренд или флэт.
+
+   Порог наклона EMA берём ОТНОСИТЕЛЬНО цены
+   (в долях от last), а не абсолютным числом —
+   иначе один и тот же порог по-разному сработает
+   на BTC (~60000) и на EUR/USD (~1.16).
+*/
+
+let regime="RANGE";
+
+if(
+ema20!==null &&
+ema50!==null &&
+closes.length>=70
+){
+
+const priorCloses20=
+closes.slice(0,-20);
+
+const priorCloses50=
+closes.slice(0,-50);
+
+const priorEma20=
+priorCloses20.length>=20
+?ema(priorCloses20,20)
+:null;
+
+const priorEma50=
+priorCloses50.length>=50
+?ema(priorCloses50,50)
+:null;
+
+if(
+priorEma20!==null &&
+priorEma50!==null &&
+last>0
+){
+
+const slope20=
+(ema20-priorEma20)/last;
+
+const slope50=
+(ema50-priorEma50)/last;
+
+if(
+Math.abs(slope20)>0.0006 &&
+Math.abs(slope50)>0.0004 &&
+slope20*slope50>0
+){
+
+regime="TREND";
+
+}
+
+}
+
+}
+
+const trendWeight=
+regime==="TREND"?1.3:0.7;
+
+const rangeWeight=
+regime==="TREND"?0.7:1.3;
+
+
+/*
+   Проверка на "мёртвый" рынок: текущая
+   волатильность (ATR) резко ниже, чем
+   недавняя — типичный признак закрытой
+   биржи/выходных или полного отсутствия
+   ликвидности. В таком состоянии сигналы
+   не несут смысла и только засоряют
+   статистику, поэтому блокируем их сразу.
+*/
+
+let deadMarket=false;
+
+if(data.length>=40){
+
+const priorAtrData=
+data.slice(0,-14);
+
+if(priorAtrData.length>=20){
+
+const priorAtr=
+atr(priorAtrData,14);
+
+const currentAtrForGate=
+atr(data,14);
+
+if(
+priorAtr &&
+priorAtr>0 &&
+currentAtrForGate<priorAtr*0.35
+){
+
+deadMarket=true;
+
+}
+
+}
+
+}
+
+
 let score=50;
 
 const factors=[];
@@ -4526,7 +4648,9 @@ ema50!==null
 
 if(ema20>ema50){
 
-score+=10;
+score+=
+10*trendWeight*
+getAdaptiveFactorWeight("EMA20 > EMA50");
 
 factors.push({
 text:"EMA20 > EMA50",
@@ -4535,7 +4659,9 @@ type:"good"
 
 }else{
 
-score-=10;
+score-=
+10*trendWeight*
+getAdaptiveFactorWeight("EMA20 < EMA50");
 
 factors.push({
 text:"EMA20 < EMA50",
@@ -4553,7 +4679,9 @@ if(ema200!==null){
 
 if(last>ema200){
 
-score+=10;
+score+=
+10*trendWeight*
+getAdaptiveFactorWeight("Цена выше EMA200");
 
 factors.push({
 text:"Цена выше EMA200",
@@ -4562,7 +4690,9 @@ type:"good"
 
 }else{
 
-score-=10;
+score-=
+10*trendWeight*
+getAdaptiveFactorWeight("Цена ниже EMA200");
 
 factors.push({
 text:"Цена ниже EMA200",
@@ -4578,7 +4708,9 @@ type:"bad"
 
 if(rsiValue<30){
 
-score+=8;
+score+=
+8*rangeWeight*
+getAdaptiveFactorWeight("RSI: перепродан");
 
 factors.push({
 text:"RSI: перепродан",
@@ -4588,7 +4720,9 @@ type:"good"
 }
 else if(rsiValue>70){
 
-score-=8;
+score-=
+8*rangeWeight*
+getAdaptiveFactorWeight("RSI: перекуплен");
 
 factors.push({
 text:"RSI: перекуплен",
@@ -4598,7 +4732,9 @@ type:"bad"
 }
 else if(rsiValue>=52){
 
-score+=5;
+score+=
+5*trendWeight*
+getAdaptiveFactorWeight("RSI: бычий");
 
 factors.push({
 text:"RSI: бычий",
@@ -4608,7 +4744,9 @@ type:"good"
 }
 else if(rsiValue<=48){
 
-score-=5;
+score-=
+5*trendWeight*
+getAdaptiveFactorWeight("RSI: медвежий");
 
 factors.push({
 text:"RSI: медвежий",
@@ -4633,7 +4771,9 @@ macdValue.macd>
 macdValue.signal
 ){
 
-score+=8;
+score+=
+8*trendWeight*
+getAdaptiveFactorWeight("MACD: бычий");
 
 factors.push({
 text:"MACD: бычий",
@@ -4642,7 +4782,9 @@ type:"good"
 
 }else{
 
-score-=8;
+score-=
+8*trendWeight*
+getAdaptiveFactorWeight("MACD: медвежий");
 
 factors.push({
 text:"MACD: медвежий",
@@ -4654,7 +4796,10 @@ type:"bad"
 
 /* STRUCTURE */
 
-score+=structure.score;
+score+=
+structure.score*
+trendWeight*
+getAdaptiveFactorWeight(structure.text);
 
 factors.push({
 
@@ -4670,9 +4815,23 @@ structure.score>0
 });
 
 
-/* MOMENTUM */
+/*
+   MOMENTUM — по факт-статистике исторически
+   самый слабый фактор (около 42% winrate),
+   особенно в сильном тренде (вход "в разгон"
+   на самом пике импульса). Базовый вес урезан
+   вдвое, а в режиме TREND — ещё вдвое, чтобы
+   не подталкивать вход именно там, где раньше
+   это чаще всего оказывалось убыточным.
+*/
 
-score+=momentum.score;
+const momentumWeight=
+0.5*(regime==="TREND"?0.5:1);
+
+score+=
+momentum.score*
+momentumWeight*
+getAdaptiveFactorWeight(momentum.text);
 
 factors.push({
 
@@ -4690,7 +4849,9 @@ momentum.score>0
 
 /* ORDER BLOCK */
 
-score+=orderBlock.score;
+score+=
+orderBlock.score*
+getAdaptiveFactorWeight(orderBlock.text);
 
 factors.push({
 
@@ -4724,7 +4885,9 @@ if(
 distanceResistance<0.4
 ){
 
-score-=7;
+score-=
+7*rangeWeight*
+getAdaptiveFactorWeight("Цена у сопротивления");
 
 factors.push({
 text:"Цена у сопротивления",
@@ -4736,7 +4899,9 @@ else if(
 distanceSupport<0.4
 ){
 
-score+=7;
+score+=
+7*rangeWeight*
+getAdaptiveFactorWeight("Цена у поддержки");
 
 factors.push({
 text:"Цена у поддержки",
@@ -4754,7 +4919,15 @@ type:"neutral"
 }
 
 
-/* VOLUME */
+/*
+   VOLUME — по факт-статистике исторически
+   слабый и шумный фактор (около 33% winrate
+   на малой выборке), особенно "тиковый" объём
+   на форексе, который не отражает реальный
+   объём рынка. Вес снижен и применяется как
+   ослабленное reversion-подтверждение, а не
+   как сильный самостоятельный сигнал.
+*/
 
 if(
 avgVol>0 &&
@@ -4770,7 +4943,9 @@ lastCandle.close>
 lastCandle.open
 ){
 
-score+=6;
+score+=
+4*rangeWeight*
+getAdaptiveFactorWeight("Объём: покупки");
 
 factors.push({
 text:"Объём: покупки",
@@ -4779,7 +4954,9 @@ type:"good"
 
 }else{
 
-score-=6;
+score-=
+4*rangeWeight*
+getAdaptiveFactorWeight("Объём: продажи");
 
 factors.push({
 text:"Объём: продажи",
@@ -4820,7 +4997,9 @@ type:"neutral"
 
 /* CANDLE */
 
-score+=candle.score;
+score+=
+candle.score*
+getAdaptiveFactorWeight(candle.text);
 
 factors.push({
 
@@ -4869,6 +5048,13 @@ signal="SELL";
 }
 
 
+if(deadMarket){
+
+signal="WAIT";
+
+}
+
+
 return{
 
 signal,
@@ -4876,7 +5062,7 @@ signal,
 score,
 
 info:
-`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей`,
+`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • ${regime}${deadMarket?" • рынок неактивен":""}`,
 
 factors,
 
@@ -5039,20 +5225,29 @@ baseResult.signal;
 
 const midAgrees=
 direction==="BUY"
-?midResult.score>50
-:midResult.score<50;
+?midResult.score>53
+:midResult.score<47;
 
 const highAgrees=
 direction==="BUY"
-?highResult.score>50
-:highResult.score<50;
+?highResult.score>53
+:highResult.score<47;
 
 const agreeCount=
 (midAgrees?1:0)+
 (highAgrees?1:0);
 
 
-if(agreeCount===0){
+/*
+   Требуем согласия ОБОИХ старших ТФ
+   из выбранного набора, а не одного из
+   двух — иначе получается, что бот
+   "смотрит" на средний и старший ТФ
+   только формально, а по факту хватало
+   почти любого перевеса на одном из них.
+*/
+
+if(agreeCount<2){
 
 return{
 ...baseResult,
@@ -5060,20 +5255,11 @@ signal:"WAIT",
 duration:0,
 info:
 baseResult.info+
-` • отменено: ${timeframeLabel(midTf)} и ${timeframeLabel(highTf)} против`
+` • отменено: нет согласия по всем ТФ набора (${timeframeLabel(midTf)}/${timeframeLabel(highTf)})`
 };
 
 }
 
-
-let durationMinutes;
-
-if(agreeCount===1){
-
-durationMinutes=
-baseMinutes;
-
-}else{
 
 const avgStrength=
 (
@@ -5090,10 +5276,8 @@ range,
 Math.max(0,(avgStrength-25)/25*range)
 );
 
-durationMinutes=
+let durationMinutes=
 midMinutes+extra;
-
-}
 
 durationMinutes=
 Math.min(
@@ -5111,7 +5295,7 @@ Math.round(durationMinutes)*60*1000,
 
 info:
 baseResult.info+
-` • ${monitor.comboLabel||""}: ${agreeCount}/2 согласны (${Math.round(durationMinutes)} мин)`
+` • ${monitor.comboLabel||""}: все ТФ согласны (${Math.round(durationMinutes)} мин)`
 
 };
 
@@ -5808,13 +5992,73 @@ durationReason=
 
 }
 
+/*
+   Догон (повторный вход после убытка) —
+   справочная информация, а не рекомендация
+   действовать. Даём ближайшую и более
+   глубокую структурную зону на основе уже
+   посчитанных уровней и ATR, и честно
+   предупреждаем о рисках такого подхода —
+   это не устраняет причину убытка, а
+   увеличивает объём позиции на той же идее.
+*/
+
+let dogonNearZone=null;
+
+let dogonDeeperZone=null;
+
+if(direction==="BUY" && levels && isFinite(levels.support)){
+
+dogonNearZone=
+levels.support;
+
+dogonDeeperZone=
+levels.support-atrValue*1.5;
+
+}else if(
+direction==="SELL" &&
+levels &&
+isFinite(levels.resistance)
+){
+
+dogonNearZone=
+levels.resistance;
+
+dogonDeeperZone=
+levels.resistance+atrValue*1.5;
+
+}
+
+const dogonReason=
+"Догон не устраняет причину убытка — он лишь увеличивает объём позиции на той же самой идее. Ставить его имеет смысл только если рыночная структура (тренд, уровни) не изменилась после первого входа, и никогда — как попытку механически отыграть убыток фиксированным объёмом: так риск растёт быстрее, чем шанс на восстановление. Ниже — не совет действовать, а справочные ориентиры по структуре рынка.";
+
 return{
 
 entryPrice,
 entryReason,
 durationMinutes,
 durationReason,
-plannedMinutes
+plannedMinutes,
+dogonNearZone,
+dogonDeeperZone,
+dogonReason,
+
+/*
+   "Теневая" сделка по рекомендации —
+   отдельная от реальной сделки симуляция:
+   ждёт, пока цена реально дойдёт до
+   рекомендованного входа, и только тогда
+   "открывается" на рекомендованное время.
+*/
+
+shadowStatus:"waiting",
+shadowEntry:null,
+shadowStart:null,
+shadowEnd:null,
+shadowExit:null,
+shadowResult:null,
+shadowResultValue:null,
+shadowClosedAt:null
 
 };
 
@@ -6842,6 +7086,101 @@ tradeStorageKey
 
 
 /*
+   =========================================================
+   АДАПТИВНЫЕ ВЕСА ФАКТОРОВ
+
+   Идея: после накопления достаточного числа реальных
+   сделок бот сам смотрит на ту же статистику, что видна
+   пользователю в "По факторам", и усиливает те факторы,
+   которые исторически чаще приводили к прибыли, а те,
+   что показывали слабый результат — приглушает. Ничего
+   больше в логике сигналов не меняется — это ТОЛЬКО
+   множитель поверх уже существующего расчёта score.
+
+   Полностью не обнуляем даже слабые факторы (минимум
+   0.15 от исходного веса) — единичная неудачная серия
+   не должна навсегда и жёстко выключать индикатор,
+   иначе система становится хрупкой и однобокой.
+========================================================= */
+
+let adaptiveFactorWeights={};
+
+const ADAPTIVE_MIN_TOTAL_TRADES=20;
+
+const ADAPTIVE_MIN_FACTOR_SAMPLES=5;
+
+
+function updateAdaptiveFactorWeights(){
+
+const closedTotal=
+trades.filter(
+t=>
+t.closed &&
+(t.result==="WIN" || t.result==="LOSS")
+).length;
+
+if(closedTotal<ADAPTIVE_MIN_TOTAL_TRADES){
+
+adaptiveFactorWeights={};
+
+return;
+
+}
+
+const stats=
+computeFactorStats();
+
+const newWeights={};
+
+stats.forEach(s=>{
+
+if(s.total<ADAPTIVE_MIN_FACTOR_SAMPLES)
+return;
+
+const wr=
+s.winrate/100;
+
+let weight;
+
+if(wr>=0.6){
+
+weight=
+1+Math.min(0.5,(wr-0.5)*1.5);
+
+}else if(wr<=0.4){
+
+weight=
+Math.max(0.15,wr*0.5);
+
+}else{
+
+weight=1;
+
+}
+
+newWeights[s.name]=weight;
+
+});
+
+adaptiveFactorWeights=newWeights;
+
+}
+
+
+function getAdaptiveFactorWeight(text){
+
+const w=
+adaptiveFactorWeights[text];
+
+return w===undefined?1:w;
+
+}
+
+
+updateAdaptiveFactorWeights();
+
+
+/*
    Есть ли у монитора серия из
    LOSS_STREAK_THRESHOLD убытков подряд,
    закрывшаяся менее LOSS_STREAK_COOLDOWN назад.
@@ -7581,6 +7920,12 @@ monitor.lastScore=
 result.score;
 
 
+updateShadowRecommendations(
+monitor,
+livePrice
+);
+
+
 }
 catch(e){
 
@@ -7598,6 +7943,143 @@ e
 /* =========================================================
    ЗАКРЫТИЕ ОДНОЙ СДЕЛКИ
 ========================================================= */
+
+/*
+   =========================================================
+   ТЕНЕВАЯ СИМУЛЯЦИЯ РЕКОМЕНДАЦИИ
+
+   Полностью отдельная от реальной сделки "бумажная"
+   сделка: ждёт, пока живая цена реально дойдёт до
+   рекомендованного входа (а не открывается сразу же,
+   как реальная сделка по рынку), затем идёт свой
+   отсчёт рекомендованной длительности и своё закрытие
+   с собственным результатом. Реальная сделка это никак
+   не затрагивает — она открывается/закрывается как
+   раньше, полностью независимо.
+========================================================= */
+
+function updateShadowRecommendations(monitor,livePrice){
+
+const relevant=
+trades.filter(
+t=>
+t.monitorId===monitor.id &&
+t.recommendation &&
+(
+t.recommendation.shadowStatus==="waiting" ||
+t.recommendation.shadowStatus==="open"
+)
+);
+
+if(!relevant.length)
+return;
+
+const now=
+Date.now();
+
+let changed=false;
+
+relevant.forEach(t=>{
+
+const rec=
+t.recommendation;
+
+if(rec.shadowStatus==="waiting"){
+
+const reached=
+t.direction==="BUY"
+?livePrice<=rec.entryPrice
+:livePrice>=rec.entryPrice;
+
+if(reached){
+
+rec.shadowStatus="open";
+
+rec.shadowEntry=livePrice;
+
+rec.shadowStart=now;
+
+rec.shadowEnd=
+now+rec.durationMinutes*60000;
+
+changed=true;
+
+}else{
+
+/*
+   Если цена так и не дошла до
+   рекомендованного входа в течение
+   разумного окна (двойная от
+   исходной запланированной
+   длительности сделки) — считаем,
+   что рекомендация "не сработала".
+*/
+
+const deadline=
+t.end+(t.end-t.start);
+
+if(now>=deadline){
+
+rec.shadowStatus="missed";
+
+changed=true;
+
+}
+
+}
+
+return;
+
+}
+
+if(
+rec.shadowStatus==="open" &&
+now>=rec.shadowEnd
+){
+
+const exit=
+livePrice;
+
+const difference=
+t.direction==="BUY"
+?exit-rec.shadowEntry
+:rec.shadowEntry-exit;
+
+const tolerance=
+Math.max(
+Math.abs(rec.shadowEntry)*0.000001,
+1e-12
+);
+
+rec.shadowExit=exit;
+
+rec.shadowResultValue=difference;
+
+rec.shadowResult=
+Math.abs(difference)<tolerance
+?"FLAT"
+:difference>0
+?"WIN"
+:"LOSS";
+
+rec.shadowStatus="closed";
+
+rec.shadowClosedAt=now;
+
+changed=true;
+
+}
+
+});
+
+if(changed){
+
+saveTrades();
+
+}
+
+}
+
 
 async function closeTradeNow(trade){
 
@@ -8230,14 +8712,15 @@ document.getElementById(
    и какой винрейт был у сделок, где он присутствовал.
 ========================================================= */
 
-function computeFactorStats(){
+function computeFactorStats(typeFilter){
 
 const closedWithSnapshot=
 trades.filter(
 t=>
 t.closed &&
 t.factorsSnapshot &&
-(t.result==="WIN" || t.result==="LOSS")
+(t.result==="WIN" || t.result==="LOSS") &&
+(!typeFilter || t.type===typeFilter)
 );
 
 const buckets={};
@@ -8339,13 +8822,14 @@ winrate
 }
 
 
-function computeTimeframeStats(){
+function computeTimeframeStats(typeFilter){
 
 const closed=
 trades.filter(
 t=>
 t.closed &&
-(t.result==="WIN" || t.result==="LOSS")
+(t.result==="WIN" || t.result==="LOSS") &&
+(!typeFilter || t.type===typeFilter)
 );
 
 const buckets={};
@@ -8406,18 +8890,28 @@ a.sortMinutes-b.sortMinutes
 }
 
 
-function openFactorStatsModal(){
+function openFactorStatsModal(typeFilter){
 
 const body=
 document.getElementById(
 "factorStatsBody"
 );
 
+document.getElementById(
+"factorStatsTitle"
+).textContent=
+
+typeFilter==="forex"
+?"📊 Статистика по факторам — Форекс"
+:typeFilter==="crypto"
+?"📊 Статистика по факторам — Крипто"
+:"📊 Статистика по факторам";
+
 const tfStats=
-computeTimeframeStats();
+computeTimeframeStats(typeFilter);
 
 const factorStats=
-computeFactorStats();
+computeFactorStats(typeFilter);
 
 let html="";
 
@@ -8578,6 +9072,87 @@ Math.round(
 (trade.end-trade.start)/60000
 );
 
+let shadowHtml="";
+
+if(rec.shadowStatus==="waiting"){
+
+shadowHtml=`
+<div class="factor-stat-item">
+<span class="factor-stat-name">⏳ Ожидает цену рекомендации</span>
+</div>
+<div class="rec-reason">Пока живая цена не дойдёт до ${formatTradePrice(rec.entryPrice,trade.type)}, рекомендованная сделка не считается открытой.</div>
+`;
+
+}else if(rec.shadowStatus==="open"){
+
+shadowHtml=`
+<div class="factor-stat-item factor-stat-good">
+<span class="factor-stat-name">🟢 Открыта по рекомендации</span>
+<span class="factor-stat-nums">${formatTradePrice(rec.shadowEntry,trade.type)}</span>
+</div>
+<div class="rec-reason">Осталось примерно ${formatRemaining(rec.shadowEnd-Date.now())} до закрытия по рекомендованной длительности.</div>
+`;
+
+}else if(rec.shadowStatus==="closed"){
+
+const shadowSign=
+rec.shadowResultValue>0?"+":"";
+
+const shadowCls=
+rec.shadowResult==="WIN"
+?"factor-stat-good"
+:rec.shadowResult==="LOSS"
+?"factor-stat-bad"
+:"";
+
+const shadowLabel=
+rec.shadowResult==="WIN"
+?"✅ Рекомендация закрылась в плюс"
+:rec.shadowResult==="LOSS"
+?"❌ Рекомендация закрылась в минус"
+:"⚪ Рекомендация закрылась в ноль";
+
+shadowHtml=`
+<div class="factor-stat-item ${shadowCls}">
+<span class="factor-stat-name">${shadowLabel}</span>
+<span class="factor-stat-nums">${shadowSign}${formatDifference(rec.shadowResultValue,trade.type)}</span>
+</div>
+<div class="rec-reason">Вход по рекомендации: ${formatTradePrice(rec.shadowEntry,trade.type)} → выход: ${formatTradePrice(rec.shadowExit,trade.type)}. Это результат отдельной "бумажной" сделки по рекомендации, а не реальной сделки выше.</div>
+`;
+
+}else if(rec.shadowStatus==="missed"){
+
+shadowHtml=`
+<div class="factor-stat-item">
+<span class="factor-stat-name">⚪ Цена не дошла до рекомендованного входа</span>
+</div>
+<div class="rec-reason">Рекомендация не была бы исполнена — цена ушла в сторону, не откатившись до ${formatTradePrice(rec.entryPrice,trade.type)}.</div>
+`;
+
+}
+
+let dogonHtml="";
+
+if(rec.dogonNearZone!==null && isFinite(rec.dogonNearZone)){
+
+dogonHtml=`
+<div class="factor-stats-section-title">Догон (справочно)</div>
+
+<div class="factor-stat-item">
+<span class="factor-stat-name">Ближайшая зона</span>
+<span class="factor-stat-nums">${formatTradePrice(rec.dogonNearZone,trade.type)}</span>
+</div>
+
+<div class="factor-stat-item">
+<span class="factor-stat-name">Более глубокая зона</span>
+<span class="factor-stat-nums">${formatTradePrice(rec.dogonDeeperZone,trade.type)}</span>
+</div>
+
+<div class="rec-reason">${rec.dogonReason}</div>
+`;
+
+}
+
 body.innerHTML=`
 
 <div class="factor-stats-section-title">Точка входа</div>
@@ -8607,6 +9182,12 @@ body.innerHTML=`
 </div>
 
 <div class="rec-reason">${rec.durationReason}</div>
+
+<div class="factor-stats-section-title">Статус рекомендации</div>
+
+${shadowHtml}
+
+${dogonHtml}
 
 `;
 
@@ -9505,6 +10086,15 @@ try{
 */
 
 await closeExpiredTrades();
+
+
+/*
+   Обновляем адаптивные веса факторов —
+   после каждого цикла статистика могла
+   пополниться новыми закрытыми сделками.
+*/
+
+updateAdaptiveFactorWeights();
 
 
 /*
