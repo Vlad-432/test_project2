@@ -45,6 +45,90 @@ header{
     gap:10px;
 }
 
+#splashScreen{
+    position:fixed;
+    top:0;
+    right:0;
+    bottom:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:#080b10;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    animation:splashFadeOut .6s ease forwards;
+    animation-delay:2.6s;
+}
+
+.splash-content{
+    text-align:center;
+}
+
+.splash-logo{
+    font-size:32px;
+    font-weight:900;
+    letter-spacing:.5px;
+    color:#fff;
+    opacity:0;
+    animation:splashLogoIn .8s ease forwards .2s;
+}
+
+.splash-logo span{color:#00d68f}
+
+@keyframes splashLogoIn{
+    0%{
+        opacity:0;
+        transform:translateY(14px) scale(.85);
+    }
+    60%{
+        opacity:1;
+        transform:scale(1.06);
+    }
+    100%{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+.splash-chart{
+    display:block;
+    width:180px;
+    height:54px;
+    margin:16px auto 0;
+    opacity:0;
+    animation:splashChartIn .4s ease forwards 1s;
+}
+
+@keyframes splashChartIn{
+    to{opacity:1}
+}
+
+.splash-line{
+    fill:none;
+    stroke:#00d68f;
+    stroke-width:2.5;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-dasharray:260;
+    stroke-dashoffset:260;
+    animation:splashDraw 1.4s ease forwards 1.1s;
+}
+
+@keyframes splashDraw{
+    to{stroke-dashoffset:0}
+}
+
+@keyframes splashFadeOut{
+    to{
+        opacity:0;
+        visibility:hidden;
+        pointer-events:none;
+    }
+}
+
 .logo{
     font-size:13px;
     font-weight:900;
@@ -97,9 +181,9 @@ header{
     background:#0b0f15;
     color:#aeb7c6;
     border-radius:8px;
-    padding:7px 10px;
+    padding:7px 6px;
     cursor:pointer;
-    font-size:11px;
+    font-size:10px;
 }
 
 .nav-btn.active{
@@ -544,6 +628,67 @@ header{
     margin-bottom:8px;
 }
 
+.tester-input{
+    width:100%;
+    padding:10px;
+    margin-bottom:8px;
+    border-radius:8px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#fff;
+    font-size:13px;
+}
+
+.tester-run-btn{
+    width:100%;
+    margin-bottom:10px;
+    background:#00d68f;
+    color:#06110d;
+    border:0;
+    font-weight:900;
+    border-radius:8px;
+    padding:11px;
+    font-size:13px;
+}
+
+.tester-run-btn:disabled{
+    opacity:.6;
+}
+
+.tester-progress{
+    min-height:18px;
+    font-size:10px;
+    color:#8993a5;
+    margin-bottom:8px;
+}
+
+.tester-ask-buttons{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
+}
+
+.tester-ask-buttons button{
+    flex:1;
+    padding:9px;
+    border-radius:7px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#dfe4ea;
+    font-size:11px;
+}
+
+.tester-ask-buttons button.save{
+    background:#00d68f;
+    color:#06110d;
+    border:0;
+    font-weight:900;
+}
+
+.tester-summary{
+    margin-bottom:8px;
+}
+
 .journal-category-tabs{
     display:flex;
     gap:6px;
@@ -635,6 +780,77 @@ header{
     line-height:1;
     padding:2px 8px;
     cursor:pointer;
+}
+
+.trade-ai-btn{
+    background:#14221e;
+    border:1px solid #00d68f;
+    color:#00d68f;
+    font-size:9px;
+    font-weight:800;
+    line-height:1;
+    padding:4px 6px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.ai-chat-box{
+    display:flex;
+    flex-direction:column;
+    max-height:80vh;
+}
+
+.ai-chat-messages{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:4px 2px;
+    margin-bottom:8px;
+}
+
+.ai-chat-msg{
+    padding:9px 10px;
+    border-radius:9px;
+    font-size:11px;
+    line-height:1.5;
+    max-width:88%;
+}
+
+.ai-chat-msg.ai{
+    background:#10141b;
+    border:1px solid #242c38;
+    align-self:flex-start;
+}
+
+.ai-chat-msg.user{
+    background:#0d2a22;
+    border:1px solid #00d68f;
+    color:#dfe4ea;
+    align-self:flex-end;
+}
+
+.ai-chat-msg-meta{
+    font-size:8px;
+    color:#748095;
+    margin-bottom:4px;
+}
+
+.ai-chat-error{
+    color:#ff536d;
+    font-size:10px;
+    padding:0 2px 6px;
+}
+
+.ai-chat-input-row{
+    display:flex;
+    gap:6px;
+}
+
+.ai-chat-input-row .modal-input{
+    flex:1;
 }
 
 .trade-menu-actions{
@@ -840,7 +1056,10 @@ header{
 
 .modal{
     position:fixed;
-    inset:0;
+    top:0;
+    right:0;
+    bottom:0;
+    left:0;
     background:rgba(0,0,0,.7);
     z-index:100;
     display:none;
@@ -928,6 +1147,71 @@ header{
 
 .api-service-block{
     margin-top:12px;
+}
+
+.ai-provider-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px;
+}
+
+.ai-provider-tab{
+    flex:1 1 40%;
+    padding:8px;
+    border-radius:7px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#8993a5;
+    font-size:11px;
+    font-weight:800;
+}
+
+.ai-provider-tab.active{
+    border-color:#00d68f;
+    color:#00d68f;
+    background:#14221e;
+}
+
+.ai-key-status{
+    font-size:9px;
+    color:#8993a5;
+    margin-top:5px;
+}
+
+.ai-model-row{
+    display:flex;
+    gap:6px;
+    margin-top:7px;
+}
+
+.ai-model-row select{
+    flex:1;
+    padding:9px;
+    border-radius:7px;
+    border:1px solid #29313e;
+    background:#0b0f15;
+    color:#dfe4ea;
+    font-size:11px;
+}
+
+.ai-refresh-btn{
+    flex:0 0 auto;
+    padding:0 12px;
+}
+
+.ai-toggle-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+    font-size:11px;
+    color:#dfe4ea;
+}
+
+.ai-warning-note{
+    margin-top:8px;
+    color:#ffb020;
 }
 
 .api-service-block:first-of-type{
@@ -1045,6 +1329,32 @@ header{
 
 <body>
 
+
+<div id="splashScreen">
+
+<div class="splash-content">
+
+<div class="splash-logo">
+Crypto<span>Scr</span>
+</div>
+
+<svg
+class="splash-chart"
+viewBox="0 0 200 60"
+preserveAspectRatio="none">
+
+<polyline
+class="splash-line"
+points="0,45 25,38 45,48 70,25 95,32 120,14 145,20 170,6 200,12">
+</polyline>
+
+</svg>
+
+</div>
+
+</div>
+
+
 <header>
 
 <div class="header-inner">
@@ -1080,6 +1390,13 @@ class="nav-btn"
 id="journalNav"
 onclick="showPage('journal')">
 Журнал
+</button>
+
+<button
+class="nav-btn"
+id="testerNav"
+onclick="showPage('tester')">
+Тестер
 </button>
 
 </div>
@@ -1280,6 +1597,130 @@ id="journalPairList">
 
 </section>
 
+
+<section
+class="page"
+id="testerPage">
+
+<div class="signals-page">
+
+<div class="signals-head">
+
+<div class="signals-title">
+🧪 Тестер стратегии
+</div>
+
+</div>
+
+
+<input
+type="text"
+id="testerSymbolInput"
+class="tester-input"
+placeholder="Пара, напр. EURUSD или BTCUSDT">
+
+
+<div
+class="tf-select"
+id="testerComboSelect">
+
+<button
+class="tf-option active"
+data-combo="5-10-30">
+5м-10м-30м
+</button>
+
+<button
+class="tf-option"
+data-combo="5-15-30">
+5м-15м-30м
+</button>
+
+<button
+class="tf-option"
+data-combo="5-15-60">
+5м-15м-1ч
+</button>
+
+<button
+class="tf-option"
+data-combo="10-30-60">
+10м-30м-1ч
+</button>
+
+<button
+class="tf-option"
+data-combo="30-60-240">
+30м-1ч-4ч
+</button>
+
+<button
+class="tf-option"
+data-combo="60-240-D">
+1ч-4ч-1д
+</button>
+
+</div>
+
+
+<input
+type="number"
+id="testerCountInput"
+class="tester-input"
+value="50"
+min="1"
+max="500">
+
+
+<label class="ai-toggle-row">
+
+<input
+type="checkbox"
+id="testerAiToggle">
+
+<span>🤖 Использовать ИИ при поиске сигналов (медленнее, тратит запросы к API — до 30 за тест)</span>
+
+</label>
+
+
+<button
+class="save tester-run-btn"
+id="testerRunBtn"
+onclick="startBacktest()">
+▶ Запустить тест
+</button>
+
+
+<div
+id="testerProgress"
+class="tester-progress">
+</div>
+
+
+<div
+id="testerSummary"
+class="tester-summary">
+</div>
+
+
+<button
+class="factor-stats-btn journal-factors-btn"
+id="testerFactorsBtn"
+style="display:none"
+onclick="openTesterFactors()">
+📊 По факторам (тест)
+</button>
+
+
+<div
+class="journal-pair-list"
+id="testerResultsList">
+</div>
+
+</div>
+
+</section>
+
 </div>
 
 
@@ -1433,6 +1874,107 @@ id="twelvedataKeyList">
 </div>
 
 
+<div class="api-service-block ai-settings-block">
+
+<div class="api-service-title">
+🤖 ИИ-советник по сделкам
+</div>
+
+<div
+class="ai-provider-tabs"
+id="aiProviderTabs">
+
+<button
+class="ai-provider-tab"
+data-provider="anthropic"
+onclick="selectAiProvider('anthropic')">
+Claude
+</button>
+
+<button
+class="ai-provider-tab"
+data-provider="deepseek"
+onclick="selectAiProvider('deepseek')">
+DeepSeek
+</button>
+
+<button
+class="ai-provider-tab"
+data-provider="openai"
+onclick="selectAiProvider('openai')">
+ChatGPT
+</button>
+
+<button
+class="ai-provider-tab"
+data-provider="gemini"
+onclick="selectAiProvider('gemini')">
+Gemini
+</button>
+
+</div>
+
+<div class="api-key-input-row">
+
+<input
+class="modal-input"
+id="aiKeyInput"
+placeholder="Вставьте API-ключ выбранного провайдера"
+onkeydown="if(event.key==='Enter'){saveAiKey();}"
+>
+
+<button
+class="apply-btn"
+onclick="saveAiKey()">
++
+</button>
+
+</div>
+
+<div
+class="ai-key-status"
+id="aiKeyStatus">
+</div>
+
+<div class="ai-model-row">
+
+<select
+id="aiModelSelect"
+onchange="onAiModelPicked(this.value)">
+<option value="">Модель не определена</option>
+</select>
+
+<button
+class="apply-btn ai-refresh-btn"
+onclick="detectAiModels(true)">
+🔄
+</button>
+
+</div>
+
+<div
+class="ai-key-status"
+id="aiModelStatus">
+</div>
+
+<label class="ai-toggle-row">
+
+<input
+type="checkbox"
+id="aiEnabledToggle"
+onchange="toggleAiEnabled(this.checked)">
+
+<span>Использовать ИИ при открытии сделок</span>
+
+</label>
+
+<div class="api-settings-note ai-warning-note">
+Ключи хранятся прямо в этом браузере, без сервера — их может увидеть любой, кто откроет файл или посмотрит сетевые запросы. Используйте только для личного применения. Часть провайдеров блокирует прямые запросы из браузера (CORS) — если ключ не срабатывает, при первом сигнале появится ошибка сети.
+</div>
+
+</div>
+
+
 <div class="api-settings-note">
 Ключи хранятся только в этом браузере. При сбое текущий
 ключ автоматически заменяется следующим по кругу, а через
@@ -1574,6 +2116,59 @@ class="factor-stats-body">
 <div class="modal-actions">
 
 <button onclick="closeTradeRecommendationModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal modal-nested"
+id="aiChatModal">
+
+<div class="modal-box api-settings-box ai-chat-box">
+
+<div
+class="modal-title"
+id="aiChatTitle">
+🤖 ИИ по сделке
+</div>
+
+<div
+id="aiChatMessages"
+class="ai-chat-messages">
+</div>
+
+<div
+id="aiChatError"
+class="ai-chat-error">
+</div>
+
+<div class="ai-chat-input-row">
+
+<input
+class="modal-input"
+id="aiChatInput"
+placeholder="Спросить у ИИ про эту сделку..."
+onkeydown="if(event.key==='Enter'){sendAiChatMessage();}"
+>
+
+<button
+class="apply-btn"
+id="aiChatSendBtn"
+onclick="sendAiChatMessage()">
+➤
+</button>
+
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeAiChatModal()">
 Закрыть
 </button>
 
@@ -2230,6 +2825,8 @@ function openApiSettingsModal(){
 renderApiKeyList("finnhub");
 renderApiKeyList("twelvedata");
 
+renderAiProviderTabs();
+
 document
 .getElementById("apiSettingsModal")
 .classList.add("open");
@@ -2242,6 +2839,874 @@ function closeApiSettingsModal(){
 document
 .getElementById("apiSettingsModal")
 .classList.remove("open");
+
+}
+
+
+/* =========================================================
+   ИИ-СОВЕТНИК
+
+   Отдельная от бирж/котировок интеграция: перед открытием
+   сделки (в живом режиме и, опционально, в тестере) сигнал
+   можно передать выбранной нейросети — она может согласиться,
+   отказаться от сделки, поменять направление или предложить
+   свою длительность. У каждой сделки хранится её ответ и
+   можно продолжить диалог по конкретной сделке отдельно.
+========================================================= */
+
+const AI_PROVIDERS={
+
+anthropic:{
+label:"Claude (Anthropic)"
+},
+
+deepseek:{
+label:"DeepSeek"
+},
+
+openai:{
+label:"ChatGPT (OpenAI)"
+},
+
+gemini:{
+label:"Gemini (Google)"
+}
+
+};
+
+
+let aiSelectedProvider=
+localStorage.getItem("aiSelectedProvider")||"anthropic";
+
+let aiEnabled=
+localStorage.getItem("aiEnabled")==="true";
+
+
+function getAiKey(provider){
+
+return(
+localStorage.getItem("aiKey_"+provider)||""
+);
+
+}
+
+
+function setAiKey(provider,key){
+
+localStorage.setItem("aiKey_"+provider,key);
+
+}
+
+
+function getAiModel(provider){
+
+return(
+localStorage.getItem("aiModel_"+provider)||""
+);
+
+}
+
+
+function setAiModel(provider,model){
+
+localStorage.setItem("aiModel_"+provider,model);
+
+}
+
+
+/*
+   Запрашиваем у самого провайдера актуальный
+   список моделей вместо того, чтобы хранить
+   одно захардкоженное имя — так при выходе новых
+   версий (что происходит у всех провайдеров
+   регулярно) приложению не нужно чинить руками.
+*/
+
+async function fetchAvailableModels(provider,key){
+
+if(provider==="anthropic"){
+
+const response=
+await fetch(
+"https://api.anthropic.com/v1/models",
+{
+headers:{
+"x-api-key":key,
+"anthropic-version":"2023-06-01",
+"anthropic-dangerous-direct-browser-access":"true"
+}
+}
+);
+
+if(!response.ok)
+throw new Error("HTTP "+response.status);
+
+const data=
+await response.json();
+
+return(
+(data.data||[])
+.map(m=>m.id)
+);
+
+}
+
+if(provider==="openai" || provider==="deepseek"){
+
+const endpoint=
+provider==="deepseek"
+?"https://api.deepseek.com/models"
+:"https://api.openai.com/v1/models";
+
+const response=
+await fetch(endpoint,{
+headers:{
+"Authorization":"Bearer "+key
+}
+});
+
+if(!response.ok)
+throw new Error("HTTP "+response.status);
+
+const data=
+await response.json();
+
+return(
+(data.data||[])
+.map(m=>m.id)
+);
+
+}
+
+if(provider==="gemini"){
+
+const response=
+await fetch(
+"https://generativelanguage.googleapis.com/v1beta/models?key="+
+encodeURIComponent(key)
+);
+
+if(!response.ok)
+throw new Error("HTTP "+response.status);
+
+const data=
+await response.json();
+
+return(
+(data.models||[])
+.map(m=>
+(m.name||"").replace(/^models\//,"")
+)
+);
+
+}
+
+return[];
+
+}
+
+
+/*
+   Из всего списка моделей провайдера выбираем
+   по умолчанию дешёвую/быструю "чат"-модель
+   (flash/mini/haiku/chat), а не первую попавшуюся —
+   для разовых советов по сделке это разумный выбор
+   по цене и скорости. Пользователь может вручную
+   выбрать любую другую из выпадающего списка.
+*/
+
+function pickDefaultModel(provider,models){
+
+if(!models.length)
+return"";
+
+const cheapPatterns=
+{
+anthropic:/haiku/i,
+openai:/mini|nano/i,
+deepseek:/chat/i,
+gemini:/flash(?!.*lite)/i
+};
+
+const pattern=
+cheapPatterns[provider];
+
+const cheap=
+models.find(m=>pattern && pattern.test(m));
+
+return cheap||models[0];
+
+}
+
+
+async function detectAiModels(showAlert){
+
+const provider=aiSelectedProvider;
+
+const key=getAiKey(provider);
+
+const statusEl=
+document.getElementById("aiModelStatus");
+
+if(!key){
+
+if(statusEl){
+
+statusEl.textContent=
+"Сначала сохраните ключ, чтобы определить доступные модели.";
+
+}
+
+return;
+
+}
+
+if(statusEl){
+
+statusEl.textContent=
+"Запрашиваю список моделей у "+
+AI_PROVIDERS[provider].label+
+"...";
+
+}
+
+try{
+
+const models=
+await fetchAvailableModels(provider,key);
+
+if(!models.length){
+
+throw new Error("Пустой список моделей");
+
+}
+
+const select=
+document.getElementById("aiModelSelect");
+
+const currentSaved=
+getAiModel(provider);
+
+select.innerHTML=
+models
+.map(m=>
+`<option value="${m}">${m}</option>`
+)
+.join("");
+
+const toSelect=
+(currentSaved && models.includes(currentSaved))
+?currentSaved
+:pickDefaultModel(provider,models);
+
+select.value=toSelect;
+
+setAiModel(provider,toSelect);
+
+if(statusEl){
+
+statusEl.textContent=
+`Найдено моделей: ${models.length}. Выбрана: ${toSelect}.`;
+
+}
+
+}catch(e){
+
+if(statusEl){
+
+statusEl.textContent=
+"Не удалось получить список моделей ("+
+e.message+
+"). Используется модель по умолчанию.";
+
+}
+
+if(showAlert){
+
+alert(
+"Не удалось получить список моделей: "+
+e.message
+);
+
+}
+
+}
+
+}
+
+
+function onAiModelPicked(modelId){
+
+setAiModel(aiSelectedProvider,modelId);
+
+}
+
+
+function renderAiProviderTabs(){
+
+document
+.querySelectorAll("#aiProviderTabs .ai-provider-tab")
+.forEach(btn=>{
+
+btn.classList.toggle(
+"active",
+btn.dataset.provider===aiSelectedProvider
+);
+
+});
+
+const input=
+document.getElementById("aiKeyInput");
+
+if(input){
+
+input.value=
+getAiKey(aiSelectedProvider);
+
+}
+
+const status=
+document.getElementById("aiKeyStatus");
+
+if(status){
+
+const hasKey=
+!!getAiKey(aiSelectedProvider);
+
+status.textContent=
+hasKey
+?`Ключ для ${AI_PROVIDERS[aiSelectedProvider].label} сохранён.`
+:`Ключ для ${AI_PROVIDERS[aiSelectedProvider].label} не задан.`;
+
+}
+
+const toggle=
+document.getElementById("aiEnabledToggle");
+
+if(toggle){
+
+toggle.checked=aiEnabled;
+
+}
+
+const modelSelect=
+document.getElementById("aiModelSelect");
+
+const modelStatus=
+document.getElementById("aiModelStatus");
+
+if(modelSelect){
+
+const savedModel=
+getAiModel(aiSelectedProvider);
+
+modelSelect.innerHTML=
+savedModel
+?`<option value="${savedModel}">${savedModel}</option>`
+:`<option value="">Модель не определена</option>`;
+
+modelSelect.value=savedModel;
+
+}
+
+if(modelStatus){
+
+modelStatus.textContent=
+getAiModel(aiSelectedProvider)
+?""
+:"Нажмите 🔄, чтобы определить доступные модели по ключу.";
+
+}
+
+}
+
+
+function selectAiProvider(provider){
+
+aiSelectedProvider=provider;
+
+localStorage.setItem(
+"aiSelectedProvider",
+provider
+);
+
+renderAiProviderTabs();
+
+}
+
+
+function saveAiKey(){
+
+const input=
+document.getElementById("aiKeyInput");
+
+if(!input)
+return;
+
+const value=
+(input.value||"").trim();
+
+setAiKey(aiSelectedProvider,value);
+
+renderAiProviderTabs();
+
+if(value){
+
+detectAiModels(false);
+
+}
+
+}
+
+
+function toggleAiEnabled(checked){
+
+aiEnabled=checked;
+
+localStorage.setItem(
+"aiEnabled",
+checked?"true":"false"
+);
+
+}
+
+
+/*
+   Вытаскиваем JSON из ответа модели, даже если
+   она обернула его в ```json ... ``` или добавила
+   лишний текст вокруг — просим строго JSON, но
+   не полагаемся на то, что все провайдеры это
+   соблюдают идеально.
+*/
+
+function escapeHtml(str){
+
+const div=
+document.createElement("div");
+
+div.textContent=
+str==null?"":String(str);
+
+return div.innerHTML;
+
+}
+
+
+function extractJsonFromAiText(text){
+
+if(!text)
+return null;
+
+const fenced=
+text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+
+const candidate=
+fenced?fenced[1]:text;
+
+const braceMatch=
+candidate.match(/\{[\s\S]*\}/);
+
+if(!braceMatch)
+return null;
+
+try{
+
+return JSON.parse(braceMatch[0]);
+
+}catch(e){
+
+return null;
+
+}
+
+}
+
+
+/*
+   Единая точка вызова ИИ — маршрутизирует запрос
+   к нужному провайдеру, у каждого свой формат
+   запроса/ответа.
+*/
+
+async function callAI(promptText){
+
+const provider=aiSelectedProvider;
+
+const key=getAiKey(provider);
+
+if(!key){
+
+throw new Error(
+"Не задан API-ключ для "+
+AI_PROVIDERS[provider].label
+);
+
+}
+
+if(provider==="anthropic"){
+
+const model=
+getAiModel("anthropic")||"claude-sonnet-5";
+
+const response=
+await fetch(
+"https://api.anthropic.com/v1/messages",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"x-api-key":key,
+"anthropic-version":"2023-06-01",
+"anthropic-dangerous-direct-browser-access":"true"
+},
+body:JSON.stringify({
+model,
+max_tokens:700,
+messages:[{
+role:"user",
+content:promptText
+}]
+})
+}
+);
+
+if(!response.ok){
+
+const errText=
+await response.text();
+
+throw new Error(
+"Anthropic API: "+
+response.status+
+" "+
+errText.slice(0,200)
+);
+
+}
+
+const data=
+await response.json();
+
+return(
+(data.content||[])
+.map(b=>b.text||"")
+.join("\n")
+);
+
+}
+
+if(provider==="deepseek" || provider==="openai"){
+
+const endpoint=
+provider==="deepseek"
+?"https://api.deepseek.com/chat/completions"
+:"https://api.openai.com/v1/chat/completions";
+
+const model=
+getAiModel(provider)||
+(
+provider==="deepseek"
+?"deepseek-chat"
+:"gpt-5-mini"
+);
+
+const response=
+await fetch(endpoint,{
+method:"POST",
+headers:{
+"Content-Type":"application/json",
+"Authorization":"Bearer "+key
+},
+body:JSON.stringify({
+model,
+messages:[{
+role:"user",
+content:promptText
+}],
+max_tokens:700
+})
+});
+
+if(!response.ok){
+
+const errText=
+await response.text();
+
+throw new Error(
+provider+" API: "+
+response.status+
+" "+
+errText.slice(0,200)
+);
+
+}
+
+const data=
+await response.json();
+
+return(
+data.choices &&
+data.choices[0] &&
+data.choices[0].message &&
+data.choices[0].message.content
+)||"";
+
+}
+
+if(provider==="gemini"){
+
+const model=
+getAiModel("gemini")||"gemini-flash-latest";
+
+const response=
+await fetch(
+"https://generativelanguage.googleapis.com/v1beta/models/"+
+model+
+":generateContent?key="+
+encodeURIComponent(key),
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+contents:[{
+parts:[{text:promptText}]
+}]
+})
+}
+);
+
+if(!response.ok){
+
+const errText=
+await response.text();
+
+throw new Error(
+"Gemini API: "+
+response.status+
+" "+
+errText.slice(0,200)
+);
+
+}
+
+const data=
+await response.json();
+
+return(
+data.candidates &&
+data.candidates[0] &&
+data.candidates[0].content &&
+data.candidates[0].content.parts &&
+data.candidates[0].content.parts[0] &&
+data.candidates[0].content.parts[0].text
+)||"";
+
+}
+
+throw new Error("Неизвестный провайдер ИИ");
+
+}
+
+
+/*
+   Промпт для ИИ по конкретному сигналу.
+
+   "Самообучение": подмешиваем свежую статистику по
+   факторам (ту же, что видна в "По факторам") — так
+   модель видит, что реально сработало на предыдущих
+   сделках, а не просто оценивает сигнал в вакууме.
+*/
+
+function buildAiSignalPrompt(monitor,result,statsSourceArray){
+
+const factorsText=
+(result.factors||[])
+.map(f=>`- ${f.text} (${f.type})`)
+.join("\n");
+
+const statsList=
+computeFactorStats(monitor.type,statsSourceArray)
+.slice(0,8);
+
+const statsText=
+statsList.length
+?statsList
+.map(s=>`- ${s.name}: ${s.winrate}% побед из ${s.total} сделок`)
+.join("\n")
+:"Пока недостаточно закрытых сделок для статистики.";
+
+return`Ты — трейдинг-аналитик. Тебе дан торговый сигнал от алгоритмической системы. Проанализируй его и прими решение: открывать сделку или нет.
+
+Данные сигнала:
+- Пара: ${monitor.symbol}
+- Тип рынка: ${monitor.type==="forex"?"форекс":"криптовалюта"}
+- Набор таймфреймов: ${monitor.comboLabel||timeframeLabel(monitor.interval)}
+- Направление по алгоритму: ${result.signal}
+- Сила сигнала (score): ${result.score}/100
+- Текущая цена на момент сигнала: ${result.price}
+- Запланированная длительность по алгоритму: ${Math.round((result.duration||0)/60000)} мин
+
+Факторы сигнала:
+${factorsText||"нет данных"}
+
+Статистика по факторам на этой паре за последние сделки (используй как контекст, не как жёсткое правило):
+${statsText}
+
+Ты имеешь право:
+1. Согласиться и открыть сделку в направлении алгоритма.
+2. Отказаться от сделки, если считаешь её недостаточно надёжной.
+3. Предложить свою длительность в минутах, если считаешь, что данные алгоритма не соответствуют ситуации.
+
+Ответь СТРОГО в формате JSON, без текста до или после JSON:
+{
+"decision": "OPEN" или "SKIP",
+"direction": "BUY" или "SELL",
+"duration_minutes": число или null (null — согласен со стандартной длительностью),
+"reasoning": "краткое объяснение на русском, 2-4 предложения, почему именно такое решение"
+}`;
+
+}
+
+
+/*
+   Оценка сигнала ИИ и, при решении OPEN, открытие
+   сделки. Запускается без ожидания (fire-and-forget)
+   из updateMonitor, чтобы не блокировать остальной
+   мониторинг на время сетевого запроса к ИИ — пока
+   идёт анализ, реально проходит время, и сделка
+   открывается по цене на момент готового ответа,
+   а не по цене на момент сигнала.
+*/
+
+async function evaluateSignalWithAI(monitor,result){
+
+const prompt=
+buildAiSignalPrompt(monitor,result);
+
+let aiText;
+
+try{
+
+aiText=
+await callAI(prompt);
+
+}catch(e){
+
+console.log(
+"ИИ недоступен, сделка не открыта:",
+e
+);
+
+return;
+
+}
+
+const parsed=
+extractJsonFromAiText(aiText);
+
+if(!parsed || parsed.decision!=="OPEN"){
+
+return;
+
+}
+
+const direction=
+(parsed.direction==="BUY" || parsed.direction==="SELL")
+?parsed.direction
+:result.signal;
+
+/*
+   Пока ИИ анализировал — прошло время.
+   Берём реальную текущую цену на момент
+   готового решения, а не цену на момент
+   сигнала.
+*/
+
+let freshPrice=null;
+
+try{
+
+freshPrice=
+monitor.type==="forex"
+?await getForexCurrentPrice(monitor.symbol)
+:await getCryptoCurrentPrice(monitor.symbol);
+
+}catch(e){
+
+freshPrice=monitor.lastPrice;
+
+}
+
+if(!isFinite(freshPrice) || freshPrice<=0){
+
+freshPrice=monitor.lastPrice;
+
+}
+
+const customDurationMs=
+(
+typeof parsed.duration_minutes==="number" &&
+parsed.duration_minutes>0
+)
+?parsed.duration_minutes*60000
+:null;
+
+const finalResult={
+
+...result,
+
+signal:direction,
+
+duration:
+customDurationMs||result.duration
+
+};
+
+if(!monitors.some(m=>m.id===monitor.id)){
+
+return;
+
+}
+
+const trade=
+createTrade(
+monitor,
+finalResult,
+freshPrice
+);
+
+if(trade){
+
+trade.aiAnalysis={
+
+provider:aiSelectedProvider,
+
+providerLabel:
+AI_PROVIDERS[aiSelectedProvider].label,
+
+decision:parsed.decision,
+
+reasoning:
+parsed.reasoning||"",
+
+customDurationMinutes:
+customDurationMs
+?parsed.duration_minutes
+:null,
+
+createdAt:Date.now()
+
+};
+
+trade.aiChatHistory=[];
+
+saveTrades();
+
+renderSignals();
+
+}
 
 }
 
@@ -3777,6 +5242,318 @@ volume:parseFloat(c[5])
 
 
 /* =========================================================
+   ИСТОРИЧЕСКИЕ ДАННЫЕ ДЛЯ ТЕСТЕРА СТРАТЕГИИ
+
+   Отдельные функции от "живых" getCryptoKlines/
+   getForexKlines — те заточены под "последние N свечей
+   прямо сейчас", а тестеру нужно уметь докачивать всё
+   более старую историю (пагинация назад по времени),
+   потенциально по три ТФ сразу (комбо). Ничего в живой
+   логике не меняем, просто переиспользуем те же API
+   и вспомогательные функции (fetchWithRetry,
+   scheduleTwelveDataCall, twelveInterval, binanceInterval,
+   normalizeForex, resampleCandles).
+========================================================= */
+
+const HISTORICAL_MAX_CANDLES=8000;
+
+const HISTORICAL_MAX_PAGES=20;
+
+
+async function fetchCryptoKlinesRawBefore(
+symbol,
+binanceIntervalStr,
+limit,
+endTimeMs
+){
+
+let url=
+"https://api.binance.com/api/v3/klines"+
+"?symbol="+
+encodeURIComponent(symbol)+
+"&interval="+
+binanceIntervalStr+
+"&limit="+
+limit;
+
+if(endTimeMs){
+
+url+=
+"&endTime="+
+Math.floor(endTimeMs);
+
+}
+
+const response=
+await fetchWithRetry(url);
+
+if(!response.ok){
+
+throw new Error(
+"Пара не найдена на Binance"
+);
+
+}
+
+const data=
+await response.json();
+
+return data.map(c=>({
+
+time:c[0],
+
+open:parseFloat(c[1]),
+high:parseFloat(c[2]),
+low:parseFloat(c[3]),
+close:parseFloat(c[4]),
+volume:parseFloat(c[5])
+
+}));
+
+}
+
+
+async function fetchForexKlinesRawBefore(
+symbol,
+twelveIntervalStr,
+outputsize,
+endDateMs
+){
+
+return scheduleTwelveDataCall(
+async()=>
+
+callTwelveDataApi(async(apiKey)=>{
+
+const pair=
+normalizeForex(symbol);
+
+let url=
+"https://api.twelvedata.com/time_series"+
+"?symbol="+
+encodeURIComponent(pair)+
+"&interval="+
+twelveIntervalStr+
+"&outputsize="+
+outputsize+
+"&apikey="+
+encodeURIComponent(apiKey);
+
+if(endDateMs){
+
+const endDateStr=
+new Date(endDateMs)
+.toISOString()
+.slice(0,19)
+.replace("T"," ");
+
+url+=
+"&end_date="+
+encodeURIComponent(endDateStr);
+
+}
+
+const response=
+await fetchWithRetry(url);
+
+const json=
+await response.json();
+
+if(
+json.status==="error" ||
+!json.values ||
+!json.values.length
+){
+
+throw new Error(
+(json.message)||
+"Forex-пара не найдена"
+);
+
+}
+
+return json.values
+.slice()
+.reverse()
+.map(v=>({
+
+time:
+new Date(v.datetime).getTime(),
+
+open:parseFloat(v.open),
+high:parseFloat(v.high),
+low:parseFloat(v.low),
+close:parseFloat(v.close),
+volume:
+v.volume
+?parseFloat(v.volume)
+:0
+
+}));
+
+})
+
+);
+
+}
+
+
+/*
+   Докачивает историю "вниз" по времени, страница за
+   страницей, пока не наберётся needed свечей или пока
+   биржа не перестанет отдавать более старые данные
+   (или пока не упрёмся в жёсткий лимит на кол-во страниц/
+   свечей — чтобы не уйти в бесконечный цикл запросов).
+
+   onProgress(loadedCount, needed) — необязательный
+   колбэк для отображения прогресса пользователю.
+*/
+
+async function fetchHistoricalRawCandles(
+type,
+symbol,
+rawIntervalStr,
+needed,
+onProgress
+){
+
+let all=[];
+
+let endTime=null;
+
+let page=0;
+
+while(
+all.length<needed &&
+page<HISTORICAL_MAX_PAGES &&
+all.length<HISTORICAL_MAX_CANDLES
+){
+
+const limit=
+type==="forex"?5000:1000;
+
+let batch;
+
+try{
+
+batch=
+type==="forex"
+?await fetchForexKlinesRawBefore(
+symbol,rawIntervalStr,limit,endTime
+)
+:await fetchCryptoKlinesRawBefore(
+symbol,rawIntervalStr,limit,endTime
+);
+
+}catch(e){
+
+break;
+
+}
+
+if(!batch || !batch.length)
+break;
+
+/*
+   Отбрасываем возможное пересечение
+   на границе страниц (последняя свеча
+   новой пачки может совпасть по времени
+   с первой уже имеющейся).
+*/
+
+const filtered=
+all.length
+?batch.filter(
+c=>c.time<all[0].time
+)
+:batch;
+
+if(!filtered.length)
+break;
+
+all=
+filtered.concat(all);
+
+endTime=
+filtered[0].time-1;
+
+page++;
+
+if(onProgress){
+
+onProgress(all.length,needed);
+
+}
+
+if(batch.length<limit)
+break;
+
+}
+
+return all;
+
+}
+
+
+/*
+   Высокоуровневая функция для тестера: получить
+   исторические свечи нужного ТФ (включая синтетические
+   2/3/4/10 — через докачку 1-минутных и ресемплинг),
+   в количестве, достаточном для needed итоговых свечей
+   базового ТФ плюс запас на скользящее окно анализа.
+*/
+
+async function getHistoricalCandles(
+type,
+symbol,
+interval,
+needed,
+onProgress
+){
+
+const resampleFactor=
+SYNTHETIC_TF_FACTORS[interval];
+
+if(resampleFactor){
+
+const rawNeeded=
+Math.min(
+HISTORICAL_MAX_CANDLES,
+needed*resampleFactor+resampleFactor
+);
+
+const base=
+await fetchHistoricalRawCandles(
+type,
+symbol,
+type==="forex"
+?twelveInterval("1")
+:binanceInterval("1"),
+rawNeeded,
+onProgress
+);
+
+return resampleCandles(
+base,
+resampleFactor
+);
+
+}
+
+return await fetchHistoricalRawCandles(
+type,
+symbol,
+type==="forex"
+?twelveInterval(interval)
+:binanceInterval(interval),
+needed,
+onProgress
+);
+
+}
+
+
+/* =========================================================
    EMA
 ========================================================= */
 
@@ -5146,6 +6923,99 @@ return candles;
 }
 
 
+/*
+   Чистая (без сети) логика согласования комбо
+   из 3 ТФ — вынесена отдельно, чтобы её могли
+   использовать и живой мониторинг, и тестер
+   стратегии на истории, гарантированно одной
+   и той же логикой без риска разойтись.
+*/
+
+function computeComboConfirmation(
+baseResult,
+midResult,
+highResult,
+baseMinutes,
+midMinutes,
+highMinutes,
+comboLabel,
+midLabel,
+highLabel
+){
+
+const direction=
+baseResult.signal;
+
+const midAgrees=
+direction==="BUY"
+?midResult.score>53
+:midResult.score<47;
+
+const highAgrees=
+direction==="BUY"
+?highResult.score>53
+:highResult.score<47;
+
+const agreeCount=
+(midAgrees?1:0)+
+(highAgrees?1:0);
+
+
+if(agreeCount<2){
+
+return{
+...baseResult,
+signal:"WAIT",
+duration:0,
+info:
+baseResult.info+
+` • отменено: нет согласия по всем ТФ набора (${midLabel}/${highLabel})`
+};
+
+}
+
+
+const avgStrength=
+(
+Math.abs(midResult.score-50)+
+Math.abs(highResult.score-50)
+)/2;
+
+const range=
+Math.max(0,highMinutes-midMinutes);
+
+const extra=
+Math.min(
+range,
+Math.max(0,(avgStrength-25)/25*range)
+);
+
+let durationMinutes=
+midMinutes+extra;
+
+durationMinutes=
+Math.min(
+highMinutes,
+Math.max(baseMinutes,durationMinutes)
+);
+
+
+return{
+
+...baseResult,
+
+duration:
+Math.round(durationMinutes)*60*1000,
+
+info:
+baseResult.info+
+` • ${comboLabel||""}: все ТФ согласны (${Math.round(durationMinutes)} мин)`
+
+};
+
+}
+
+
 async function calculateTradeSignalMTF(monitor,baseCandles){
 
 const baseResult=
@@ -5220,84 +7090,17 @@ calculateSignal(midCandles);
 const highResult=
 calculateSignal(highCandles);
 
-const direction=
-baseResult.signal;
-
-const midAgrees=
-direction==="BUY"
-?midResult.score>53
-:midResult.score<47;
-
-const highAgrees=
-direction==="BUY"
-?highResult.score>53
-:highResult.score<47;
-
-const agreeCount=
-(midAgrees?1:0)+
-(highAgrees?1:0);
-
-
-/*
-   Требуем согласия ОБОИХ старших ТФ
-   из выбранного набора, а не одного из
-   двух — иначе получается, что бот
-   "смотрит" на средний и старший ТФ
-   только формально, а по факту хватало
-   почти любого перевеса на одном из них.
-*/
-
-if(agreeCount<2){
-
-return{
-...baseResult,
-signal:"WAIT",
-duration:0,
-info:
-baseResult.info+
-` • отменено: нет согласия по всем ТФ набора (${timeframeLabel(midTf)}/${timeframeLabel(highTf)})`
-};
-
-}
-
-
-const avgStrength=
-(
-Math.abs(midResult.score-50)+
-Math.abs(highResult.score-50)
-)/2;
-
-const range=
-Math.max(0,highMinutes-midMinutes);
-
-const extra=
-Math.min(
-range,
-Math.max(0,(avgStrength-25)/25*range)
-);
-
-let durationMinutes=
-midMinutes+extra;
-
-durationMinutes=
-Math.min(
+return computeComboConfirmation(
+baseResult,
+midResult,
+highResult,
+baseMinutes,
+midMinutes,
 highMinutes,
-Math.max(baseMinutes,durationMinutes)
+monitor.comboLabel,
+timeframeLabel(midTf),
+timeframeLabel(highTf)
 );
-
-
-return{
-
-...baseResult,
-
-duration:
-Math.round(durationMinutes)*60*1000,
-
-info:
-baseResult.info+
-` • ${monitor.comboLabel||""}: все ТФ согласны (${Math.round(durationMinutes)} мин)`
-
-};
 
 }
 
@@ -6068,7 +7871,9 @@ shadowClosedAt:null
 function applyAdvancedFactors(
 monitor,
 baseCandles,
-result
+result,
+tradesSource,
+nowOverride
 ){
 
 if(
@@ -6259,7 +8064,11 @@ monitor.pendingConfirmed=false;
 
 if(
 (signal==="BUY" || signal==="SELL") &&
-isInLossStreakCooldown(monitor.id)
+isInLossStreakCooldown(
+monitor.id,
+tradesSource,
+nowOverride
+)
 ){
 
 signal="WAIT";
@@ -6308,6 +8117,672 @@ adxValue===null
 
 divergence:
 divergence||"нет"
+
+};
+
+}
+
+
+/*
+   =========================================================
+   ТЕСТЕР СТРАТЕГИИ (БЭКТЕСТ)
+
+   calculateBacktestSignal — зеркало живой
+   calculateTradeSignal(), но без сети: получает уже
+   заранее нарезанные окна свечей (без заглядывания
+   в будущее — окна обрезаны строго по времени текущей
+   "виртуальной" свечи) и использует ТЕ ЖЕ САМЫЕ функции
+   (calculateSignal, computeComboConfirmation,
+   applyAdvancedFactors), что и живая торговля — чтобы
+   тест был максимально честным отражением реальной логики,
+   а не отдельной, потенциально разъехавшейся копией.
+========================================================= */
+
+function calculateBacktestSignal(
+fakeMonitor,
+baseWindow,
+midWindow,
+highWindow,
+backtestTrades,
+simulatedNow
+){
+
+const baseResult=
+calculateSignal(baseWindow);
+
+const baseMinutes=
+timeframeMinutes(fakeMonitor.interval);
+
+let mtfResult;
+
+if(baseResult.signal==="WAIT"){
+
+mtfResult={
+...baseResult,
+duration:baseMinutes*60*1000
+};
+
+}else{
+
+const midResult=
+calculateSignal(midWindow);
+
+const highResult=
+calculateSignal(highWindow);
+
+const midMinutes=
+timeframeMinutes(fakeMonitor.comboTfs[1]);
+
+const highMinutes=
+timeframeMinutes(fakeMonitor.comboTfs[2]);
+
+mtfResult=
+computeComboConfirmation(
+baseResult,
+midResult,
+highResult,
+baseMinutes,
+midMinutes,
+highMinutes,
+fakeMonitor.comboLabel,
+timeframeLabel(fakeMonitor.comboTfs[1]),
+timeframeLabel(fakeMonitor.comboTfs[2])
+);
+
+}
+
+return applyAdvancedFactors(
+fakeMonitor,
+baseWindow,
+mtfResult,
+backtestTrades,
+simulatedNow
+);
+
+}
+
+
+/*
+   Прогоняет историю вперёд по времени, свеча за
+   свечой базового ТФ, симулируя ровно ту же
+   последовательность решений, что и живой монитор:
+   не открывает вторую сделку, пока не закрылась
+   предыдущая (как и в жизни — один монитор ведёт
+   максимум одну открытую сделку). Если истории не
+   хватило на запрошенное число сделок — докачивает
+   более старую историю и повторяет проход заново.
+*/
+
+async function runBacktest(
+type,
+symbol,
+comboTfs,
+comboLabel,
+targetCount,
+onProgress,
+onNeedMore,
+useAiInTest
+){
+
+const AI_TEST_MAX_CALLS=30;
+
+let aiCallsUsed=0;
+
+const aiDecisionCache=new Map();
+
+const baseTf=comboTfs[0];
+const midTf=comboTfs[1];
+const highTf=comboTfs[2];
+
+const midMinutes=
+timeframeMinutes(midTf);
+
+const highMinutes=
+timeframeMinutes(highTf);
+
+const fakeMonitor={
+
+id:
+"backtest_"+Date.now()+"_"+Math.random(),
+
+type,
+symbol,
+
+interval:baseTf,
+comboTfs,
+comboLabel,
+
+pendingSignal:null,
+pendingConfirmed:false
+
+};
+
+const baseCandleMinutes=
+timeframeMinutes(baseTf);
+
+/*
+   Сначала пробуем ближайшие ~2 суток
+   календарного времени по базовому ТФ,
+   а не абстрактное число свечей — иначе
+   один и тот же множитель растягивается
+   в разы дальше на крупных ТФ (30м/1ч/4ч/1д),
+   чем на мелких (5м). Если сигналов в этом
+   окне не хватит — тестер сам спросит,
+   углубляться ли дальше (не тихо).
+
+   Меньше ANALYSIS_CANDLES+буфер уйти не
+   можем: индикаторам физически нужно
+   столько свечей истории, чтобы посчитать
+   вообще хоть один сигнал — это требование
+   самой стратегии, а не тестера.
+*/
+
+const twoDaysCandles=
+Math.ceil(
+(2*24*60)/baseCandleMinutes
+);
+
+let baseNeeded=
+Math.max(
+ANALYSIS_CANDLES+50,
+twoDaysCandles
+);
+
+let backtestTrades=[];
+
+let stoppedReason="target_reached";
+
+while(true){
+
+if(onProgress){
+
+onProgress({
+stage:"base",
+loaded:0,
+needed:baseNeeded
+});
+
+}
+
+let baseCandles;
+
+try{
+
+baseCandles=
+await getHistoricalCandles(
+type,symbol,baseTf,baseNeeded,
+(loaded,needed)=>{
+
+if(onProgress){
+
+onProgress({
+stage:"base",
+loaded,
+needed
+});
+
+}
+
+}
+);
+
+}catch(e){
+
+stoppedReason="network_error";
+
+break;
+
+}
+
+if(baseCandles.length<ANALYSIS_CANDLES+10){
+
+stoppedReason="insufficient_data";
+
+break;
+
+}
+
+const spanStart=
+baseCandles[0].time;
+
+const spanEnd=
+baseCandles[baseCandles.length-1].time;
+
+const spanMinutes=
+(spanEnd-spanStart)/60000;
+
+const midNeeded=
+Math.min(
+HISTORICAL_MAX_CANDLES,
+Math.ceil(spanMinutes/midMinutes)+
+ANALYSIS_CANDLES+60
+);
+
+const highNeeded=
+Math.min(
+HISTORICAL_MAX_CANDLES,
+Math.ceil(spanMinutes/highMinutes)+
+ANALYSIS_CANDLES+60
+);
+
+if(onProgress){
+
+onProgress({
+stage:"mid",
+loaded:0,
+needed:midNeeded
+});
+
+}
+
+let midCandles,highCandles;
+
+try{
+
+midCandles=
+await getHistoricalCandles(
+type,symbol,midTf,midNeeded,
+(loaded,needed)=>{
+
+if(onProgress){
+
+onProgress({
+stage:"mid",
+loaded,
+needed
+});
+
+}
+
+}
+);
+
+if(onProgress){
+
+onProgress({
+stage:"high",
+loaded:0,
+needed:highNeeded
+});
+
+}
+
+highCandles=
+await getHistoricalCandles(
+type,symbol,highTf,highNeeded,
+(loaded,needed)=>{
+
+if(onProgress){
+
+onProgress({
+stage:"high",
+loaded,
+needed
+});
+
+}
+
+}
+);
+
+}catch(e){
+
+stoppedReason="network_error";
+
+break;
+
+}
+
+backtestTrades=[];
+
+fakeMonitor.pendingSignal=null;
+fakeMonitor.pendingConfirmed=false;
+
+let i=ANALYSIS_CANDLES-1;
+
+let blockedUntil=0;
+
+while(
+i<baseCandles.length &&
+backtestTrades.length<targetCount
+){
+
+const candle=
+baseCandles[i];
+
+if(candle.time<blockedUntil){
+
+i++;
+continue;
+
+}
+
+const baseWindow=
+baseCandles.slice(
+Math.max(0,i-ANALYSIS_CANDLES+1),
+i+1
+);
+
+const midWindow=
+midCandles
+.filter(c=>c.time<=candle.time)
+.slice(-ANALYSIS_CANDLES);
+
+const highWindow=
+highCandles
+.filter(c=>c.time<=candle.time)
+.slice(-ANALYSIS_CANDLES);
+
+if(
+midWindow.length<ANALYSIS_CANDLES ||
+highWindow.length<ANALYSIS_CANDLES
+){
+
+i++;
+continue;
+
+}
+
+const result=
+calculateBacktestSignal(
+fakeMonitor,
+baseWindow,
+midWindow,
+highWindow,
+backtestTrades,
+candle.time
+);
+
+if(
+result.signal!=="BUY" &&
+result.signal!=="SELL"
+){
+
+i++;
+continue;
+
+}
+
+let aiReasoning=null;
+
+if(useAiInTest){
+
+const cacheKey=
+candle.time+"_"+result.signal;
+
+let parsed=
+aiDecisionCache.get(cacheKey)||null;
+
+if(!parsed){
+
+if(aiCallsUsed>=AI_TEST_MAX_CALLS){
+
+/*
+   Лимит обращений к ИИ за один тест
+   исчерпан — не тратим время/деньги
+   дальше, честно останавливаемся.
+*/
+
+stoppedReason="ai_limit_reached";
+
+break;
+
+}
+
+if(onProgress){
+
+onProgress({
+stage:"ai",
+found:backtestTrades.length,
+needed:targetCount
+});
+
+}
+
+aiCallsUsed++;
+
+const prompt=
+buildAiSignalPrompt(
+fakeMonitor,
+result,
+backtestTrades
+);
+
+try{
+
+const aiText=
+await callAI(prompt);
+
+parsed=
+extractJsonFromAiText(aiText);
+
+}catch(e){
+
+stoppedReason="network_error";
+
+break;
+
+}
+
+aiDecisionCache.set(cacheKey,parsed);
+
+}
+
+if(!parsed || parsed.decision!=="OPEN"){
+
+i++;
+continue;
+
+}
+
+if(
+parsed.direction==="BUY" ||
+parsed.direction==="SELL"
+){
+
+result.signal=parsed.direction;
+
+}
+
+if(
+typeof parsed.duration_minutes==="number" &&
+parsed.duration_minutes>0
+){
+
+result.duration=
+parsed.duration_minutes*60000;
+
+}
+
+aiReasoning=parsed.reasoning||"";
+
+}
+
+const duration=
+(isFinite(result.duration) && result.duration>0)
+?result.duration
+:timeframeMinutes(baseTf)*60*1000;
+
+const entryPrice=
+candle.close;
+
+const entryTime=
+candle.time;
+
+const exitTime=
+entryTime+duration;
+
+let exitIndex=i;
+
+while(
+exitIndex<baseCandles.length-1 &&
+baseCandles[exitIndex].time<exitTime
+){
+
+exitIndex++;
+
+}
+
+if(baseCandles[exitIndex].time<exitTime){
+
+/*
+   Истории не хватает, чтобы честно
+   закрыть эту сделку — останавливаемся,
+   не придумываем результат.
+*/
+
+break;
+
+}
+
+const exitPrice=
+baseCandles[exitIndex].close;
+
+const difference=
+result.signal==="BUY"
+?exitPrice-entryPrice
+:entryPrice-exitPrice;
+
+const tolerance=
+Math.max(
+Math.abs(entryPrice)*0.000001,
+1e-12
+);
+
+const tradeResult=
+Math.abs(difference)<tolerance
+?"FLAT"
+:difference>0
+?"WIN"
+:"LOSS";
+
+backtestTrades.push({
+
+id:
+"bt_"+entryTime+"_"+Math.random(),
+
+symbol,
+type,
+
+interval:baseTf,
+comboLabel,
+
+direction:result.signal,
+
+score:result.score,
+
+confidence:result.confidence||null,
+
+factorsSnapshot:{
+
+factors:result.factors||[],
+
+adx:
+result.adx!==undefined
+?result.adx
+:null,
+
+adxRegime:
+result.adxRegime||null,
+
+confidence:result.confidence||null,
+
+divergence:
+result.divergence||"нет"
+
+},
+
+entry:entryPrice,
+exit:exitPrice,
+
+start:entryTime,
+end:exitTime,
+
+closed:true,
+closedAt:
+baseCandles[exitIndex].time,
+
+monitorId:fakeMonitor.id,
+
+aiReasoning,
+
+result:tradeResult,
+resultValue:difference
+
+});
+
+blockedUntil=
+baseCandles[exitIndex].time;
+
+i=exitIndex+1;
+
+if(onProgress){
+
+onProgress({
+stage:"simulating",
+found:backtestTrades.length,
+needed:targetCount
+});
+
+}
+
+}
+
+if(backtestTrades.length>=targetCount){
+
+stoppedReason="target_reached";
+
+break;
+
+}
+
+if(baseNeeded>=HISTORICAL_MAX_CANDLES){
+
+stoppedReason="history_exhausted";
+
+break;
+
+}
+
+const nextBaseNeeded=
+Math.min(
+HISTORICAL_MAX_CANDLES,
+baseNeeded*2
+);
+
+if(onNeedMore){
+
+const shouldContinue=
+await onNeedMore({
+found:backtestTrades.length,
+requested:targetCount,
+loadedCandles:baseCandles.length,
+baseCandleMinutes,
+nextBaseNeeded,
+aiCallsUsed,
+useAiInTest
+});
+
+if(!shouldContinue){
+
+stoppedReason="user_stopped";
+
+break;
+
+}
+
+}
+
+baseNeeded=nextBaseNeeded;
+
+}
+
+return{
+
+trades:backtestTrades,
+requested:targetCount,
+found:backtestTrades.length,
+stoppedReason
 
 };
 
@@ -7023,6 +9498,14 @@ page==="journal"
 
 
 document
+.getElementById("testerPage")
+.classList.toggle(
+"active",
+page==="tester"
+);
+
+
+document
 .getElementById("mainNav")
 .classList.toggle(
 "active",
@@ -7043,6 +9526,14 @@ document
 .classList.toggle(
 "active",
 page==="journal"
+);
+
+
+document
+.getElementById("testerNav")
+.classList.toggle(
+"active",
+page==="tester"
 );
 
 
@@ -7186,10 +9677,20 @@ updateAdaptiveFactorWeights();
    закрывшаяся менее LOSS_STREAK_COOLDOWN назад.
 */
 
-function isInLossStreakCooldown(monitorId){
+function isInLossStreakCooldown(
+monitorId,
+tradesSource,
+nowOverride
+){
+
+const src=
+tradesSource||trades;
+
+const now=
+nowOverride||Date.now();
 
 const closedTrades=
-trades
+src
 .filter(
 t=>
 t.monitorId===monitorId &&
@@ -7218,7 +9719,7 @@ if(!allLosses)
 return false;
 
 return(
-Date.now()-recent[0].closedAt<
+now-recent[0].closedAt<
 LOSS_STREAK_COOLDOWN
 );
 
@@ -7287,13 +9788,13 @@ let selectedCombo="5-15-30";
 
 
 document
-.querySelectorAll(".tf-option")
+.querySelectorAll("#tfSelect .tf-option")
 .forEach(button=>{
 
 button.onclick=()=>{
 
 document
-.querySelectorAll(".tf-option")
+.querySelectorAll("#tfSelect .tf-option")
 .forEach(
 b=>b.classList.remove(
 "active"
@@ -7312,6 +9813,451 @@ button.dataset.combo;
 };
 
 });
+
+
+/* =========================================================
+   ТЕСТЕР СТРАТЕГИИ — UI
+
+   Управляет вводом (пара/комбо/кол-во сделок), таймером
+   и прогрессом во время работы runBacktest(), интерактивным
+   запросом "копать глубже или закончить?" когда истории не
+   хватает, и выводом результата (список сделок + сводка +
+   факторы — отдельно от реального журнала).
+========================================================= */
+
+let testerCombo="5-10-30";
+
+document
+.querySelectorAll("#testerComboSelect .tf-option")
+.forEach(button=>{
+
+button.onclick=()=>{
+
+document
+.querySelectorAll("#testerComboSelect .tf-option")
+.forEach(
+b=>b.classList.remove("active")
+);
+
+button.classList.add("active");
+
+testerCombo=
+button.dataset.combo;
+
+};
+
+});
+
+
+let testerTimerInterval=null;
+
+let testerStartTime=0;
+
+let testerLastProgress=null;
+
+let testerContinueResolve=null;
+
+let testerResultTrades=[];
+
+
+function testerFormatElapsed(ms){
+
+const totalSec=
+Math.max(0,Math.floor(ms/1000));
+
+const m=
+Math.floor(totalSec/60);
+
+const s=
+totalSec%60;
+
+return(
+String(m).padStart(2,"0")+
+":"+
+String(s).padStart(2,"0")
+);
+
+}
+
+
+function testerStageLabel(stage){
+
+if(stage==="base")
+return "Загружаю историю базового ТФ";
+
+if(stage==="mid")
+return "Загружаю историю среднего ТФ";
+
+if(stage==="high")
+return "Загружаю историю старшего ТФ";
+
+if(stage==="simulating")
+return "Ищу сигналы в истории";
+
+if(stage==="ai")
+return "Спрашиваю ИИ по найденному сигналу";
+
+return "Работаю";
+
+}
+
+
+function testerRenderProgress(progress){
+
+const el=
+document.getElementById("testerProgress");
+
+if(!el)
+return;
+
+const elapsed=
+testerFormatElapsed(
+Date.now()-testerStartTime
+);
+
+let detail="Подготовка...";
+
+if(progress){
+
+detail=
+(progress.stage==="simulating" || progress.stage==="ai")
+?`${testerStageLabel(progress.stage)}: найдено ${progress.found} из ${progress.needed}`
+:`${testerStageLabel(progress.stage)}: ${progress.loaded}/${progress.needed} свечей`;
+
+}
+
+el.innerHTML=
+`⏱ ${elapsed} · ${detail}`;
+
+}
+
+
+/*
+   Вызывается движком бэктеста, когда истории не
+   хватило на запрошенное число сделок, но копать
+   ещё глубже технически возможно. Показываем
+   пользователю выбор вместо тихого автопродолжения.
+*/
+
+function testerAskContinue(info){
+
+return new Promise(resolve=>{
+
+testerContinueResolve=resolve;
+
+const el=
+document.getElementById("testerProgress");
+
+if(!el){
+
+resolve(false);
+
+return;
+
+}
+
+el.innerHTML=`
+
+<div class="rec-reason">
+Нашлось ${info.found} из ${info.requested} запрошенных сделок за ближайшие ~${Math.round(info.loadedCandles*info.baseCandleMinutes/1440*10)/10} дней истории.${info.useAiInTest?(info.aiCallsUsed>0?` ИИ рассмотрел ${info.aiCallsUsed} сигнал(ов) от стратегии и открыл только ${info.found} — остальные отклонил.`:" За это время стратегия вообще не нашла ни одного сигнала для проверки ИИ — дело не в отказах ИИ, сигналов не было."):""} Копнуть в историю ещё глубже? Это займёт больше времени и запросов к API.
+</div>
+
+<div class="tester-ask-buttons">
+
+<button
+class="save"
+onclick="testerRespondContinue(true)">
+Продолжить поиск
+</button>
+
+<button
+onclick="testerRespondContinue(false)">
+Закончить с тем, что есть
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+
+function testerRespondContinue(shouldContinue){
+
+if(testerContinueResolve){
+
+testerContinueResolve(shouldContinue);
+
+testerContinueResolve=null;
+
+}
+
+}
+
+
+async function startBacktest(){
+
+const runBtn=
+document.getElementById("testerRunBtn");
+
+if(runBtn.disabled)
+return;
+
+const rawSymbol=
+document.getElementById(
+"testerSymbolInput"
+).value;
+
+const value=
+normalizeInput(rawSymbol);
+
+if(!value){
+
+alert("Введите пару, например EURUSD или BTCUSDT");
+
+return;
+
+}
+
+const forex=
+isForexSymbol(value);
+
+const symbol=
+forex
+?normalizeForex(value)
+:normalizeCrypto(value);
+
+const type=
+forex?"forex":"crypto";
+
+const combo=
+TF_COMBO_PRESETS[testerCombo];
+
+const countInput=
+document.getElementById(
+"testerCountInput"
+);
+
+let targetCount=
+parseInt(countInput.value,10);
+
+if(!isFinite(targetCount) || targetCount<1){
+
+targetCount=1;
+
+}
+
+if(targetCount>500){
+
+targetCount=500;
+
+}
+
+countInput.value=targetCount;
+
+const useAiInTest=
+document.getElementById(
+"testerAiToggle"
+).checked;
+
+if(useAiInTest && !getAiKey(aiSelectedProvider)){
+
+alert(
+"Для использования ИИ в тесте сначала задайте API-ключ в настройках (⚙ Настройки API)."
+);
+
+return;
+
+}
+
+
+runBtn.disabled=true;
+
+runBtn.textContent=
+"⏳ Тестирую...";
+
+document.getElementById(
+"testerFactorsBtn"
+).style.display="none";
+
+document.getElementById(
+"testerResultsList"
+).innerHTML="";
+
+document.getElementById(
+"testerSummary"
+).innerHTML="";
+
+testerStartTime=Date.now();
+
+testerLastProgress=null;
+
+testerRenderProgress(null);
+
+testerTimerInterval=
+setInterval(()=>{
+
+if(!testerContinueResolve){
+
+testerRenderProgress(testerLastProgress);
+
+}
+
+},1000);
+
+
+let result;
+
+try{
+
+result=
+await runBacktest(
+type,
+symbol,
+combo.tfs,
+combo.label,
+targetCount,
+(progress)=>{
+
+testerLastProgress=progress;
+
+if(!testerContinueResolve){
+
+testerRenderProgress(progress);
+
+}
+
+},
+(info)=>testerAskContinue(info),
+useAiInTest
+);
+
+}catch(e){
+
+result={
+
+trades:[],
+requested:targetCount,
+found:0,
+stoppedReason:"network_error"
+
+};
+
+}
+
+clearInterval(testerTimerInterval);
+
+testerTimerInterval=null;
+
+runBtn.disabled=false;
+
+runBtn.textContent=
+"▶ Запустить тест";
+
+testerRenderResult(symbol,combo,result);
+
+}
+
+
+function testerRenderResult(symbol,combo,result){
+
+testerResultTrades=result.trades;
+
+document.getElementById(
+"testerProgress"
+).innerHTML="";
+
+const wins=
+result.trades.filter(
+t=>t.result==="WIN"
+).length;
+
+const losses=
+result.trades.filter(
+t=>t.result==="LOSS"
+).length;
+
+const flat=
+result.trades.filter(
+t=>t.result==="FLAT"
+).length;
+
+const closedTotal=
+wins+losses;
+
+const winrate=
+closedTotal
+?Math.round(wins/closedTotal*100)
+:0;
+
+const reasonText=
+
+result.stoppedReason==="target_reached"
+?"Найдено запрошенное количество сделок."
+:result.stoppedReason==="history_exhausted"
+?"Достигнут предел доступной истории для этой пары/ТФ — глубже уйти нельзя."
+:result.stoppedReason==="user_stopped"
+?"Остановлено по вашему выбору."
+:result.stoppedReason==="insufficient_data"
+?"Слишком мало исторических данных для этой пары на выбранном ТФ."
+:result.stoppedReason==="network_error"
+?"Ошибка сети/API при загрузке истории — тест остановлен раньше срока."
+:result.stoppedReason==="ai_limit_reached"
+?"Достигнут лимит обращений к ИИ за один тест (30) — тест остановлен, чтобы не тратить лишнее время и деньги."
+:"";
+
+document.getElementById(
+"testerSummary"
+).innerHTML=`
+
+<div class="stats-line">
+<span>Найдено: ${result.found}/${result.requested}</span>
+<span>✅ ${wins}</span>
+<span>❌ ${losses}</span>
+<span>⚪ ${flat}</span>
+<span>Win Rate: ${winrate}%</span>
+</div>
+
+<div class="rec-reason">${symbol} • ${combo.label} — ${reasonText}</div>
+
+`;
+
+document.getElementById(
+"testerFactorsBtn"
+).style.display=
+result.trades.length?"block":"none";
+
+document.getElementById(
+"testerResultsList"
+).innerHTML=
+
+result.trades.length
+
+?result.trades
+.slice()
+.reverse()
+.map(t=>renderBacktestTrade(t))
+.join("")
+
+:`<div class="empty">Сигналов на истории не найдено.</div>`;
+
+}
+
+
+function openTesterFactors(){
+
+if(!testerResultTrades.length)
+return;
+
+openFactorStatsModal(
+null,
+testerResultTrades,
+`📊 По факторам — тест ${testerResultTrades[0].symbol}`
+);
+
+}
 
 
 function openMonitorModal(){
@@ -7741,6 +10687,8 @@ saveMonitors();
 
 renderSignals();
 
+return trade;
+
 }
 
 
@@ -7883,11 +10831,29 @@ if(
 monitors.some(m=>m.id===monitor.id)
 ){
 
+if(aiEnabled){
+
+evaluateSignalWithAI(
+monitor,
+result
+).catch(e=>{
+
+console.log(
+"Ошибка оценки ИИ:",
+e
+);
+
+});
+
+}else{
+
 createTrade(
 monitor,
 result,
 livePrice
 );
+
+}
 
 }
 
@@ -7986,6 +10952,23 @@ t.recommendation;
 
 if(rec.shadowStatus==="waiting"){
 
+/*
+   Если реальная сделка уже закрылась,
+   а рекомендация так и не сработала —
+   считаем её несостоявшейся сразу,
+   без дополнительного окна ожидания.
+*/
+
+if(t.closed){
+
+rec.shadowStatus="missed";
+
+changed=true;
+
+return;
+
+}
+
 const reached=
 t.direction==="BUY"
 ?livePrice<=rec.entryPrice
@@ -8003,28 +10986,6 @@ rec.shadowEnd=
 now+rec.durationMinutes*60000;
 
 changed=true;
-
-}else{
-
-/*
-   Если цена так и не дошла до
-   рекомендованного входа в течение
-   разумного окна (двойная от
-   исходной запланированной
-   длительности сделки) — считаем,
-   что рекомендация "не сработала".
-*/
-
-const deadline=
-t.end+(t.end-t.start);
-
-if(now>=deadline){
-
-rec.shadowStatus="missed";
-
-changed=true;
-
-}
 
 }
 
@@ -8346,6 +11307,14 @@ ${trade.direction}
 
 </div>
 
+${trade.aiAnalysis?`
+<button
+class="trade-ai-btn"
+onclick="openAiChatForTrade('${trade.id}',event)">
+🤖 AI
+</button>
+`:""}
+
 <button
 class="trade-menu-btn"
 onclick="openTradeMenu('${trade.id}',event)">
@@ -8473,6 +11442,14 @@ ${trade.direction}
 
 </div>
 
+${trade.aiAnalysis?`
+<button
+class="trade-ai-btn"
+onclick="openAiChatForTrade('${trade.id}',event)">
+🤖 AI
+</button>
+`:""}
+
 <button
 class="trade-menu-btn"
 onclick="openTradeMenu('${trade.id}',event)">
@@ -8538,6 +11515,146 @@ trade.type
 }
 
 </div>
+
+</div>
+
+`;
+
+}
+
+
+/*
+   Карточка сделки тестера — визуально идентична
+   закрытой карточке из renderTrade, но без кнопки
+   "⋮": тестовые сделки не лежат в общем массиве
+   trades, так что меню (удаление/факторы/
+   рекомендация) для них всё равно не сработало бы.
+*/
+
+function renderBacktestTrade(trade){
+
+const directionClass=
+trade.direction==="BUY"
+?"buy"
+:"sell";
+
+const directionIcon=
+trade.direction==="BUY"
+?"🟢"
+:"🔴";
+
+const difference=
+trade.resultValue||0;
+
+const resultClass=
+trade.result==="WIN"
+?"win"
+:trade.result==="LOSS"
+?"loss"
+:"flat";
+
+const resultText=
+trade.result==="WIN"
+?"ПРИБЫЛЬ"
+:trade.result==="LOSS"
+?"УБЫТОК"
+:"FLAT";
+
+const sign=
+difference>0?"+":"";
+
+const durationMinutes=
+Math.round(
+(trade.end-trade.start)/60000
+);
+
+return `
+
+<div class="signal-item">
+
+<div class="signal-item-top">
+
+<div class="signal-pair">
+
+${directionIcon}
+${trade.symbol}
+•
+${trade.comboLabel||timeframeLabel(
+trade.interval
+)}
+
+</div>
+
+<div
+class="signal-direction ${directionClass}">
+
+${trade.direction}
+
+</div>
+
+</div>
+
+
+<div class="signal-price">
+
+${formatTradePrice(
+trade.entry,
+trade.type
+)}
+
+→
+
+${formatTradePrice(
+trade.exit,
+trade.type
+)}
+
+</div>
+
+
+<div class="signal-meta">
+
+<span>
+Score ${trade.score}/100${trade.confidence?" • "+trade.confidence:""} • ${durationMinutes}м
+</span>
+
+</div>
+
+
+<div class="signal-meta">
+
+<span>
+Откр: ${formatTradeDateTime(trade.start)}
+</span>
+
+<span>
+Закр: ${formatTradeDateTime(trade.closedAt||trade.end)}
+</span>
+
+</div>
+
+
+<div class="result ${resultClass}">
+
+${resultText}
+
+${
+trade.result==="FLAT"
+?""
+:
+` ${sign}${formatDifference(
+difference,
+trade.type
+)}`
+}
+
+</div>
+
+${
+trade.aiReasoning
+?`<div class="rec-reason">🤖 ${escapeHtml(trade.aiReasoning)}</div>`
+:""
+}
 
 </div>
 
@@ -8712,10 +11829,10 @@ document.getElementById(
    и какой винрейт был у сделок, где он присутствовал.
 ========================================================= */
 
-function computeFactorStats(typeFilter){
+function computeFactorStats(typeFilter,sourceArray){
 
 const closedWithSnapshot=
-trades.filter(
+(sourceArray||trades).filter(
 t=>
 t.closed &&
 t.factorsSnapshot &&
@@ -8822,10 +11939,10 @@ winrate
 }
 
 
-function computeTimeframeStats(typeFilter){
+function computeTimeframeStats(typeFilter,sourceArray){
 
 const closed=
-trades.filter(
+(sourceArray||trades).filter(
 t=>
 t.closed &&
 (t.result==="WIN" || t.result==="LOSS") &&
@@ -8890,7 +12007,7 @@ a.sortMinutes-b.sortMinutes
 }
 
 
-function openFactorStatsModal(typeFilter){
+function openFactorStatsModal(typeFilter,sourceArray,titleOverride){
 
 const body=
 document.getElementById(
@@ -8901,17 +12018,21 @@ document.getElementById(
 "factorStatsTitle"
 ).textContent=
 
+titleOverride||
+
+(
 typeFilter==="forex"
 ?"📊 Статистика по факторам — Форекс"
 :typeFilter==="crypto"
 ?"📊 Статистика по факторам — Крипто"
-:"📊 Статистика по факторам";
+:"📊 Статистика по факторам"
+);
 
 const tfStats=
-computeTimeframeStats(typeFilter);
+computeTimeframeStats(typeFilter,sourceArray);
 
 const factorStats=
-computeFactorStats(typeFilter);
+computeFactorStats(typeFilter,sourceArray);
 
 let html="";
 
@@ -9124,9 +12245,9 @@ shadowHtml=`
 
 shadowHtml=`
 <div class="factor-stat-item">
-<span class="factor-stat-name">⚪ Цена не дошла до рекомендованного входа</span>
+<span class="factor-stat-name">⚪ Рекомендация не была открыта</span>
 </div>
-<div class="rec-reason">Рекомендация не была бы исполнена — цена ушла в сторону, не откатившись до ${formatTradePrice(rec.entryPrice,trade.type)}.</div>
+<div class="rec-reason">Сделка уже закрылась, а цена так и не дошла до рекомендованного входа ${formatTradePrice(rec.entryPrice,trade.type)} — рекомендация не была бы исполнена.</div>
 `;
 
 }
@@ -9205,6 +12326,202 @@ function closeTradeRecommendationModal(){
 document.getElementById(
 "tradeRecommendationModal"
 ).classList.remove("open");
+
+}
+
+
+/* =========================================================
+   ЧАТ С ИИ ПО КОНКРЕТНОЙ СДЕЛКЕ
+
+   История переписки хранится прямо на объекте сделки
+   (trade.aiChatHistory), так что переживает перезагрузку
+   страницы и видна там же, где карточка сделки.
+========================================================= */
+
+let activeAiChatTradeId=null;
+
+
+function openAiChatForTrade(id,event){
+
+if(event){
+
+event.stopPropagation();
+
+}
+
+activeAiChatTradeId=id;
+
+const trade=
+trades.find(t=>t.id===id);
+
+if(!trade || !trade.aiAnalysis){
+
+return;
+
+}
+
+document.getElementById(
+"aiChatTitle"
+).textContent=
+`🤖 ${trade.symbol} • ${trade.aiAnalysis.providerLabel||""}`;
+
+document.getElementById(
+"aiChatError"
+).textContent="";
+
+renderAiChatMessages();
+
+document.getElementById(
+"aiChatModal"
+).classList.add("open");
+
+}
+
+
+function closeAiChatModal(){
+
+document.getElementById(
+"aiChatModal"
+).classList.remove("open");
+
+activeAiChatTradeId=null;
+
+}
+
+
+function renderAiChatMessages(){
+
+const trade=
+trades.find(
+t=>t.id===activeAiChatTradeId
+);
+
+if(!trade)
+return;
+
+const container=
+document.getElementById(
+"aiChatMessages"
+);
+
+const initialText=
+escapeHtml(
+trade.aiAnalysis.reasoning||
+"Нет объяснения от ИИ для этой сделки."
+);
+
+const durationNote=
+trade.aiAnalysis.customDurationMinutes
+?` (ИИ выбрал свою длительность: ${trade.aiAnalysis.customDurationMinutes} мин вместо стандартной)`
+:"";
+
+let html=`
+
+<div class="ai-chat-msg ai">
+<div class="ai-chat-msg-meta">Решение: ${escapeHtml(trade.aiAnalysis.decision)}${durationNote}</div>
+${initialText}
+</div>
+
+`;
+
+const history=
+trade.aiChatHistory||[];
+
+history.forEach(m=>{
+
+html+=`
+<div class="ai-chat-msg ${m.role==="user"?"user":"ai"}">
+${escapeHtml(m.text)}
+</div>
+`;
+
+});
+
+container.innerHTML=html;
+
+container.scrollTop=
+container.scrollHeight;
+
+}
+
+
+async function sendAiChatMessage(){
+
+const input=
+document.getElementById("aiChatInput");
+
+const question=
+(input.value||"").trim();
+
+if(!question)
+return;
+
+const trade=
+trades.find(
+t=>t.id===activeAiChatTradeId
+);
+
+if(!trade)
+return;
+
+input.value="";
+
+if(!trade.aiChatHistory){
+
+trade.aiChatHistory=[];
+
+}
+
+trade.aiChatHistory.push({
+role:"user",
+text:question
+});
+
+renderAiChatMessages();
+
+const sendBtn=
+document.getElementById("aiChatSendBtn");
+
+const errorEl=
+document.getElementById("aiChatError");
+
+errorEl.textContent="";
+
+sendBtn.disabled=true;
+
+const contextPrompt=
+`Контекст сделки: ${trade.symbol}, направление ${trade.direction}, вход ${trade.entry}, ${trade.closed?("выход "+trade.exit+", результат "+trade.result):"сделка ещё открыта"}. Твоё исходное объяснение при открытии: "${trade.aiAnalysis.reasoning||""}".
+
+Вопрос пользователя об этой сделке: ${question}
+
+Ответь кратко и по делу, на русском.`;
+
+try{
+
+const answer=
+await callAI(contextPrompt);
+
+trade.aiChatHistory.push({
+role:"ai",
+text:answer||"Пустой ответ от ИИ."
+});
+
+saveTrades();
+
+renderAiChatMessages();
+
+}catch(e){
+
+errorEl.textContent=
+"Ошибка запроса к ИИ: "+e.message;
+
+trade.aiChatHistory.pop();
+
+renderAiChatMessages();
+
+}
+
+sendBtn.disabled=false;
 
 }
 
