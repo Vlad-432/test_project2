@@ -1738,8 +1738,7 @@ onclick="runBacktest()">
 
 <div
 id="backtestBody"
-class="factor-stats-body"
-style="margin-top:12px;">
+style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
 </div>
 
 <div class="modal-actions">
@@ -6194,30 +6193,38 @@ info+=
 }
 
 
-/* Режим рынка: тренд/флэт через ADX (ТЗ п.2) */
+/*
+   Нейтрализация фактора "Импульс" — по накопленной
+   статистике (вкладка "По факторам") он показывает
+   винрейт ниже 50% в обе стороны (рост ~42%, падение
+   ~38%), то есть на деле скорее мешает, чем помогает.
+   Вычитаем его вклад обратно, как уже делали с объёмом.
+*/
+
+const momentumContribution=
+momentumAnalysis(data).score;
+
+if(momentumContribution!==0){
+
+score-=momentumContribution;
+
+info+=
+" • импульс не учитывался (слабый фактор по статистике)";
+
+}
+
+
+/*
+   Режим рынка через ADX (ТЗ п.2) — по накопленной
+   статистике усиление/приглушение score регулярно
+   показывало винрейт ХУЖЕ, чем когда score вообще не
+   трогали ("нейтрально" 65% против "тренд" 52% и
+   "флэт" 46%). Оставляем ADX как информационную метку,
+   но больше не двигаем из-за него score.
+*/
 
 const adxValue=
 calculateADX(data,14);
-
-if(adxValue!==null){
-
-const deviation=
-score-50;
-
-if(adxValue>=25){
-
-score=50+deviation*1.15;
-
-}else if(adxValue<20){
-
-score=50+deviation*0.75;
-
-}
-
-score=
-Math.max(0,Math.min(100,score));
-
-}
 
 
 /* Дивергенция RSI (ТЗ п.3) */
@@ -6239,7 +6246,7 @@ info+=
 }else if(signal==="BUY"){
 
 score=
-Math.min(100,score+8);
+Math.min(100,score+12);
 
 info+=
 " • подтверждено бычьей дивергенцией";
@@ -6260,7 +6267,7 @@ info+=
 }else if(signal==="SELL"){
 
 score=
-Math.max(0,score-8);
+Math.max(0,score-12);
 
 info+=
 " • подтверждено медвежьей дивергенцией";
@@ -6296,6 +6303,28 @@ signal="WAIT";
 
 info+=
 " • ждём откат перед входом";
+
+}
+
+
+/*
+   Строгий порог для реальных сделок (не для главной!).
+   calculateSignal() пускает BUY/SELL уже от 75/25, но
+   после всех поправок выше (объём/импульс/ADX-метка/
+   дивергенция) для РЕАЛЬНОГО открытия сделки требуем
+   более явный перевес — меньше сделок, но только
+   действительно убедительные сетапы, а не пограничные.
+*/
+
+if(
+(signal==="BUY" || signal==="SELL") &&
+Math.abs(score-50)<32
+){
+
+info+=
+" • сигнал есть, но недостаточно убедительный для входа (после пересчёта)";
+
+signal="WAIT";
 
 }
 
