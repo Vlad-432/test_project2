@@ -4756,6 +4756,95 @@ text:"Зона: OB не найден"
 
 
 /* =========================================================
+   ДОБАВЛЕННАЯ СТРАТЕГИЯ: TREND + PULLBACK + CONFIRMATION
+
+   Это отдельный фильтр входа. Существующие индикаторы,
+   интерфейс, API, мониторы, сохранение сделок и остальные
+   функции не переписываются. Фильтр только отсекает слабые
+   BUY/SELL-сетапы и объясняет причину в факторах сигнала.
+========================================================= */
+
+function personalStrategyFilter(data,direction,ema20,ema50,ema200,rsiValue,atrValue){
+
+if(!data || data.length<60){
+return {ok:false,reason:"мало свечей для стратегии"};
+}
+
+const last=data[data.length-1];
+const previous=data.slice(-5,-1);
+const range=last.high-last.low;
+
+if(!range || range<=0){
+return {ok:false,reason:"у последней свечи нет диапазона"};
+}
+
+if(!atrValue || atrValue<=0){
+return {ok:false,reason:"ATR недоступен"};
+}
+
+/* 1. Направление старшего тренда */
+if(direction==="BUY"){
+if(!(ema20>ema50) || (ema200!==null && last.close<=ema200)){
+return {ok:false,reason:"покупка против основного тренда EMA"};
+}
+}else{
+if(!(ema20<ema50) || (ema200!==null && last.close>=ema200)){
+return {ok:false,reason:"продажа против основного тренда EMA"};
+}
+}
+
+/* 2. Не входить в боковике с очень слабым ADX */
+const adx=calculateADX(data,14);
+if(adx!==null && adx<16){
+return {ok:false,reason:"слабый тренд / боковик (ADX "+Math.round(adx)+")"};
+}
+
+/* 3. Не покупать в перегретой зоне и не продавать в перепроданной */
+if(direction==="BUY" && (rsiValue<48 || rsiValue>68)){
+return {ok:false,reason:"RSI вне зоны продолжения роста (48–68)"};
+}
+if(direction==="SELL" && (rsiValue<32 || rsiValue>52)){
+return {ok:false,reason:"RSI вне зоны продолжения падения (32–52)"};
+}
+
+/* 4. Не гнаться за ценой, если она слишком далеко от EMA20 */
+const distanceFromEma=Math.abs(last.close-ema20);
+if(distanceFromEma>atrValue*1.5){
+return {ok:false,reason:"цена слишком далеко от EMA20 — не догоняем импульс"};
+}
+if(direction==="BUY" && last.close<=ema20){
+return {ok:false,reason:"ждём возврата цены выше EMA20 для BUY"};
+}
+if(direction==="SELL" && last.close>=ema20){
+return {ok:false,reason:"ждём возврата цены ниже EMA20 для SELL"};
+}
+
+/* 5. В последних четырёх свечах должен быть откат к EMA20 */
+const retest=previous.some(c=>direction==="BUY"
+?(c.low<=ema20+atrValue*0.35)
+:(c.high>=ema20-atrValue*0.35));
+if(!retest){
+return {ok:false,reason:"нет подтверждённого отката к EMA20"};
+}
+
+/* 6. Последняя свеча должна подтвердить возобновление движения */
+const body=Math.abs(last.close-last.open);
+const closePosition=(last.close-last.low)/range;
+if(body<range*0.2){
+return {ok:false,reason:"слабая свеча подтверждения"};
+}
+if(direction==="BUY" && !(last.close>last.open && closePosition>=0.6)){
+return {ok:false,reason:"нет сильной бычьей свечи подтверждения"};
+}
+if(direction==="SELL" && !(last.close<last.open && closePosition<=0.4)){
+return {ok:false,reason:"нет сильной медвежьей свечи подтверждения"};
+}
+
+return {ok:true,reason:"тренд + откат к EMA20 + свечное подтверждение"};
+}
+
+
+/* =========================================================
    SIGNAL
 ========================================================= */
 
@@ -5191,6 +5280,40 @@ signal="SELL";
 }
 
 
+/* Добавляем только фильтр стратегии; базовый расчёт score не меняем. */
+let strategyInfo="Стратегия не применялась: сигнала нет";
+
+if(signal==="BUY" || signal==="SELL"){
+
+const strategyResult=personalStrategyFilter(
+ data,
+ signal,
+ ema20,
+ ema50,
+ ema200,
+ rsiValue,
+ atrValue
+);
+
+strategyInfo=strategyResult.reason;
+
+factors.push({
+ text:"Моя стратегия: "+strategyResult.reason,
+ type:strategyResult.ok?"good":"bad"
+});
+
+if(!strategyResult.ok){
+signal="WAIT";
+}
+
+}else{
+factors.push({
+ text:"Моя стратегия: ожидание совпадения условий",
+ type:"neutral"
+});
+}
+
+
 return{
 
 signal,
@@ -5198,7 +5321,7 @@ signal,
 score,
 
 info:
-`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей`,
+`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей • Стратегия: ${strategyInfo}`,
 
 factors,
 
