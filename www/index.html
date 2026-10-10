@@ -248,20 +248,40 @@ header{
 
 .favorite-chip{
     flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
     border:1px solid #29313e;
     background:#0b0f15;
     color:#d7dde6;
     border-radius:16px;
-    padding:5px 11px;
+    padding:5px 7px 5px 11px;
     font-size:10px;
     font-weight:700;
     white-space:nowrap;
+}
+
+.favorite-chip span{
     cursor:pointer;
 }
 
 .favorite-chip:active{
     border-color:#ffd23f;
     color:#ffd23f;
+}
+
+.favorite-chip-remove{
+    border:0;
+    background:none;
+    color:#555f70;
+    font-size:11px;
+    line-height:1;
+    padding:2px 3px;
+    cursor:pointer;
+}
+
+.favorite-chip-remove:active{
+    color:#ff536d;
 }
 
 .coin-symbol{
@@ -390,7 +410,7 @@ header{
     position:fixed;
     top:12px;
     left:50%;
-    transform:translateX(-50%) translateY(-120%);
+    transform:translateX(-50%);
     z-index:300;
     background:#14221e;
     border:1px solid #00d68f;
@@ -401,12 +421,15 @@ header{
     font-weight:800;
     max-width:90vw;
     text-align:center;
-    transition:transform .3s ease;
+    transition:opacity .3s ease;
     pointer-events:none;
+    opacity:0;
+    visibility:hidden;
 }
 
 .alert-toast.show{
-    transform:translateX(-50%) translateY(0);
+    opacity:1;
+    visibility:visible;
 }
 
 .timeframes{
@@ -1698,6 +1721,12 @@ id="backtestTfSelect">
 <button class="backtest-tf-option" data-tf="30" onclick="selectBacktestTf('30',this)">30м</button>
 <button class="backtest-tf-option" data-tf="60" onclick="selectBacktestTf('60',this)">1ч</button>
 
+</div>
+
+<div class="api-settings-note" style="margin-top:6px;">
+2м/3м/4м — не от TradingView и не про подписку: у бирж таких
+свечей просто не существует физически, мы сами собираем их
+из 1-минутных данных (склеиваем по 2/3/4 штуки в одну свечу).
 </div>
 
 <button
@@ -8907,9 +8936,43 @@ bar.style.display=
 "flex";
 
 bar.innerHTML=
-favorites.map(sym=>`
-<button class="favorite-chip" onclick="jumpToFavorite('${sym.replace(/'/g,"\\'")}')">⭐ ${sym}</button>
-`).join("");
+favorites.map(sym=>{
+
+const safe=
+sym.replace(/'/g,"\\'");
+
+return `
+<div class="favorite-chip">
+<span onclick="jumpToFavorite('${safe}')">⭐ ${sym}</span>
+<button class="favorite-chip-remove" onclick="event.stopPropagation();removeFavorite('${safe}')">✕</button>
+</div>
+`;
+
+}).join("");
+
+}
+
+
+function removeFavorite(symbol){
+
+const pos=
+favorites.indexOf(symbol);
+
+if(pos===-1)
+return;
+
+favorites.splice(pos,1);
+
+saveFavorites();
+
+renderFavoritesBar();
+
+Object.keys(cards).forEach(idx=>{
+
+if(cards[idx].symbol===symbol)
+refreshStarButtonState(idx);
+
+});
 
 }
 
@@ -9421,7 +9484,7 @@ total
 
 const lastTrades=
 log
-.slice(-10)
+.slice()
 .reverse();
 
 body.innerHTML=
