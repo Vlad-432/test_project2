@@ -17,9 +17,20 @@ html,body{
     width:100%;
     height:100%;
     overflow:hidden;
-    background:#080b10;
-    color:#fff;
-    font-family:Arial,Helvetica,sans-serif;
+    background:#0A0B0E;
+    color:#ECEEF1;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+.num,
+.price,
+.stat-value,
+.coin-symbol,
+.change,
+.signal-price,
+.backtest-summary-value{
+    font-family:ui-monospace,"SF Mono","Roboto Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    font-variant-numeric:tabular-nums;
 }
 
 button,input{font:inherit}
@@ -28,7 +39,7 @@ header{
     height:64px;
     padding:6px 12px 8px;
     background:rgba(8,11,16,.97);
-    border-bottom:1px solid #202631;
+    border-bottom:1px solid #1C2026;
     display:flex;
     flex-direction:column;
     justify-content:center;
@@ -68,7 +79,7 @@ header{
     }
 }
 
-.logo span{color:#00d68f}
+.logo span{color:#E8A33D}
 
 .header-right{
     display:flex;
@@ -79,7 +90,11 @@ header{
 .header-nav{
     width:100%;
     display:flex;
-    gap:6px;
+    gap:2px;
+    background:#14161B;
+    border:1px solid #20242B;
+    border-radius:11px;
+    padding:3px;
 }
 
 .header-nav .nav-btn{
@@ -88,24 +103,26 @@ header{
 }
 
 .connection{
-    color:#00d68f;
+    color:#2BC482;
     font-size:11px;
 }
 
 .nav-btn{
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#aeb7c6;
+    border:0;
+    background:transparent;
+    color:#767C87;
     border-radius:8px;
     padding:7px 10px;
     cursor:pointer;
     font-size:11px;
+    font-weight:600;
+    transition:background-color .25s ease,color .25s ease;
 }
 
 .nav-btn.active{
-    color:#00d68f;
-    border-color:#00d68f;
-    background:#14221e;
+    color:#0A1410;
+    background:#E8A33D;
+    font-weight:800;
 }
 
 .app{
@@ -137,9 +154,9 @@ header{
 }
 
 .settings-btn{
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:7px;
     padding:5px 8px;
     cursor:pointer;
@@ -147,17 +164,17 @@ header{
 }
 
 .settings-btn:hover{
-    color:#00d68f;
-    border-color:#00d68f;
+    color:#E8A33D;
+    border-color:#E8A33D;
 }
 
 .api-status{
-    color:#556075;
+    color:#656B76;
     font-size:9px;
 }
 
 .api-status-warn{
-    color:#ffb020;
+    color:#E8A33D;
 }
 
 .main-title{
@@ -174,7 +191,7 @@ header{
 
 .main-title p{
     margin:3px 0 0;
-    color:#687386;
+    color:#767C87;
     font-size:10px;
 }
 
@@ -191,18 +208,27 @@ header{
 .card{
     min-width:0;
     min-height:0;
-    background:#10141b;
-    border:1px solid #232a35;
+    background:#14161B;
+    border:1px solid #20242B;
+    border-left-width:3px;
     border-radius:14px;
     display:flex;
     flex-direction:column;
+}
+
+.card-crypto{
+    border-left-color:#2BC482;
+}
+
+.card-forex{
+    border-left-color:#E8A33D;
 }
 
 .card-sticky-top{
     position:sticky;
     top:0;
     z-index:6;
-    background:#10141b;
+    background:#14161B;
     border-top-left-radius:14px;
     border-top-right-radius:14px;
 }
@@ -227,7 +253,7 @@ header{
 .star-btn{
     border:0;
     background:none;
-    color:#555f70;
+    color:#656B76;
     font-size:15px;
     line-height:1;
     padding:0;
@@ -235,7 +261,7 @@ header{
 }
 
 .star-btn.active{
-    color:#ffd23f;
+    color:#F0C14B;
 }
 
 .favorites-bar{
@@ -251,9 +277,9 @@ header{
     display:flex;
     align-items:center;
     gap:6px;
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#d7dde6;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#ECEEF1;
     border-radius:16px;
     padding:5px 7px 5px 11px;
     font-size:10px;
@@ -266,14 +292,14 @@ header{
 }
 
 .favorite-chip:active{
-    border-color:#ffd23f;
-    color:#ffd23f;
+    border-color:#F0C14B;
+    color:#F0C14B;
 }
 
 .favorite-chip-remove{
     border:0;
     background:none;
-    color:#555f70;
+    color:#656B76;
     font-size:11px;
     line-height:1;
     padding:2px 3px;
@@ -281,11 +307,11 @@ header{
 }
 
 .favorite-chip-remove:active{
-    color:#ff536d;
+    color:#E5484D;
 }
 
 .coin-symbol{
-    color:#6f7a8d;
+    color:#767C87;
     font-size:10px;
     margin-top:2px;
 }
@@ -297,13 +323,13 @@ header{
     border-radius:5px;
     font-size:8px;
     font-weight:800;
-    background:#18221f;
-    color:#00d68f;
+    background:#122018;
+    color:#2BC482;
 }
 
 .market-badge.forex{
-    background:#211e18;
-    color:#ffb020;
+    background:#1C2026;
+    color:#E8A33D;
 }
 
 .change{
@@ -314,12 +340,12 @@ header{
 }
 
 .positive{
-    color:#00d68f;
+    color:#2BC482;
     background:rgba(0,214,143,.1);
 }
 
 .negative{
-    color:#ff536d;
+    color:#E5484D;
     background:rgba(255,83,109,.1);
 }
 
@@ -337,15 +363,15 @@ header{
 }
 
 .stat{
-    background:#0b0f15;
-    border:1px solid #1e2530;
+    background:#0A0B0E;
+    border:1px solid #20242B;
     padding:6px;
     border-radius:7px;
     min-width:0;
 }
 
 .stat-label{
-    color:#697487;
+    color:#767C87;
     font-size:8px;
 }
 
@@ -367,21 +393,21 @@ header{
 .pair-input{
     width:100%;
     min-width:0;
-    background:#0b0f15;
+    background:#0A0B0E;
     color:white;
-    border:1px solid #2a3240;
+    border:1px solid #262B33;
     border-radius:7px;
     padding:7px;
     outline:none;
     font-size:11px;
 }
 
-.pair-input:focus{border-color:#00d68f}
+.pair-input:focus{border-color:#E8A33D}
 
 .apply-btn{
     border:0;
-    background:#00d68f;
-    color:#06110d;
+    background:#E8A33D;
+    color:#1A1203;
     border-radius:7px;
     padding:0 10px;
     font-weight:900;
@@ -390,9 +416,9 @@ header{
 }
 
 .alert-btn{
-    border:1px solid #2a3240;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #262B33;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:7px;
     padding:0 10px;
     cursor:pointer;
@@ -401,9 +427,9 @@ header{
 }
 
 .alert-btn.has-alert{
-    border-color:#ffb020;
-    color:#ffb020;
-    background:#241c0b;
+    border-color:#E8A33D;
+    color:#E8A33D;
+    background:#2A2316;
 }
 
 .alert-toast{
@@ -412,9 +438,9 @@ header{
     left:50%;
     transform:translateX(-50%);
     z-index:300;
-    background:#14221e;
-    border:1px solid #00d68f;
-    color:#00d68f;
+    background:#122018;
+    border:1px solid #2BC482;
+    color:#2BC482;
     padding:11px 16px;
     border-radius:10px;
     font-size:12px;
@@ -442,9 +468,9 @@ header{
 
 .timeframe{
     flex:0 0 auto;
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:5px;
     padding:5px 7px;
     cursor:pointer;
@@ -452,21 +478,21 @@ header{
 }
 
 .timeframe.active{
-    background:#1b2925;
-    color:#00d68f;
-    border-color:#00d68f;
+    background:#122018;
+    color:#2BC482;
+    border-color:#2BC482;
 }
 
 .signal-box{
     margin-top:7px;
     padding:8px;
     border-radius:8px;
-    background:#0b0f15;
-    border:1px solid #1e2530;
+    background:#0A0B0E;
+    border:1px solid #20242B;
 }
 
 .signal-title{
-    color:#697487;
+    color:#767C87;
     font-size:8px;
 }
 
@@ -476,12 +502,12 @@ header{
     font-weight:900;
 }
 
-.signal-buy{color:#00d68f}
-.signal-sell{color:#ff536d}
-.signal-wait{color:#ffb020}
+.signal-buy{color:#2BC482}
+.signal-sell{color:#E5484D}
+.signal-wait{color:#E8A33D}
 
 .signal-info{
-    color:#8993a5;
+    color:#8B9099;
     font-size:9px;
     margin-top:3px;
 }
@@ -496,17 +522,17 @@ header{
 .factor{
     padding:3px 5px;
     border-radius:4px;
-    background:#141a22;
-    color:#aeb7c6;
+    background:#16181D;
+    color:#AEB4BD;
     font-size:7px;
 }
 
-.factor.good{color:#00d68f}
-.factor.bad{color:#ff536d}
-.factor.neutral{color:#ffb020}
+.factor.good{color:#2BC482}
+.factor.bad{color:#E5484D}
+.factor.neutral{color:#E8A33D}
 
 .error{
-    color:#ff536d;
+    color:#E5484D;
     font-size:9px;
     margin-top:4px;
 }
@@ -520,8 +546,8 @@ header{
     flex:1 1 auto;
     min-height:280px;
     width:100%;
-    border-top:1px solid #232a35;
-    background:#0b0e13;
+    border-top:1px solid #20242B;
+    background:#0A0B0E;
     overflow:hidden;
     position:relative;
     border-bottom-left-radius:14px;
@@ -543,7 +569,7 @@ header{
     font-size:10px;
     line-height:1.3;
     font-weight:700;
-    color:#d7dde6;
+    color:#ECEEF1;
     text-shadow:0 1px 2px rgba(0,0,0,.9);
     letter-spacing:.2px;
     white-space:nowrap;
@@ -596,8 +622,8 @@ header{
 
 .add-monitor{
     border:0;
-    background:#00d68f;
-    color:#06110d;
+    background:#2BC482;
+    color:#0A1410;
     border-radius:8px;
     padding:8px 10px;
     font-weight:900;
@@ -617,10 +643,10 @@ header{
 .monitor-chip{
     flex:0 0 auto;
     padding:6px 8px;
-    background:#10141b;
-    border:1px solid #252d39;
+    background:#14161B;
+    border:1px solid #20242B;
     border-radius:7px;
-    color:#aeb7c6;
+    color:#AEB4BD;
     font-size:9px;
 }
 
@@ -628,7 +654,7 @@ header{
     margin-left:5px;
     border:0;
     background:none;
-    color:#ff536d;
+    color:#E5484D;
     cursor:pointer;
 }
 
@@ -650,17 +676,17 @@ header{
     flex:1;
     padding:9px;
     border-radius:8px;
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     font-weight:800;
     font-size:12px;
 }
 
 .journal-tab.active{
-    border-color:#00d68f;
-    color:#00d68f;
-    background:#14221e;
+    border-color:#2BC482;
+    color:#2BC482;
+    background:#122018;
 }
 
 .journal-pair-list{
@@ -670,8 +696,8 @@ header{
 }
 
 .journal-pair-item{
-    background:#10141b;
-    border:1px solid #242c38;
+    background:#14161B;
+    border:1px solid #20242B;
     border-radius:8px;
     padding:10px;
     margin-bottom:6px;
@@ -686,13 +712,13 @@ header{
 
 .journal-pair-stats{
     font-size:10px;
-    color:#8993a5;
+    color:#8B9099;
 }
 
 .signal-column{
     min-height:0;
-    background:#0b0f15;
-    border:1px solid #202733;
+    background:#0A0B0E;
+    border:1px solid #1C2026;
     border-radius:10px;
     overflow:hidden;
     display:flex;
@@ -701,10 +727,10 @@ header{
 
 .column-head{
     padding:8px;
-    border-bottom:1px solid #202733;
+    border-bottom:1px solid #1C2026;
     font-size:10px;
     font-weight:900;
-    color:#aeb7c6;
+    color:#AEB4BD;
 }
 
 .signal-list{
@@ -715,8 +741,8 @@ header{
 }
 
 .signal-item{
-    background:#10141b;
-    border:1px solid #242c38;
+    background:#14161B;
+    border:1px solid #20242B;
     border-radius:8px;
     padding:8px;
     margin-bottom:5px;
@@ -726,7 +752,7 @@ header{
 .trade-menu-btn{
     background:none;
     border:none;
-    color:#748095;
+    color:#828893;
     font-size:16px;
     line-height:1;
     padding:2px 8px;
@@ -743,16 +769,16 @@ header{
 .trade-menu-actions button{
     padding:11px;
     border-radius:7px;
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#dfe4ea;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#ECEEF1;
     font-size:13px;
     text-align:left;
 }
 
 .trade-menu-actions button.danger{
-    color:#ff536d;
-    border-color:#3a232a;
+    color:#E5484D;
+    border-color:#2A1517;
 }
 
 .signal-item-top{
@@ -778,9 +804,9 @@ header{
     font-weight:900;
 }
 
-.signal-direction.buy{color:#00d68f}
-.signal-direction.sell{color:#ff536d}
-.signal-direction.flat{color:#ffb020}
+.signal-direction.buy{color:#2BC482}
+.signal-direction.sell{color:#E5484D}
+.signal-direction.flat{color:#E8A33D}
 
 .signal-price{
     margin-top:5px;
@@ -788,9 +814,16 @@ header{
     font-weight:800;
 }
 
+.trade-spark{
+    width:100%;
+    height:22px;
+    margin-top:5px;
+    display:block;
+}
+
 .signal-meta{
     margin-top:4px;
-    color:#748095;
+    color:#828893;
     font-size:8px;
     display:flex;
     justify-content:space-between;
@@ -800,14 +833,14 @@ header{
 .progress{
     margin-top:6px;
     height:4px;
-    background:#1b222d;
+    background:#1A1D23;
     border-radius:10px;
     overflow:hidden;
 }
 
 .progress-inner{
     height:100%;
-    background:#00d68f;
+    background:#2BC482;
     width:0;
 }
 
@@ -817,15 +850,15 @@ header{
     font-weight:900;
 }
 
-.result.win{color:#00d68f}
-.result.loss{color:#ff536d}
-.result.flat{color:#ffb020}
+.result.win{color:#2BC482}
+.result.loss{color:#E5484D}
+.result.flat{color:#E8A33D}
 
 .stats-line{
     margin-top:7px;
     padding:6px 8px;
-    background:#10141b;
-    border:1px solid #232a35;
+    background:#14161B;
+    border:1px solid #20242B;
     border-radius:7px;
     display:flex;
     flex-wrap:wrap;
@@ -833,13 +866,13 @@ header{
     justify-content:space-between;
     gap:6px;
     font-size:8px;
-    color:#8993a5;
+    color:#8B9099;
 }
 
 .factor-stats-btn{
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:6px;
     padding:4px 7px;
     cursor:pointer;
@@ -848,8 +881,8 @@ header{
 }
 
 .factor-stats-btn:hover{
-    color:#00d68f;
-    border-color:#00d68f;
+    color:#E8A33D;
+    border-color:#E8A33D;
 }
 
 .journal-pair-factors-btn{
@@ -877,15 +910,15 @@ header{
     align-items:center;
     justify-content:space-between;
     gap:8px;
-    background:#0b0f15;
-    border:1px solid #1e2530;
+    background:#0A0B0E;
+    border:1px solid #20242B;
     border-radius:7px;
     padding:7px 9px;
 }
 
 .factor-stat-name{
     font-size:10px;
-    color:#d7dde6;
+    color:#ECEEF1;
     min-width:0;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -894,18 +927,18 @@ header{
 
 .factor-stat-nums{
     font-size:9px;
-    color:#8993a5;
+    color:#8B9099;
     flex:0 0 auto;
     text-align:right;
 }
 
-.factor-stat-good .factor-stat-nums{color:#00d68f}
-.factor-stat-bad .factor-stat-nums{color:#ff536d}
+.factor-stat-good .factor-stat-nums{color:#2BC482}
+.factor-stat-bad .factor-stat-nums{color:#E5484D}
 
 .factor-stats-section-title{
     font-size:10px;
     font-weight:900;
-    color:#687386;
+    color:#767C87;
     text-transform:uppercase;
     letter-spacing:.4px;
     margin:10px 0 2px;
@@ -916,14 +949,14 @@ header{
 }
 
 .empty{
-    color:#555f70;
+    color:#656B76;
     text-align:center;
     padding:20px 5px;
     font-size:9px;
 }
 
 .rec-reason{
-    color:#8993a5;
+    color:#8B9099;
     font-size:10px;
     line-height:1.5;
     padding:6px 4px 14px;
@@ -951,8 +984,8 @@ header{
 
 .modal-box{
     width:min(390px,100%);
-    background:#10141b;
-    border:1px solid #29313e;
+    background:#14161B;
+    border:1px solid #242830;
     border-radius:14px;
     padding:14px;
 }
@@ -965,9 +998,9 @@ header{
 
 .modal-input{
     width:100%;
-    background:#0b0f15;
-    color:#fff;
-    border:1px solid #2a3240;
+    background:#0A0B0E;
+    color:#ECEEF1;
+    border:1px solid #262B33;
     border-radius:8px;
     padding:10px;
     outline:none;
@@ -981,33 +1014,33 @@ header{
 }
 
 .tf-option{
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:6px;
     padding:6px 8px;
     font-size:9px;
 }
 
 .tf-option.active{
-    border-color:#00d68f;
-    color:#00d68f;
-    background:#14221e;
+    border-color:#E8A33D;
+    color:#E8A33D;
+    background:#2A2316;
 }
 
 .backtest-tf-option{
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#8993a5;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
     border-radius:6px;
     padding:6px 8px;
     font-size:9px;
 }
 
 .backtest-tf-option.active{
-    border-color:#00d68f;
-    color:#00d68f;
-    background:#14221e;
+    border-color:#E8A33D;
+    color:#E8A33D;
+    background:#2A2316;
 }
 
 .backtest-summary{
@@ -1019,8 +1052,8 @@ header{
 
 .backtest-summary-item{
     flex:1 1 30%;
-    background:#0b0f15;
-    border:1px solid #1e2530;
+    background:#0A0B0E;
+    border:1px solid #20242B;
     border-radius:7px;
     padding:8px;
     text-align:center;
@@ -1033,7 +1066,7 @@ header{
 
 .backtest-summary-label{
     font-size:8px;
-    color:#8993a5;
+    color:#8B9099;
     margin-top:2px;
 }
 
@@ -1047,14 +1080,14 @@ header{
     flex:1;
     padding:9px;
     border-radius:7px;
-    border:1px solid #29313e;
-    background:#0b0f15;
-    color:#aeb7c6;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#AEB4BD;
 }
 
 .modal-actions .save{
-    background:#00d68f;
-    color:#06110d;
+    background:#E8A33D;
+    color:#1A1203;
     border:0;
     font-weight:900;
 }
@@ -1079,7 +1112,7 @@ header{
 }
 
 .api-service-title span{
-    color:#687386;
+    color:#767C87;
     font-weight:400;
     font-size:10px;
 }
@@ -1105,8 +1138,8 @@ header{
     align-items:center;
     justify-content:space-between;
     gap:8px;
-    background:#0b0f15;
-    border:1px solid #1e2530;
+    background:#0A0B0E;
+    border:1px solid #20242B;
     border-radius:7px;
     padding:7px 8px;
 }
@@ -1126,13 +1159,13 @@ header{
 
 .api-key-status{
     font-size:8px;
-    color:#8993a5;
+    color:#8B9099;
 }
 
 .api-key-remove{
     border:0;
     background:none;
-    color:#ff536d;
+    color:#E5484D;
     cursor:pointer;
     font-size:13px;
     flex:0 0 auto;
@@ -1140,7 +1173,7 @@ header{
 
 .api-settings-note{
     margin-top:12px;
-    color:#687386;
+    color:#767C87;
     font-size:9px;
     line-height:1.4;
 }
@@ -2756,7 +2789,9 @@ forex
 const card =
 document.createElement("div");
 
-card.className="card";
+card.className=
+"card "+
+(forex?"card-forex":"card-crypto");
 
 card.innerHTML=`
 
@@ -2984,7 +3019,7 @@ id="chart-${index}">
 <div
 class="chart-symbol-label"
 id="chart-symbol-${index}"
-style="position:absolute;top:6px;left:8px;z-index:5;max-width:60%;font-size:10px;line-height:1.3;font-weight:700;color:#d7dde6;text-shadow:0 1px 2px rgba(0,0,0,.9);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;background:none;border:0;padding:0;">
+style="position:absolute;top:6px;left:8px;z-index:5;max-width:60%;font-size:10px;line-height:1.3;font-weight:700;color:#ECEEF1;text-shadow:0 1px 2px rgba(0,0,0,.9);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;background:none;border:0;padding:0;">
 </div>
 
 <div
@@ -3055,7 +3090,7 @@ connection.textContent=
 "● Forex режим";
 
 connection.style.color=
-"#ffb020";
+"#E8A33D";
 
 return;
 
@@ -3080,7 +3115,7 @@ connection.textContent=
 "● Binance: онлайн";
 
 connection.style.color=
-"#00d68f";
+"#2BC482";
 
 };
 
@@ -3129,7 +3164,7 @@ connection.textContent=
 "● Binance: ошибка";
 
 connection.style.color=
-"#ff536d";
+"#E5484D";
 
 };
 
@@ -3140,7 +3175,7 @@ connection.textContent=
 "● Переподключение...";
 
 connection.style.color=
-"#ffb020";
+"#E8A33D";
 
 
 setTimeout(
@@ -3682,6 +3717,32 @@ trade.symbol===symbol
 ){
 
 trade.current=price;
+
+if(!trade.pricePath)
+trade.pricePath=[];
+
+const lastPoint=
+trade.pricePath[
+trade.pricePath.length-1
+];
+
+if(
+!lastPoint ||
+Date.now()-lastPoint.t>=8000
+){
+
+trade.pricePath.push({
+t:Date.now(),
+p:price
+});
+
+if(trade.pricePath.length>40){
+
+trade.pricePath.shift();
+
+}
+
+}
 
 }
 
@@ -4756,96 +4817,206 @@ text:"Зона: OB не найден"
 
 
 /* =========================================================
-   ДОБАВЛЕННАЯ СТРАТЕГИЯ: TREND + PULLBACK + CONFIRMATION
-
-   Это отдельный фильтр входа. Существующие индикаторы,
-   интерфейс, API, мониторы, сохранение сделок и остальные
-   функции не переписываются. Фильтр только отсекает слабые
-   BUY/SELL-сетапы и объясняет причину в факторах сигнала.
+   SIGNAL
 ========================================================= */
 
-function personalStrategyFilter(data,direction,ema20,ema50,ema200,rsiValue,atrValue){
+function stochastic(candles,period,smoothK,smoothD){
 
-if(!data || data.length<60){
-return {ok:false,reason:"мало свечей для стратегии"};
-}
+if(candles.length<period+smoothK+smoothD)
+return{k:50,d:50,kPrev:50,dPrev:50};
 
-const last=data[data.length-1];
-const previous=data.slice(-5,-1);
-const range=last.high-last.low;
+const kValues=[];
 
-if(!range || range<=0){
-return {ok:false,reason:"у последней свечи нет диапазона"};
-}
+for(let i=period-1;i<candles.length;i++){
 
-if(!atrValue || atrValue<=0){
-return {ok:false,reason:"ATR недоступен"};
-}
+const window=
+candles.slice(i-period+1,i+1);
 
-/* 1. Направление старшего тренда */
-if(direction==="BUY"){
-if(!(ema20>ema50) || (ema200!==null && last.close<=ema200)){
-return {ok:false,reason:"покупка против основного тренда EMA"};
-}
-}else{
-if(!(ema20<ema50) || (ema200!==null && last.close>=ema200)){
-return {ok:false,reason:"продажа против основного тренда EMA"};
-}
-}
+const highestHigh=
+Math.max(...window.map(c=>c.high));
 
-/* 2. Не входить в боковике с очень слабым ADX */
-const adx=calculateADX(data,14);
-if(adx!==null && adx<16){
-return {ok:false,reason:"слабый тренд / боковик (ADX "+Math.round(adx)+")"};
+const lowestLow=
+Math.min(...window.map(c=>c.low));
+
+const range=
+highestHigh-lowestLow;
+
+kValues.push(
+range===0
+?50
+:((candles[i].close-lowestLow)/range)*100
+);
+
 }
 
-/* 3. Не покупать в перегретой зоне и не продавать в перепроданной */
-if(direction==="BUY" && (rsiValue<48 || rsiValue>68)){
-return {ok:false,reason:"RSI вне зоны продолжения роста (48–68)"};
-}
-if(direction==="SELL" && (rsiValue<32 || rsiValue>52)){
-return {ok:false,reason:"RSI вне зоны продолжения падения (32–52)"};
+const smoothedK=[];
+
+for(let i=smoothK-1;i<kValues.length;i++){
+
+const slice=
+kValues.slice(i-smoothK+1,i+1);
+
+smoothedK.push(
+slice.reduce((a,b)=>a+b,0)/smoothK
+);
+
 }
 
-/* 4. Не гнаться за ценой, если она слишком далеко от EMA20 */
-const distanceFromEma=Math.abs(last.close-ema20);
-if(distanceFromEma>atrValue*1.5){
-return {ok:false,reason:"цена слишком далеко от EMA20 — не догоняем импульс"};
-}
-if(direction==="BUY" && last.close<=ema20){
-return {ok:false,reason:"ждём возврата цены выше EMA20 для BUY"};
-}
-if(direction==="SELL" && last.close>=ema20){
-return {ok:false,reason:"ждём возврата цены ниже EMA20 для SELL"};
+const dValues=[];
+
+for(let i=smoothD-1;i<smoothedK.length;i++){
+
+const slice=
+smoothedK.slice(i-smoothD+1,i+1);
+
+dValues.push(
+slice.reduce((a,b)=>a+b,0)/smoothD
+);
+
 }
 
-/* 5. В последних четырёх свечах должен быть откат к EMA20 */
-const retest=previous.some(c=>direction==="BUY"
-?(c.low<=ema20+atrValue*0.35)
-:(c.high>=ema20-atrValue*0.35));
-if(!retest){
-return {ok:false,reason:"нет подтверждённого отката к EMA20"};
+return{
+
+k:smoothedK[smoothedK.length-1],
+kPrev:smoothedK[smoothedK.length-2],
+
+d:dValues[dValues.length-1],
+dPrev:dValues[dValues.length-2]
+
+};
+
 }
 
-/* 6. Последняя свеча должна подтвердить возобновление движения */
-const body=Math.abs(last.close-last.open);
-const closePosition=(last.close-last.low)/range;
-if(body<range*0.2){
-return {ok:false,reason:"слабая свеча подтверждения"};
-}
-if(direction==="BUY" && !(last.close>last.open && closePosition>=0.6)){
-return {ok:false,reason:"нет сильной бычьей свечи подтверждения"};
-}
-if(direction==="SELL" && !(last.close<last.open && closePosition<=0.4)){
-return {ok:false,reason:"нет сильной медвежьей свечи подтверждения"};
+
+function bollingerBands(closes,period,mult){
+
+if(closes.length<period)
+return null;
+
+const window=
+closes.slice(-period);
+
+const mean=
+window.reduce((a,b)=>a+b,0)/period;
+
+const variance=
+window.reduce(
+(a,b)=>a+(b-mean)*(b-mean),
+0
+)/period;
+
+const sd=
+Math.sqrt(variance);
+
+return{
+
+mid:mean,
+upper:mean+mult*sd,
+lower:mean-mult*sd,
+width:(mult*sd*2)/(mean||1e-9)
+
+};
+
 }
 
-return {ok:true,reason:"тренд + откат к EMA20 + свечное подтверждение"};
+
+function bollingerSqueeze(closes,period,mult,lookback){
+
+if(closes.length<period+lookback)
+return false;
+
+const widths=[];
+
+for(
+let i=closes.length-lookback;
+i<closes.length;
+i++
+){
+
+const bb=
+bollingerBands(
+closes.slice(0,i+1),
+period,
+mult
+);
+
+if(bb)
+widths.push(bb.width);
+
+}
+
+if(!widths.length)
+return false;
+
+const avgWidth=
+widths.reduce((a,b)=>a+b,0)/widths.length;
+
+const currentWidth=
+widths[widths.length-1];
+
+return currentWidth<avgWidth*0.6;
+
+}
+
+
+function findLastFractal(candles){
+
+for(
+let i=candles.length-3;
+i>=2;
+i--
+){
+
+const c=candles[i];
+
+const isHighFractal=
+c.high>candles[i-1].high &&
+c.high>candles[i-2].high &&
+c.high>candles[i+1].high &&
+c.high>candles[i+2].high;
+
+const isLowFractal=
+c.low<candles[i-1].low &&
+c.low<candles[i-2].low &&
+c.low<candles[i+1].low &&
+c.low<candles[i+2].low;
+
+if(isHighFractal){
+
+return{
+type:"high",
+price:c.high,
+barsAgo:candles.length-1-i
+};
+
+}
+
+if(isLowFractal){
+
+return{
+type:"low",
+price:c.low,
+barsAgo:candles.length-1-i
+};
+
+}
+
+}
+
+return null;
+
 }
 
 
 /* =========================================================
-   SIGNAL
+   SIGNAL — движок с нуля (Bollinger + Stochastic + EMA9/21/50
+   + RSI + MACD + структура + ордер-блоки + уровни + фракталы
+   Вильямса + RSI-дивергенция), заточен под короткие сделки
+   (бинарные опционы): больше вес у конфлюэнс-сетапов (разворот
+   у границы канала/уровня + подтверждающая свеча), ADX оставлен
+   только как информационная метка (по статистике — влияние на
+   score ему только вредило), импульс/объём намеренно убраны
+   (по статистике — такие же вредные факторы).
 ========================================================= */
 
 function calculateSignal(candles){
@@ -4862,7 +5033,13 @@ score:50,
 
 info:"Недостаточно данных",
 
-factors:[]
+factors:[],
+
+duration:5*60*1000,
+
+atrValue:0,
+
+levels:null
 
 };
 
@@ -4872,55 +5049,11 @@ factors:[]
 const data=
 candles.slice(-ANALYSIS_CANDLES);
 
-
 const closes=
 data.map(c=>c.close);
 
-
 const last=
 closes[closes.length-1];
-
-
-const ema20=
-ema(closes,20);
-
-const ema50=
-ema(closes,50);
-
-const ema200=
-ema(closes,200);
-
-
-const rsiValue=
-rsi(closes,14);
-
-const atrValue=
-atr(data,14);
-
-const macdValue=
-macd(closes);
-
-const avgVol=
-averageVolume(data,20);
-
-const currentVol=
-data[data.length-1].volume||0;
-
-
-const structure=
-marketStructure(data);
-
-const momentum=
-momentumAnalysis(data);
-
-const candle=
-candleAnalysis(data);
-
-const orderBlock=
-orderBlockAnalysis(data);
-
-const levels=
-findLevels(data);
 
 
 let score=50;
@@ -4928,29 +5061,146 @@ let score=50;
 const factors=[];
 
 
-/* EMA */
+/* 1. Тренд: EMA9/21/50 */
+
+const ema9=ema(closes,9);
+const ema21=ema(closes,21);
+const ema50v=ema(closes,50);
+
+let trendDir="NEUTRAL";
+
+if(ema9!==null && ema21!==null && ema50v!==null){
+
+if(ema9>ema21 && ema21>ema50v){
+
+score+=10;
+trendDir="UP";
+
+factors.push({
+text:"Тренд: EMA9>21>50 (бычий)",
+type:"good"
+});
+
+}else if(ema9<ema21 && ema21<ema50v){
+
+score-=10;
+trendDir="DOWN";
+
+factors.push({
+text:"Тренд: EMA9<21<50 (медвежий)",
+type:"bad"
+});
+
+}else{
+
+factors.push({
+text:"Тренд: смешанный",
+type:"neutral"
+});
+
+}
+
+}
+
+
+/* 2. Bollinger Bands */
+
+const bb=
+bollingerBands(closes,20,2);
+
+let bbSignal=0;
+
+if(bb){
+
+const pctB=
+(last-bb.lower)/((bb.upper-bb.lower)||1e-9);
+
+if(pctB<=0.05){
+
+score+=11;
+bbSignal=1;
+
+factors.push({
+text:"Цена у нижней полосы Боллинджера",
+type:"good"
+});
+
+}else if(pctB>=0.95){
+
+score-=11;
+bbSignal=-1;
+
+factors.push({
+text:"Цена у верхней полосы Боллинджера",
+type:"bad"
+});
+
+}else{
+
+factors.push({
+text:"Боллинджер: середина канала",
+type:"neutral"
+});
+
+}
+
+if(bollingerSqueeze(closes,20,2,30)){
+
+factors.push({
+text:"Боллинджер: сжатие (низкая волатильность)",
+type:"neutral"
+});
+
+}
+
+}
+
+
+/* 3. Stochastic */
+
+const stoch=
+stochastic(data,14,3,3);
+
+let stochSignal=0;
 
 if(
-ema20!==null &&
-ema50!==null
+stoch.kPrev!==undefined &&
+stoch.dPrev!==undefined
 ){
 
-if(ema20>ema50){
+const crossUp=
+stoch.kPrev<=stoch.dPrev &&
+stoch.k>stoch.d;
 
-score+=10;
+const crossDown=
+stoch.kPrev>=stoch.dPrev &&
+stoch.k<stoch.d;
+
+if(crossUp && stoch.k<30){
+
+score+=9;
+stochSignal=1;
 
 factors.push({
-text:"EMA20 > EMA50",
+text:"Стохастик: разворот вверх из перепроданности",
 type:"good"
+});
+
+}else if(crossDown && stoch.k>70){
+
+score-=9;
+stochSignal=-1;
+
+factors.push({
+text:"Стохастик: разворот вниз из перекупленности",
+type:"bad"
 });
 
 }else{
 
-score-=10;
-
 factors.push({
-text:"EMA20 < EMA50",
-type:"bad"
+text:"Стохастик: нет сигнала",
+type:"neutral"
 });
 
 }
@@ -4958,68 +5208,41 @@ type:"bad"
 }
 
 
-/* EMA 200 */
+/* 4. RSI */
 
-if(ema200!==null){
-
-if(last>ema200){
-
-score+=10;
-
-factors.push({
-text:"Цена выше EMA200",
-type:"good"
-});
-
-}else{
-
-score-=10;
-
-factors.push({
-text:"Цена ниже EMA200",
-type:"bad"
-});
-
-}
-
-}
-
-
-/* RSI */
+const rsiValue=
+rsi(closes,14);
 
 if(rsiValue<30){
 
-score+=8;
+score+=6;
 
 factors.push({
 text:"RSI: перепродан",
 type:"good"
 });
 
-}
-else if(rsiValue>70){
+}else if(rsiValue>70){
 
-score-=8;
+score-=6;
 
 factors.push({
 text:"RSI: перекуплен",
 type:"bad"
 });
 
-}
-else if(rsiValue>=52){
+}else if(rsiValue>50){
 
-score+=5;
+score+=2;
 
 factors.push({
 text:"RSI: бычий",
 type:"good"
 });
 
-}
-else if(rsiValue<=48){
+}else{
 
-score-=5;
+score-=2;
 
 factors.push({
 text:"RSI: медвежий",
@@ -5027,24 +5250,16 @@ type:"bad"
 });
 
 }
-else{
-
-factors.push({
-text:"RSI: нейтральный",
-type:"neutral"
-});
-
-}
 
 
-/* MACD */
+/* 5. MACD */
 
-if(
-macdValue.macd>
-macdValue.signal
-){
+const macdData=
+macd(closes);
 
-score+=8;
+if(macdData.macd>macdData.signal){
+
+score+=7;
 
 factors.push({
 text:"MACD: бычий",
@@ -5053,7 +5268,7 @@ type:"good"
 
 }else{
 
-score-=8;
+score-=7;
 
 factors.push({
 text:"MACD: медвежий",
@@ -5063,7 +5278,10 @@ type:"bad"
 }
 
 
-/* STRUCTURE */
+/* 6. Структура рынка */
+
+const structure=
+marketStructure(data);
 
 score+=structure.score;
 
@@ -5081,81 +5299,57 @@ structure.score>0
 });
 
 
-/* MOMENTUM */
+/* 7. Ордер-блоки */
 
-score+=momentum.score;
+const ob=
+orderBlockAnalysis(data);
+
+score+=ob.score;
 
 factors.push({
 
-text:momentum.text,
+text:ob.text,
 
 type:
-momentum.score>0
+ob.score>0
 ?"good"
-:momentum.score<0
+:ob.score<0
 ?"bad"
 :"neutral"
 
 });
 
 
-/* ORDER BLOCK */
+/* 8. Уровни поддержки/сопротивления */
 
-score+=orderBlock.score;
+const levels=
+findLevels(data);
 
-factors.push({
+const nearSupport=
+Math.abs(last-levels.support)/last<0.004;
 
-text:orderBlock.text,
+const nearResistance=
+Math.abs(last-levels.resistance)/last<0.004;
 
-type:
-orderBlock.score>0
-?"good"
-:orderBlock.score<0
-?"bad"
-:"neutral"
+if(nearSupport){
 
-});
-
-
-/* LEVELS */
-
-const distanceSupport=
-Math.abs(
-last-levels.support
-)/last*100;
-
-
-const distanceResistance=
-Math.abs(
-levels.resistance-last
-)/last*100;
-
-
-if(
-distanceResistance<0.4
-){
-
-score-=7;
-
-factors.push({
-text:"Цена у сопротивления",
-type:"bad"
-});
-
-}
-else if(
-distanceSupport<0.4
-){
-
-score+=7;
+score+=6;
 
 factors.push({
 text:"Цена у поддержки",
 type:"good"
 });
 
-}
-else{
+}else if(nearResistance){
+
+score-=6;
+
+factors.push({
+text:"Цена у сопротивления",
+type:"bad"
+});
+
+}else{
 
 factors.push({
 text:"Уровни: свободная зона",
@@ -5165,114 +5359,157 @@ type:"neutral"
 }
 
 
-/* VOLUME */
+/* 9. Фракталы Вильямса */
 
-if(
-avgVol>0 &&
-currentVol>avgVol*1.25
-){
+const fractal=
+findLastFractal(data);
 
-const lastCandle=
-data[data.length-1];
+let fractalSignal=0;
 
+if(fractal && fractal.barsAgo<=6){
 
-if(
-lastCandle.close>
-lastCandle.open
-){
+if(fractal.type==="low" && last>fractal.price){
 
-score+=6;
+score+=7;
+fractalSignal=1;
 
 factors.push({
-text:"Объём: покупки",
+text:"Фрактал: разворот от минимума",
 type:"good"
 });
 
-}else{
+}else if(fractal.type==="high" && last<fractal.price){
 
-score-=6;
+score-=7;
+fractalSignal=-1;
 
 factors.push({
-text:"Объём: продажи",
+text:"Фрактал: разворот от максимума",
 type:"bad"
 });
 
 }
 
-}else{
+}
+
+
+/* 10. RSI-дивергенция — лучший фактор по накопленной статистике */
+
+const divergence=
+detectRsiDivergence(data);
+
+if(divergence==="bullish"){
+
+score+=16;
 
 factors.push({
-text:"Объём: обычный",
-type:"neutral"
+text:"Дивергенция: бычья",
+type:"good"
+});
+
+}else if(divergence==="bearish"){
+
+score-=16;
+
+factors.push({
+text:"Дивергенция: медвежья",
+type:"bad"
 });
 
 }
 
 
-/* VOLATILITY */
+/* 11. Свечной разворотный паттерн — бонус за конфлюэнс с п.2/3/8 */
 
-const volatility=
-last>0
-?atrValue/last*100
-:0;
+const lastCandle=
+data[data.length-1];
 
+const body=
+Math.abs(lastCandle.close-lastCandle.open);
+
+const isBullishReversal=
+lastCandle.close>lastCandle.open &&
+(lastCandle.open-lastCandle.low)>body*1.5;
+
+const isBearishReversal=
+lastCandle.close<lastCandle.open &&
+(lastCandle.high-lastCandle.open)>body*1.5;
+
+if(isBullishReversal){
+
+const confirmed=
+nearSupport || bbSignal===1 || stochSignal===1;
+
+score+=confirmed?9:5;
+
+factors.push({
+text:
+"Свеча: бычий разворот"+
+(confirmed?" (подтверждён)":""),
+type:"good"
+});
+
+}else if(isBearishReversal){
+
+const confirmed=
+nearResistance || bbSignal===-1 || stochSignal===-1;
+
+score-=confirmed?9:5;
+
+factors.push({
+text:
+"Свеча: медвежий разворот"+
+(confirmed?" (подтверждён)":""),
+type:"bad"
+});
+
+}
+
+
+score=
+Math.max(0,Math.min(100,score));
+
+
+/* ADX — только метка, на score не влияет (урок из статистики) */
+
+const adxValue=
+calculateADX(data,14);
+
+if(adxValue!==null){
 
 factors.push({
 
 text:
-volatility>=1
-?"ATR: высокая волатильность"
-:"ATR: нормальная",
+"ADX "+Math.round(adxValue)+
+" ("+
+(
+adxValue>=25
+?"тренд"
+:adxValue<20
+?"флэт"
+:"нейтрально"
+)+
+")",
 
 type:"neutral"
 
 });
 
-
-/* CANDLE */
-
-score+=candle.score;
-
-factors.push({
-
-text:candle.text,
-
-type:
-candle.score>0
-?"good"
-:candle.score<0
-?"bad"
-:"neutral"
-
-});
-
-
-score=
-Math.max(
-0,
-Math.min(
-100,
-Math.round(score)
-)
-);
+}
 
 
 let signal="WAIT";
 
-
 if(
 score>=MIN_SIGNAL_SCORE &&
-structure.direction!=="BEAR" &&
-ema20>ema50
+structure.direction!=="BEAR"
 ){
 
 signal="BUY";
 
-}
-else if(
+}else if(
 score<=100-MIN_SIGNAL_SCORE &&
-structure.direction!=="BULL" &&
-ema20<ema50
+structure.direction!=="BULL"
 ){
 
 signal="SELL";
@@ -5280,52 +5517,87 @@ signal="SELL";
 }
 
 
-/* Добавляем только фильтр стратегии; базовый расчёт score не меняем. */
-let strategyInfo="Стратегия не применялась: сигнала нет";
+/* Длительность сделки — по относительной волатильности (ATR)
+   и числу согласных факторов (конфлюэнс), а не по фиксированному
+   ТФ монитора. Всплеск волатильности — движение уже идёт быстро,
+   экспирацию короче. Вялый рынок — движению нужно больше времени. */
 
-if(signal==="BUY" || signal==="SELL"){
+const atrValue=
+atr(data,14);
 
-const strategyResult=personalStrategyFilter(
- data,
- signal,
- ema20,
- ema50,
- ema200,
- rsiValue,
- atrValue
+const atrPct=
+last>0?atrValue/last*100:0;
+
+const historicalAtrSamples=[];
+
+for(
+let i=Math.max(20,data.length-30);
+i<data.length;
+i+=5
+){
+
+const histAtr=
+atr(data.slice(0,i+1),14);
+
+if(histAtr>0 && data[i].close>0){
+
+historicalAtrSamples.push(
+histAtr/data[i].close*100
 );
 
-strategyInfo=strategyResult.reason;
-
-factors.push({
- text:"Моя стратегия: "+strategyResult.reason,
- type:strategyResult.ok?"good":"bad"
-});
-
-if(!strategyResult.ok){
-signal="WAIT";
 }
+
+}
+
+const avgAtrPct=
+historicalAtrSamples.length
+?historicalAtrSamples.reduce((a,b)=>a+b,0)/historicalAtrSamples.length
+:atrPct;
+
+const volRatio=
+avgAtrPct>0?atrPct/avgAtrPct:1;
+
+const confluenceCount=
+[
+trendDir!=="NEUTRAL",
+bbSignal!==0,
+stochSignal!==0,
+fractalSignal!==0,
+!!divergence
+].filter(Boolean).length;
+
+let durationMinutes;
+
+if(volRatio>1.6){
+
+durationMinutes=1+confluenceCount;
+
+}else if(volRatio<0.6){
+
+durationMinutes=6+confluenceCount*2;
 
 }else{
-factors.push({
- text:"Моя стратегия: ожидание совпадения условий",
- type:"neutral"
-});
+
+durationMinutes=3+confluenceCount*2;
+
 }
+
+durationMinutes=
+Math.max(1,Math.min(15,durationMinutes));
 
 
 return{
 
 signal,
 
-score,
+score:Math.round(score),
 
 info:
-`Сила ${score}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${volatility.toFixed(2)}% • 250 свечей • Стратегия: ${strategyInfo}`,
+`Сила ${Math.round(score)}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${atrPct.toFixed(2)}% • реком. время ${durationMinutes} мин`,
 
 factors,
 
-price:last,
+duration:durationMinutes*60*1000,
 
 atrValue,
 
@@ -6545,19 +6817,18 @@ divergence||"нет"
 }
 
 
+/*
+   Движок сделок теперь просто делегирует в новый
+   calculateSignal() — он уже сам содержит всё нужное
+   (дивергенция, Боллинджер, Стохастик, фракталы, ADX-метка,
+   расчёт длительности по волатильности). Старая надстройка
+   с мультитаймфреймом/ручными поправками факторов больше
+   не нужна — её заменил движок целиком.
+*/
+
 async function calculateTradeSignal(monitor,baseCandles){
 
-const mtfResult=
-await calculateTradeSignalMTF(
-monitor,
-baseCandles
-);
-
-return applyAdvancedFactors(
-monitor,
-baseCandles,
-mtfResult
-);
+return calculateSignal(baseCandles);
 
 }
 
@@ -6860,7 +7131,7 @@ label.style.cssText=
 "line-height:1.3;"+
 "font-weight:700;"+
 "font-family:inherit;"+
-"color:#d7dde6;"+
+"color:#ECEEF1;"+
 "text-shadow:0 1px 2px rgba(0,0,0,.9);"+
 "letter-spacing:.2px;"+
 "white-space:nowrap;"+
@@ -7017,6 +7288,18 @@ forex
 ?" forex"
 :""
 );
+
+
+const cardEl=
+badge.closest(".card");
+
+if(cardEl){
+
+cardEl.className=
+"card "+
+(forex?"card-forex":"card-crypto");
+
+}
 
 
 saveCards();
@@ -8258,6 +8541,98 @@ renderSignals();
    RENDER TRADE
 ========================================================= */
 
+/*
+   Мини-график (спарклайн) сделки — линия пути цены от
+   момента открытия до текущей/закрытой цены. Если во время
+   жизни сделки успели накопиться точки (trade.pricePath,
+   пишется в updateOpenTradePrice) — рисуем по ним, иначе
+   просто прямая вход→текущая/выход (для старых сделок,
+   созданных до этой функции).
+*/
+
+function renderTradeSparkline(trade){
+
+let points;
+
+if(
+trade.pricePath &&
+trade.pricePath.length>=2
+){
+
+points=
+trade.pricePath.map(p=>p.p);
+
+if(trade.closed && trade.exit!=null){
+
+points=
+points.concat([trade.exit]);
+
+}
+
+}else{
+
+points=
+trade.closed
+?[trade.entry,trade.exit]
+:[trade.entry,trade.current??trade.entry];
+
+}
+
+const w=100,h=26,pad=3;
+
+const min=
+Math.min(...points);
+
+const max=
+Math.max(...points);
+
+const range=
+(max-min)||1e-9;
+
+const stepX=
+points.length>1
+?(w-pad*2)/(points.length-1)
+:0;
+
+const coords=
+points
+.map((p,i)=>{
+
+const x=
+pad+i*stepX;
+
+const y=
+h-pad-((p-min)/range)*(h-pad*2);
+
+return x.toFixed(1)+","+y.toFixed(1);
+
+})
+.join(" ");
+
+const color=
+trade.closed
+?(
+trade.result==="WIN"
+?"#2BC482"
+:trade.result==="LOSS"
+?"#E5484D"
+:"#8B9099"
+)
+:(
+trade.direction==="BUY"
+?"#2BC482"
+:"#E5484D"
+);
+
+return `
+<svg class="trade-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
+`;
+
+}
+
+
 function renderTrade(
 trade,
 open
@@ -8370,6 +8745,9 @@ trade.type
 )}
 
 </div>
+
+
+${renderTradeSparkline(trade)}
 
 
 <div class="signal-meta">
@@ -8497,6 +8875,9 @@ trade.type
 )}
 
 </div>
+
+
+${renderTradeSparkline(trade)}
 
 
 <div class="signal-meta">
@@ -9649,7 +10030,7 @@ body.innerHTML=
 </div>
 
 <div class="backtest-summary-item">
-<div class="backtest-summary-value" style="color:${winrate>=50?'#00d68f':'#ff536d'}">${winrate}%</div>
+<div class="backtest-summary-value" style="color:${winrate>=50?'#2BC482':'#E5484D'}">${winrate}%</div>
 <div class="backtest-summary-label">винрейт</div>
 </div>
 
