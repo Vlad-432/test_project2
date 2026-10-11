@@ -6,6 +6,8 @@
 
 <title>CryptoScr</title>
 
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+
 <meta name="application-name" content="CryptoScr">
 <meta name="apple-mobile-web-app-title" content="CryptoScr">
 
@@ -1767,9 +1769,10 @@ id="strategyModal">
 </div>
 
 <div class="api-settings-note">
-Выбор применяется сразу везде — и на карточках «Графики»,
-и при открытии сделок в «Сигналы». Переключить можно в любой
-момент.
+Можно выбрать сразу несколько — тапай, чтобы включить/выключить
+(минимум одна должна остаться). Если выбрано несколько, их score
+усредняется, а факторы объединяются без повторов. Применяется
+сразу везде — и на карточках «Графики», и в «Сигналы».
 </div>
 
 <div
@@ -5092,23 +5095,76 @@ return null;
    активную стратегию.
 ========================================================= */
 
-let activeStrategyId=
-localStorage.getItem("cryptoScreenStrategy")||"combined";
+function loadActiveStrategies(){
 
-function getActiveStrategy(){
+const stored=
+localStorage.getItem("cryptoScreenStrategies");
 
-return activeStrategyId;
+if(stored){
+
+try{
+
+const parsed=
+JSON.parse(stored);
+
+if(Array.isArray(parsed) && parsed.length){
+
+return parsed;
 
 }
 
-function setActiveStrategy(id){
+}catch(e){}
 
-activeStrategyId=id;
+}
+
+/* миграция старого единичного выбора, если он был */
+
+const legacy=
+localStorage.getItem("cryptoScreenStrategy");
+
+return legacy?[legacy]:["combined"];
+
+}
+
+let activeStrategyIds=
+loadActiveStrategies();
+
+function getActiveStrategies(){
+
+return activeStrategyIds;
+
+}
+
+function saveActiveStrategies(){
 
 localStorage.setItem(
-"cryptoScreenStrategy",
-id
+"cryptoScreenStrategies",
+JSON.stringify(activeStrategyIds)
 );
+
+}
+
+function toggleStrategySelection(id){
+
+const pos=
+activeStrategyIds.indexOf(id);
+
+if(pos===-1){
+
+activeStrategyIds.push(id);
+
+}else{
+
+/* нельзя снять последнюю — хотя бы одна должна остаться */
+
+if(activeStrategyIds.length===1)
+return;
+
+activeStrategyIds.splice(pos,1);
+
+}
+
+saveActiveStrategies();
 
 }
 
@@ -5941,7 +5997,8 @@ run:strategyReversal
 
 /* =========================================================
    SIGNAL — единая точка входа для главной и для сигналов.
-   Какая стратегия сейчас активна — решает STRATEGIES[getActiveStrategy()].
+   Какие стратегии сейчас активны — решает getActiveStrategies(),
+   их может быть несколько сразу (score усредняется).
 ========================================================= */
 
 function calculateSignal(candles){
@@ -5966,7 +6023,7 @@ atrValue:0,
 
 levels:null,
 
-strategy:getActiveStrategy()
+strategy:getActiveStrategies().join("+")
 
 };
 
@@ -5979,12 +6036,53 @@ candles.slice(-ANALYSIS_CANDLES);
 const ctx=
 buildIndicatorContext(data);
 
-const strategyDef=
-STRATEGIES[getActiveStrategy()]||
-STRATEGIES.combined;
+const activeIds=
+getActiveStrategies();
 
-const result=
-strategyDef.run(ctx);
+const results=
+activeIds.map(id=>
+
+(STRATEGIES[id]||STRATEGIES.combined).run(ctx)
+
+);
+
+/*
+   Несколько стратегий выбрано — усредняем их score
+   (а не складываем, чтобы не улетать за 100 просто
+   от количества выбранных) и объединяем факторы без
+   повторов одного и того же текста (разные стратегии
+   часто смотрят на один и тот же индикатор).
+*/
+
+const avgScore=
+results.reduce((a,r)=>a+r.score,0)/results.length;
+
+const factorMap=
+new Map();
+
+results.forEach(r=>{
+
+r.factors.forEach(f=>{
+
+if(!factorMap.has(f.text)){
+
+factorMap.set(f.text,f);
+
+}
+
+});
+
+});
+
+const strategyLabel=
+activeIds
+.map(id=>(STRATEGIES[id]||STRATEGIES.combined).label)
+.join(" + ");
+
+const result={
+score:avgScore,
+factors:Array.from(factorMap.values())
+};
 
 let score=
 Math.max(0,Math.min(100,result.score));
@@ -6094,7 +6192,7 @@ signal,
 score:Math.round(score),
 
 info:
-`[${strategyDef.label}] Сила ${Math.round(score)}/100 • RSI ${ctx.rsiValue.toFixed(1)} • ATR ${ctx.atrPct.toFixed(2)}% • реком. время ${durationMinutes} мин`,
+`[${strategyLabel}] Сила ${Math.round(score)}/100 • RSI ${ctx.rsiValue.toFixed(1)} • ATR ${ctx.atrPct.toFixed(2)}% • реком. время ${durationMinutes} мин`,
 
 factors,
 
@@ -6104,7 +6202,13 @@ atrValue:ctx.atrValue,
 
 levels:ctx.levels,
 
-strategy:getActiveStrategy()
+imbalanceZone:ctx.imbalance.zone,
+
+fractal:ctx.fractal,
+
+strategy:activeIds.join("+"),
+
+activeStrategies:activeIds
 
 };
 
@@ -6124,7 +6228,7 @@ if(!list)
 return;
 
 const current=
-getActiveStrategy();
+getActiveStrategies();
 
 list.innerHTML=
 Object.keys(STRATEGIES).map(id=>{
@@ -6132,11 +6236,11 @@ Object.keys(STRATEGIES).map(id=>{
 const s=STRATEGIES[id];
 
 const active=
-id===current;
+current.includes(id);
 
 return `
 <div class="strategy-option${active?" active":""}" onclick="chooseStrategy('${id}')">
-<div class="strategy-option-name">${active?"✓ ":""}${s.label}</div>
+<div class="strategy-option-name">${active?"☑ ":"☐ "}${s.label}</div>
 <div class="strategy-option-desc">${s.desc}</div>
 </div>
 `;
@@ -6148,11 +6252,11 @@ return `
 
 function chooseStrategy(id){
 
-setActiveStrategy(id);
+toggleStrategySelection(id);
 
 renderStrategyList();
 
-if(typeof createCards==="function" && typeof cards==="object"){
+if(typeof cards==="object"){
 
 Object.keys(cards).forEach(index=>{
 
@@ -7561,6 +7665,11 @@ card.lastPrice=
 last.close;
 
 
+updateChartCandles(index,candles);
+
+updateChartMarkers(index,result);
+
+
 document.getElementById(
 `error-${index}`
 ).textContent="";
@@ -7598,95 +7707,343 @@ e.message;
 
 
 /* =========================================================
-   TRADINGVIEW
+   ГРАФИК — Lightweight Charts (собственный рендер вместо
+   чужого iframe TradingView)
+
+   Свечи берём из уже загруженных данных (их тянет loadSignal()
+   для расчёта сигнала) — отдельных запросов к API график не
+   делает. Поверх свечей рисуем метки по текущей активной
+   стратегии: уровни поддержки/сопротивления — всегда, зону
+   имбаланса (FVG) — если среди активных стратегий есть
+   Smart Money или Комбинированная, точку фрактала — если
+   активна Smart Money/Комбинированная/Контртренд.
 ========================================================= */
 
-function loadTradingView(index){
+const chartInstances={};
+
+
+function ensureChartInstance(index,container){
+
+const existing=
+chartInstances[index];
+
+if(existing && existing.container===container){
+
+return existing;
+
+}
+
+if(
+typeof LightweightCharts==="undefined"
+){
+
+return null;
+
+}
+
+container.innerHTML="";
+
+const chart=
+LightweightCharts.createChart(container,{
+
+layout:{
+background:{color:"#0A0B0E"},
+textColor:"#8B9099",
+fontSize:10
+},
+
+grid:{
+vertLines:{color:"#161A20"},
+horzLines:{color:"#161A20"}
+},
+
+rightPriceScale:{
+borderColor:"#20242B"
+},
+
+timeScale:{
+borderColor:"#20242B",
+timeVisible:true,
+secondsVisible:false
+},
+
+crosshair:{mode:0},
+
+autoSize:true
+
+});
+
+const series=
+chart.addCandlestickSeries({
+
+upColor:"#2BC482",
+downColor:"#E5484D",
+borderUpColor:"#2BC482",
+borderDownColor:"#E5484D",
+wickUpColor:"#2BC482",
+wickDownColor:"#E5484D"
+
+});
+
+const instance={
+
+chart,
+series,
+container,
+priceLines:[],
+lastCandles:null
+
+};
+
+chartInstances[index]=instance;
+
+return instance;
+
+}
+
+
+function destroyChartInstance(index){
+
+const instance=
+chartInstances[index];
+
+if(!instance)
+return;
+
+try{
+
+instance.chart.remove();
+
+}catch(e){}
+
+delete chartInstances[index];
+
+}
+
+
+function updateChartCandles(index,candles){
 
 const container=
 document.getElementById(
 `chart-widget-${index}`
 );
 
+if(!container || !candles || !candles.length)
+return;
 
-container.innerHTML="";
+const instance=
+ensureChartInstance(index,container);
 
+if(!instance)
+return;
 
-/*
-   Даём браузеру один кадр, чтобы старый
-   iframe TradingView гарантированно успел
-   выгрузиться, прежде чем вставляем новый —
-   иначе на месте старого графика на долю
-   секунды остаётся визуальный мусор от
-   недоснесённого предыдущего виджета.
-*/
+const seen=
+new Set();
 
-requestAnimationFrame(()=>{
+const chartData=
+candles
+.map(c=>({
 
-buildTradingViewWidget(
-index,
-container
-);
+time:Math.floor(c.time/1000),
+
+open:c.open,
+high:c.high,
+low:c.low,
+close:c.close
+
+}))
+.filter(c=>{
+
+if(seen.has(c.time))
+return false;
+
+seen.add(c.time);
+
+return true;
 
 });
 
+instance.series.setData(chartData);
+
+instance.lastCandles=candles;
+
 }
 
 
-function buildTradingViewWidget(index,container){
+function clearChartMarkers(instance){
 
-const wrapper=
-document.createElement("div");
+instance.priceLines.forEach(line=>{
 
+try{
 
-wrapper.style.width="100%";
-wrapper.style.height="100%";
-wrapper.style.minHeight="280px";
+instance.series.removePriceLine(line);
 
+}catch(e){}
 
-const script=
-document.createElement("script");
+});
 
+instance.priceLines=[];
 
-script.type=
-"text/javascript";
+instance.series.setMarkers([]);
 
-
-script.src=
-"https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+}
 
 
-script.async=true;
+function updateChartMarkers(index,result){
+
+const instance=
+chartInstances[index];
+
+if(!instance || !result)
+return;
+
+clearChartMarkers(instance);
+
+if(result.levels){
+
+if(isFinite(result.levels.support)){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:result.levels.support,
+color:"#2BC482",
+lineWidth:1,
+lineStyle:2,
+axisLabelVisible:true,
+title:"Поддержка"
+
+})
+);
+
+}
+
+if(isFinite(result.levels.resistance)){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:result.levels.resistance,
+color:"#E5484D",
+lineWidth:1,
+lineStyle:2,
+axisLabelVisible:true,
+title:"Сопротивление"
+
+})
+);
+
+}
+
+}
 
 
-let tvSymbol;
+const activeIds=
+result.activeStrategies||[];
 
+const smartMoneyActive=
+activeIds.includes("smart_money") ||
+activeIds.includes("combined");
+
+if(smartMoneyActive && result.imbalanceZone){
+
+const z=result.imbalanceZone;
+
+const color=
+z.type==="bullish"?"#2BC482":"#E5484D";
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:z.top,
+color,
+lineWidth:1,
+lineStyle:3,
+axisLabelVisible:false,
+title:"FVG"
+
+})
+);
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:z.bottom,
+color,
+lineWidth:1,
+lineStyle:3,
+axisLabelVisible:false,
+title:"FVG"
+
+})
+);
+
+}
+
+
+const fractalFamily=
+activeIds.includes("reversal") ||
+activeIds.includes("smart_money") ||
+activeIds.includes("combined");
 
 if(
-cards[index].type==="forex"
+fractalFamily &&
+result.fractal &&
+result.fractal.barsAgo<=6 &&
+instance.lastCandles &&
+instance.lastCandles.length
 ){
 
-tvSymbol=
-"OANDA:"+
-cards[index]
-.symbol
-.replace("/","");
+const candles=
+instance.lastCandles;
 
-}else{
+const idx=
+candles.length-1-result.fractal.barsAgo;
 
-tvSymbol=
-"BINANCE:"+
-cards[index].symbol;
+const c=
+candles[idx];
+
+if(c){
+
+instance.series.setMarkers([{
+
+time:Math.floor(c.time/1000),
+
+position:
+result.fractal.type==="low"
+?"belowBar"
+:"aboveBar",
+
+color:
+result.fractal.type==="low"
+?"#2BC482"
+:"#E5484D",
+
+shape:
+result.fractal.type==="low"
+?"arrowUp"
+:"arrowDown",
+
+text:"фрактал"
+
+}]);
 
 }
 
+}
+
+}
+
+
+function updateChartSymbolLabel(index){
 
 const label=
 document.getElementById(
 `chart-symbol-${index}`
 );
 
-if(label){
+if(!label)
+return;
 
 label.textContent=
 cards[index].type==="forex"
@@ -7695,14 +8052,6 @@ cards[index].type==="forex"
 .symbol
 .replace("USDT","")+
 "/USDT";
-
-/*
-   Стили задаём прямо тут, в JS,
-   а не только через CSS-класс —
-   так подпись гарантированно
-   останется маленьким бейджем
-   независимо от каскада стилей.
-*/
 
 label.style.cssText=
 "position:absolute;"+
@@ -7728,71 +8077,29 @@ label.style.cssText=
 }
 
 
-script.innerHTML=
-JSON.stringify({
-
-autosize:true,
-
-symbol:tvSymbol,
-
-interval:
-cards[index].interval,
-
-timezone:
-"Europe/Amsterdam",
-
-theme:"dark",
-
-style:"1",
-
-locale:"ru",
-
-enable_publishing:false,
-
-allow_symbol_change:false,
-
-hide_top_toolbar:true,
-
-hide_side_toolbar:true,
-
-hide_legend:true,
-
-save_image:false,
-
-calendar:false,
-
-support_host:
-"https://www.tradingview.com"
-
-});
-
-
-wrapper.appendChild(script);
-
-container.appendChild(wrapper);
-
-
 /*
-   Даём TradingView время на
-   расчёт размеров контейнера.
+   Имя оставил прежним (loadTradingView), чтобы не трогать
+   остальные вызовы по коду — по сути теперь это "пересоздать
+   график под текущую пару/ТФ", данные ему принесёт следующий
+   за ним loadSignal().
 */
 
-setTimeout(()=>{
+function loadTradingView(index){
 
-window.dispatchEvent(
-new Event("resize")
+destroyChartInstance(index);
+
+const container=
+document.getElementById(
+`chart-widget-${index}`
 );
 
-},300);
+if(container){
 
+ensureChartInstance(index,container);
 
-setTimeout(()=>{
+}
 
-window.dispatchEvent(
-new Event("resize")
-);
-
-},1000);
+updateChartSymbolLabel(index);
 
 }
 
