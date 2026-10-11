@@ -145,12 +145,13 @@ header{
 }
 
 .api-settings-bar{
-    height:26px;
+    min-height:26px;
     margin-bottom:6px;
     display:flex;
+    flex-wrap:wrap;
     align-items:center;
     justify-content:space-between;
-    gap:8px;
+    gap:6px 8px;
 }
 
 .settings-btn{
@@ -935,6 +936,39 @@ header{
 .factor-stat-good .factor-stat-nums{color:#2BC482}
 .factor-stat-bad .factor-stat-nums{color:#E5484D}
 
+.strategy-option{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    text-align:left;
+    background:#0A0B0E;
+    border:1px solid #242830;
+    border-radius:9px;
+    padding:10px 12px;
+    cursor:pointer;
+}
+
+.strategy-option.active{
+    border-color:#E8A33D;
+    background:#2A2316;
+}
+
+.strategy-option-name{
+    font-size:12px;
+    font-weight:800;
+    color:#ECEEF1;
+}
+
+.strategy-option.active .strategy-option-name{
+    color:#E8A33D;
+}
+
+.strategy-option-desc{
+    font-size:9px;
+    color:#8B9099;
+    line-height:1.4;
+}
+
 .factor-stats-section-title{
     font-size:10px;
     font-weight:900;
@@ -1272,6 +1306,12 @@ id="mainPage">
 class="settings-btn"
 onclick="openApiSettingsModal()">
 ⚙ Настройки API
+</button>
+
+<button
+class="settings-btn"
+onclick="openStrategyModal()">
+📐 Стратегия
 </button>
 
 <span
@@ -1706,6 +1746,40 @@ class="factor-stats-body">
 <div class="modal-actions">
 
 <button onclick="closeFactorStatsModal()">
+Закрыть
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div
+class="modal"
+id="strategyModal">
+
+<div class="modal-box api-settings-box">
+
+<div class="modal-title">
+📐 Стратегия анализа
+</div>
+
+<div class="api-settings-note">
+Выбор применяется сразу везде — и на карточках «Графики»,
+и при открытии сделок в «Сигналы». Переключить можно в любой
+момент.
+</div>
+
+<div
+id="strategyList"
+style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+</div>
+
+<div class="modal-actions">
+
+<button onclick="closeStrategyModal()">
 Закрыть
 </button>
 
@@ -5009,14 +5083,865 @@ return null;
 
 
 /* =========================================================
-   SIGNAL — движок с нуля (Bollinger + Stochastic + EMA9/21/50
-   + RSI + MACD + структура + ордер-блоки + уровни + фракталы
-   Вильямса + RSI-дивергенция), заточен под короткие сделки
-   (бинарные опционы): больше вес у конфлюэнс-сетапов (разворот
-   у границы канала/уровня + подтверждающая свеча), ADX оставлен
-   только как информационная метка (по статистике — влияние на
-   score ему только вредило), импульс/объём намеренно убраны
-   (по статистике — такие же вредные факторы).
+   ВЫБОР СТРАТЕГИИ
+
+   Хранится в localStorage, применяется ОДИНАКОВО везде —
+   и на карточках "Графики", и при открытии сделок в
+   "Сигналы" — потому что обе части вызывают один и тот же
+   calculateSignal(), который внутри смотрит на текущую
+   активную стратегию.
+========================================================= */
+
+let activeStrategyId=
+localStorage.getItem("cryptoScreenStrategy")||"combined";
+
+function getActiveStrategy(){
+
+return activeStrategyId;
+
+}
+
+function setActiveStrategy(id){
+
+activeStrategyId=id;
+
+localStorage.setItem(
+"cryptoScreenStrategy",
+id
+);
+
+}
+
+
+/* =========================================================
+   SMART MONEY — ИМБАЛАНСЫ (FAIR VALUE GAP) И LIQUIDITY SWEEP
+
+   Имбаланс/FVG: 3-свечной паттерн, где между 1-й и 3-й
+   свечой остаётся "дыра" в диапазоне цены (резкое движение
+   без торговли в этой зоне) — цена статистически склонна
+   возвращаться туда ("закрывать" зону), поэтому это
+   рабочая зона поддержки/сопротивления.
+
+   Liquidity sweep: цена на хвосте свечи выносит недавний
+   максимум/минимум (собирает стопы/отложенные ордера), но
+   ЗАКРЫВАЕТСЯ обратно внутри диапазона — классический
+   признак разворота в Smart Money Concepts.
+========================================================= */
+
+function findImbalances(data,lookback){
+
+const zones=[];
+
+const startIdx=
+Math.max(2,data.length-lookback);
+
+for(let i=startIdx;i<data.length;i++){
+
+const c1=data[i-2];
+const c3=data[i];
+
+if(c1.high<c3.low){
+
+zones.push({
+type:"bullish",
+top:c3.low,
+bottom:c1.high
+});
+
+}else if(c1.low>c3.high){
+
+zones.push({
+type:"bearish",
+top:c1.low,
+bottom:c3.high
+});
+
+}
+
+}
+
+return zones;
+
+}
+
+
+function imbalanceSignal(data,last){
+
+const zones=
+findImbalances(data,30);
+
+for(let i=zones.length-1;i>=0;i--){
+
+const z=zones[i];
+
+if(last>=z.bottom && last<=z.top){
+
+return{
+dir:z.type==="bullish"?1:-1,
+zone:z
+};
+
+}
+
+}
+
+return{dir:0,zone:null};
+
+}
+
+
+function liquiditySweep(data){
+
+if(data.length<21)
+return 0;
+
+const recent=
+data.slice(-21,-1);
+
+const priorHigh=
+Math.max(...recent.map(c=>c.high));
+
+const priorLow=
+Math.min(...recent.map(c=>c.low));
+
+const lastCandle=
+data[data.length-1];
+
+if(
+lastCandle.high>priorHigh &&
+lastCandle.close<priorHigh
+){
+
+return -1;
+
+}
+
+if(
+lastCandle.low<priorLow &&
+lastCandle.close>priorLow
+){
+
+return 1;
+
+}
+
+return 0;
+
+}
+
+
+/* =========================================================
+   ОБЩИЙ КОНТЕКСТ ИНДИКАТОРОВ
+
+   Считаем один раз на вызов calculateSignal() — все
+   стратегии ниже берут из этого набора то, что им нужно,
+   вместо того чтобы каждая пересчитывала всё заново.
+========================================================= */
+
+function buildIndicatorContext(data){
+
+const closes=
+data.map(c=>c.close);
+
+const last=
+closes[closes.length-1];
+
+
+const ema9=ema(closes,9);
+const ema21=ema(closes,21);
+const ema50v=ema(closes,50);
+
+let trendDir="NEUTRAL";
+
+if(ema9!==null && ema21!==null && ema50v!==null){
+
+if(ema9>ema21 && ema21>ema50v)
+trendDir="UP";
+else if(ema9<ema21 && ema21<ema50v)
+trendDir="DOWN";
+
+}
+
+
+const bb=
+bollingerBands(closes,20,2);
+
+let bbSignal=0;
+
+if(bb){
+
+const pctB=
+(last-bb.lower)/((bb.upper-bb.lower)||1e-9);
+
+if(pctB<=0.05)
+bbSignal=1;
+else if(pctB>=0.95)
+bbSignal=-1;
+
+}
+
+const squeeze=
+bollingerSqueeze(closes,20,2,30);
+
+
+const stoch=
+stochastic(data,14,3,3);
+
+let stochSignal=0;
+
+if(stoch.kPrev!==undefined && stoch.dPrev!==undefined){
+
+const crossUp=
+stoch.kPrev<=stoch.dPrev && stoch.k>stoch.d;
+
+const crossDown=
+stoch.kPrev>=stoch.dPrev && stoch.k<stoch.d;
+
+if(crossUp && stoch.k<30)
+stochSignal=1;
+else if(crossDown && stoch.k>70)
+stochSignal=-1;
+
+}
+
+
+const rsiValue=
+rsi(closes,14);
+
+const macdData=
+macd(closes);
+
+const structure=
+marketStructure(data);
+
+const ob=
+orderBlockAnalysis(data);
+
+const levels=
+findLevels(data);
+
+const nearSupport=
+Math.abs(last-levels.support)/last<0.004;
+
+const nearResistance=
+Math.abs(last-levels.resistance)/last<0.004;
+
+const fractal=
+findLastFractal(data);
+
+let fractalSignal=0;
+
+if(fractal && fractal.barsAgo<=6){
+
+if(fractal.type==="low" && last>fractal.price)
+fractalSignal=1;
+else if(fractal.type==="high" && last<fractal.price)
+fractalSignal=-1;
+
+}
+
+const divergence=
+detectRsiDivergence(data);
+
+const lastCandle=
+data[data.length-1];
+
+const body=
+Math.abs(lastCandle.close-lastCandle.open);
+
+const isBullishReversal=
+lastCandle.close>lastCandle.open &&
+(lastCandle.open-lastCandle.low)>body*1.5;
+
+const isBearishReversal=
+lastCandle.close<lastCandle.open &&
+(lastCandle.high-lastCandle.open)>body*1.5;
+
+const adxValue=
+calculateADX(data,14);
+
+const imbalance=
+imbalanceSignal(data,last);
+
+const sweep=
+liquiditySweep(data);
+
+const atrValue=
+atr(data,14);
+
+const atrPct=
+last>0?atrValue/last*100:0;
+
+return{
+
+data,closes,last,
+
+ema9,ema21,ema50:ema50v,trendDir,
+
+bb,bbSignal,squeeze,
+
+stoch,stochSignal,
+
+rsiValue,macdData,
+
+structure,ob,levels,
+nearSupport,nearResistance,
+
+fractal,fractalSignal,
+
+divergence,
+
+isBullishReversal,isBearishReversal,
+
+adxValue,
+
+imbalance,sweep,
+
+atrValue,atrPct
+
+};
+
+}
+
+
+function confluenceCountOf(ctx){
+
+return[
+
+ctx.trendDir!=="NEUTRAL",
+ctx.bbSignal!==0,
+ctx.stochSignal!==0,
+ctx.fractalSignal!==0,
+!!ctx.divergence,
+ctx.imbalance.dir!==0,
+ctx.sweep!==0
+
+].filter(Boolean).length;
+
+}
+
+
+function candleFactor(ctx,confirmCond,bonusWeight,baseWeight){
+
+if(ctx.isBullishReversal){
+
+const confirmed=confirmCond>0;
+
+return{
+
+score:confirmed?bonusWeight:baseWeight,
+
+factor:{
+text:"Свеча: бычий разворот"+(confirmed?" (подтверждён)":""),
+type:"good"
+}
+
+};
+
+}
+
+if(ctx.isBearishReversal){
+
+const confirmed=confirmCond<0;
+
+return{
+
+score:confirmed?-bonusWeight:-baseWeight,
+
+factor:{
+text:"Свеча: медвежий разворот"+(confirmed?" (подтверждён)":""),
+type:"bad"
+}
+
+};
+
+}
+
+return null;
+
+}
+
+
+/* =========================================================
+   СТРАТЕГИИ
+
+   Каждая — чистая функция (ctx)=>{score,factors}, старт
+   всегда от базовых 50. Итоговый score зажимается в 0-100
+   уже снаружи, в calculateSignal().
+========================================================= */
+
+function strategyCombined(ctx){
+
+let score=50;
+const factors=[];
+
+if(ctx.trendDir==="UP"){
+score+=10;
+factors.push({text:"Тренд: EMA9>21>50 (бычий)",type:"good"});
+}else if(ctx.trendDir==="DOWN"){
+score-=10;
+factors.push({text:"Тренд: EMA9<21<50 (медвежий)",type:"bad"});
+}else{
+factors.push({text:"Тренд: смешанный",type:"neutral"});
+}
+
+if(ctx.bbSignal===1){
+score+=11;
+factors.push({text:"Цена у нижней полосы Боллинджера",type:"good"});
+}else if(ctx.bbSignal===-1){
+score-=11;
+factors.push({text:"Цена у верхней полосы Боллинджера",type:"bad"});
+}else{
+factors.push({text:"Боллинджер: середина канала",type:"neutral"});
+}
+
+if(ctx.squeeze){
+factors.push({text:"Боллинджер: сжатие (низкая волатильность)",type:"neutral"});
+}
+
+if(ctx.stochSignal===1){
+score+=9;
+factors.push({text:"Стохастик: разворот вверх из перепроданности",type:"good"});
+}else if(ctx.stochSignal===-1){
+score-=9;
+factors.push({text:"Стохастик: разворот вниз из перекупленности",type:"bad"});
+}else{
+factors.push({text:"Стохастик: нет сигнала",type:"neutral"});
+}
+
+if(ctx.rsiValue<30){
+score+=6;
+factors.push({text:"RSI: перепродан",type:"good"});
+}else if(ctx.rsiValue>70){
+score-=6;
+factors.push({text:"RSI: перекуплен",type:"bad"});
+}else if(ctx.rsiValue>50){
+score+=2;
+factors.push({text:"RSI: бычий",type:"good"});
+}else{
+score-=2;
+factors.push({text:"RSI: медвежий",type:"bad"});
+}
+
+if(ctx.macdData.macd>ctx.macdData.signal){
+score+=7;
+factors.push({text:"MACD: бычий",type:"good"});
+}else{
+score-=7;
+factors.push({text:"MACD: медвежий",type:"bad"});
+}
+
+score+=ctx.structure.score;
+factors.push({
+text:ctx.structure.text,
+type:ctx.structure.score>0?"good":ctx.structure.score<0?"bad":"neutral"
+});
+
+score+=ctx.ob.score;
+factors.push({
+text:ctx.ob.text,
+type:ctx.ob.score>0?"good":ctx.ob.score<0?"bad":"neutral"
+});
+
+if(ctx.nearSupport){
+score+=6;
+factors.push({text:"Цена у поддержки",type:"good"});
+}else if(ctx.nearResistance){
+score-=6;
+factors.push({text:"Цена у сопротивления",type:"bad"});
+}else{
+factors.push({text:"Уровни: свободная зона",type:"neutral"});
+}
+
+if(ctx.fractalSignal===1){
+score+=7;
+factors.push({text:"Фрактал: разворот от минимума",type:"good"});
+}else if(ctx.fractalSignal===-1){
+score-=7;
+factors.push({text:"Фрактал: разворот от максимума",type:"bad"});
+}
+
+if(ctx.divergence==="bullish"){
+score+=16;
+factors.push({text:"Дивергенция: бычья",type:"good"});
+}else if(ctx.divergence==="bearish"){
+score-=16;
+factors.push({text:"Дивергенция: медвежья",type:"bad"});
+}
+
+if(ctx.imbalance.dir===1){
+score+=6;
+factors.push({text:"Имбаланс: цена в бычьей зоне FVG",type:"good"});
+}else if(ctx.imbalance.dir===-1){
+score-=6;
+factors.push({text:"Имбаланс: цена в медвежьей зоне FVG",type:"bad"});
+}
+
+if(ctx.sweep===1){
+score+=6;
+factors.push({text:"Sweep ликвидности снизу",type:"good"});
+}else if(ctx.sweep===-1){
+score-=6;
+factors.push({text:"Sweep ликвидности сверху",type:"bad"});
+}
+
+const confirmCond=
+(ctx.nearSupport?1:0)+(ctx.bbSignal)+(ctx.stochSignal)-
+(ctx.nearResistance?1:0);
+
+const cf=candleFactor(ctx,confirmCond,9,5);
+
+if(cf){
+score+=cf.score;
+factors.push(cf.factor);
+}
+
+return{score,factors};
+
+}
+
+
+function strategySmartMoney(ctx){
+
+let score=50;
+const factors=[];
+
+score+=ctx.ob.score*1.5;
+factors.push({
+text:ctx.ob.text,
+type:ctx.ob.score>0?"good":ctx.ob.score<0?"bad":"neutral"
+});
+
+if(ctx.imbalance.dir===1){
+score+=12;
+factors.push({text:"Имбаланс: цена в бычьей зоне FVG",type:"good"});
+}else if(ctx.imbalance.dir===-1){
+score-=12;
+factors.push({text:"Имбаланс: цена в медвежьей зоне FVG",type:"bad"});
+}else{
+factors.push({text:"Имбаланс: нет активной зоны",type:"neutral"});
+}
+
+if(ctx.sweep===1){
+score+=12;
+factors.push({text:"Sweep ликвидности снизу (разворот вверх)",type:"good"});
+}else if(ctx.sweep===-1){
+score-=12;
+factors.push({text:"Sweep ликвидности сверху (разворот вниз)",type:"bad"});
+}else{
+factors.push({text:"Sweep: не обнаружен",type:"neutral"});
+}
+
+score+=ctx.structure.score*1.3;
+factors.push({
+text:ctx.structure.text,
+type:ctx.structure.score>0?"good":ctx.structure.score<0?"bad":"neutral"
+});
+
+if(ctx.nearSupport){
+score+=6;
+factors.push({text:"Цена у поддержки",type:"good"});
+}else if(ctx.nearResistance){
+score-=6;
+factors.push({text:"Цена у сопротивления",type:"bad"});
+}
+
+if(ctx.divergence==="bullish"){
+score+=14;
+factors.push({text:"Дивергенция: бычья",type:"good"});
+}else if(ctx.divergence==="bearish"){
+score-=14;
+factors.push({text:"Дивергенция: медвежья",type:"bad"});
+}
+
+const cf=
+candleFactor(
+ctx,
+ctx.imbalance.dir+ctx.sweep,
+7,
+3
+);
+
+if(cf){
+score+=cf.score;
+factors.push(cf.factor);
+}
+
+return{score,factors};
+
+}
+
+
+function strategyClassicTA(ctx){
+
+let score=50;
+const factors=[];
+
+if(ctx.trendDir==="UP"){
+score+=12;
+factors.push({text:"Тренд: EMA9>21>50 (бычий)",type:"good"});
+}else if(ctx.trendDir==="DOWN"){
+score-=12;
+factors.push({text:"Тренд: EMA9<21<50 (медвежий)",type:"bad"});
+}else{
+factors.push({text:"Тренд: смешанный",type:"neutral"});
+}
+
+if(ctx.bbSignal===1){
+score+=12;
+factors.push({text:"Цена у нижней полосы Боллинджера",type:"good"});
+}else if(ctx.bbSignal===-1){
+score-=12;
+factors.push({text:"Цена у верхней полосы Боллинджера",type:"bad"});
+}
+
+if(ctx.stochSignal===1){
+score+=10;
+factors.push({text:"Стохастик: разворот вверх из перепроданности",type:"good"});
+}else if(ctx.stochSignal===-1){
+score-=10;
+factors.push({text:"Стохастик: разворот вниз из перекупленности",type:"bad"});
+}
+
+if(ctx.rsiValue<30){
+score+=8;
+factors.push({text:"RSI: перепродан",type:"good"});
+}else if(ctx.rsiValue>70){
+score-=8;
+factors.push({text:"RSI: перекуплен",type:"bad"});
+}
+
+if(ctx.macdData.macd>ctx.macdData.signal){
+score+=9;
+factors.push({text:"MACD: бычий",type:"good"});
+}else{
+score-=9;
+factors.push({text:"MACD: медвежий",type:"bad"});
+}
+
+if(ctx.divergence==="bullish"){
+score+=14;
+factors.push({text:"Дивергенция: бычья",type:"good"});
+}else if(ctx.divergence==="bearish"){
+score-=14;
+factors.push({text:"Дивергенция: медвежья",type:"bad"});
+}
+
+return{score,factors};
+
+}
+
+
+function strategyDivergenceFocus(ctx){
+
+let score=50;
+const factors=[];
+
+if(ctx.divergence==="bullish"){
+score+=22;
+factors.push({text:"Дивергенция: бычья",type:"good"});
+}else if(ctx.divergence==="bearish"){
+score-=22;
+factors.push({text:"Дивергенция: медвежья",type:"bad"});
+}else{
+factors.push({text:"Дивергенция: нет",type:"neutral"});
+}
+
+if(ctx.nearSupport){
+score+=10;
+factors.push({text:"Цена у поддержки",type:"good"});
+}else if(ctx.nearResistance){
+score-=10;
+factors.push({text:"Цена у сопротивления",type:"bad"});
+}
+
+if(ctx.rsiValue<30){
+score+=6;
+factors.push({text:"RSI: перепродан",type:"good"});
+}else if(ctx.rsiValue>70){
+score-=6;
+factors.push({text:"RSI: перекуплен",type:"bad"});
+}
+
+score+=ctx.structure.score;
+factors.push({
+text:ctx.structure.text,
+type:ctx.structure.score>0?"good":ctx.structure.score<0?"bad":"neutral"
+});
+
+const cf=
+candleFactor(
+ctx,
+(ctx.nearSupport?1:0)-(ctx.nearResistance?1:0),
+10,
+4
+);
+
+if(cf){
+score+=cf.score;
+factors.push(cf.factor);
+}
+
+return{score,factors};
+
+}
+
+
+function strategyTrendFollow(ctx){
+
+let score=50;
+const factors=[];
+
+if(ctx.trendDir==="UP"){
+score+=16;
+factors.push({text:"Тренд: EMA9>21>50 (бычий)",type:"good"});
+}else if(ctx.trendDir==="DOWN"){
+score-=16;
+factors.push({text:"Тренд: EMA9<21<50 (медвежий)",type:"bad"});
+}else{
+factors.push({text:"Тренд: смешанный — стратегия пропускает",type:"neutral"});
+}
+
+const macdAgrees=
+(ctx.trendDir==="UP" && ctx.macdData.macd>ctx.macdData.signal)||
+(ctx.trendDir==="DOWN" && ctx.macdData.macd<ctx.macdData.signal);
+
+if(macdAgrees){
+score+=
+ctx.trendDir==="UP"?10:-10;
+factors.push({text:"MACD подтверждает тренд",type:ctx.trendDir==="UP"?"good":"bad"});
+}
+
+score+=ctx.structure.score*1.2;
+factors.push({
+text:ctx.structure.text,
+type:ctx.structure.score>0?"good":ctx.structure.score<0?"bad":"neutral"
+});
+
+const structureAgrees=
+(ctx.trendDir==="UP" && ctx.structure.direction==="BULL")||
+(ctx.trendDir==="DOWN" && ctx.structure.direction==="BEAR");
+
+if(macdAgrees && structureAgrees){
+score+=
+ctx.trendDir==="UP"?8:-8;
+factors.push({text:"Конфлюэнс тренда: EMA+MACD+структура совпали",type:ctx.trendDir==="UP"?"good":"bad"});
+}
+
+if(ctx.trendDir==="UP" && ctx.nearSupport){
+score+=6;
+factors.push({text:"Откат к поддержке по тренду вверх",type:"good"});
+}else if(ctx.trendDir==="DOWN" && ctx.nearResistance){
+score-=6;
+factors.push({text:"Откат к сопротивлению по тренду вниз",type:"bad"});
+}
+
+return{score,factors};
+
+}
+
+
+function strategyReversal(ctx){
+
+let score=50;
+const factors=[];
+
+if(ctx.bbSignal===1){
+score+=14;
+factors.push({text:"Цена у нижней полосы Боллинджера",type:"good"});
+}else if(ctx.bbSignal===-1){
+score-=14;
+factors.push({text:"Цена у верхней полосы Боллинджера",type:"bad"});
+}else{
+factors.push({text:"Боллинджер: не у границы — стратегия пропускает",type:"neutral"});
+}
+
+if(ctx.stochSignal===1){
+score+=14;
+factors.push({text:"Стохастик: разворот вверх из перепроданности",type:"good"});
+}else if(ctx.stochSignal===-1){
+score-=14;
+factors.push({text:"Стохастик: разворот вниз из перекупленности",type:"bad"});
+}
+
+if(ctx.rsiValue<30){
+score+=8;
+factors.push({text:"RSI: перепродан",type:"good"});
+}else if(ctx.rsiValue>70){
+score-=8;
+factors.push({text:"RSI: перекуплен",type:"bad"});
+}
+
+if(ctx.fractalSignal===1){
+score+=8;
+factors.push({text:"Фрактал: разворот от минимума",type:"good"});
+}else if(ctx.fractalSignal===-1){
+score-=8;
+factors.push({text:"Фрактал: разворот от максимума",type:"bad"});
+}
+
+const cf=
+candleFactor(
+ctx,
+ctx.bbSignal+ctx.stochSignal,
+10,
+4
+);
+
+if(cf){
+score+=cf.score;
+factors.push(cf.factor);
+}
+
+return{score,factors};
+
+}
+
+
+const STRATEGIES={
+
+combined:{
+label:"Комбинированная (всё вместе)",
+desc:"Все индикаторы и концепции разом с умеренным весом каждой — универсальный вариант по умолчанию.",
+run:strategyCombined
+},
+
+smart_money:{
+label:"Smart Money (ордер-блоки, имбаланс, sweep)",
+desc:"Ордер-блоки, имбалансы (Fair Value Gap) и liquidity sweep — концепции институциональной торговли, минимум классических осцилляторов.",
+run:strategySmartMoney
+},
+
+classic_ta:{
+label:"Классический тех.анализ",
+desc:"EMA, RSI, MACD, Bollinger, Stochastic — набор индикаторов из учебников технического анализа.",
+run:strategyClassicTA
+},
+
+divergence_focus:{
+label:"Дивергенция + уровни",
+desc:"Упор на RSI-дивергенцию (лучший фактор по твоей же накопленной статистике) и ключевые уровни.",
+run:strategyDivergenceFocus
+},
+
+trend_follow:{
+label:"Следование за трендом",
+desc:"Торгует только по тренду при согласии EMA+MACD+структуры, против тренда не входит вообще.",
+run:strategyTrendFollow
+},
+
+reversal:{
+label:"Контртренд / разворот от границ",
+desc:"Ловит развороты у границ канала и в зонах перекупленности/перепроданности, тренд игнорирует.",
+run:strategyReversal
+}
+
+};
+
+
+/* =========================================================
+   SIGNAL — единая точка входа для главной и для сигналов.
+   Какая стратегия сейчас активна — решает STRATEGIES[getActiveStrategy()].
 ========================================================= */
 
 function calculateSignal(candles){
@@ -5039,7 +5964,9 @@ duration:5*60*1000,
 
 atrValue:0,
 
-levels:null
+levels:null,
+
+strategy:getActiveStrategy()
 
 };
 
@@ -5049,443 +5976,34 @@ levels:null
 const data=
 candles.slice(-ANALYSIS_CANDLES);
 
-const closes=
-data.map(c=>c.close);
+const ctx=
+buildIndicatorContext(data);
 
-const last=
-closes[closes.length-1];
+const strategyDef=
+STRATEGIES[getActiveStrategy()]||
+STRATEGIES.combined;
 
+const result=
+strategyDef.run(ctx);
 
-let score=50;
+let score=
+Math.max(0,Math.min(100,result.score));
 
-const factors=[];
+const factors=
+result.factors;
 
 
-/* 1. Тренд: EMA9/21/50 */
-
-const ema9=ema(closes,9);
-const ema21=ema(closes,21);
-const ema50v=ema(closes,50);
-
-let trendDir="NEUTRAL";
-
-if(ema9!==null && ema21!==null && ema50v!==null){
-
-if(ema9>ema21 && ema21>ema50v){
-
-score+=10;
-trendDir="UP";
-
-factors.push({
-text:"Тренд: EMA9>21>50 (бычий)",
-type:"good"
-});
-
-}else if(ema9<ema21 && ema21<ema50v){
-
-score-=10;
-trendDir="DOWN";
-
-factors.push({
-text:"Тренд: EMA9<21<50 (медвежий)",
-type:"bad"
-});
-
-}else{
-
-factors.push({
-text:"Тренд: смешанный",
-type:"neutral"
-});
-
-}
-
-}
-
-
-/* 2. Bollinger Bands */
-
-const bb=
-bollingerBands(closes,20,2);
-
-let bbSignal=0;
-
-if(bb){
-
-const pctB=
-(last-bb.lower)/((bb.upper-bb.lower)||1e-9);
-
-if(pctB<=0.05){
-
-score+=11;
-bbSignal=1;
-
-factors.push({
-text:"Цена у нижней полосы Боллинджера",
-type:"good"
-});
-
-}else if(pctB>=0.95){
-
-score-=11;
-bbSignal=-1;
-
-factors.push({
-text:"Цена у верхней полосы Боллинджера",
-type:"bad"
-});
-
-}else{
-
-factors.push({
-text:"Боллинджер: середина канала",
-type:"neutral"
-});
-
-}
-
-if(bollingerSqueeze(closes,20,2,30)){
-
-factors.push({
-text:"Боллинджер: сжатие (низкая волатильность)",
-type:"neutral"
-});
-
-}
-
-}
-
-
-/* 3. Stochastic */
-
-const stoch=
-stochastic(data,14,3,3);
-
-let stochSignal=0;
-
-if(
-stoch.kPrev!==undefined &&
-stoch.dPrev!==undefined
-){
-
-const crossUp=
-stoch.kPrev<=stoch.dPrev &&
-stoch.k>stoch.d;
-
-const crossDown=
-stoch.kPrev>=stoch.dPrev &&
-stoch.k<stoch.d;
-
-if(crossUp && stoch.k<30){
-
-score+=9;
-stochSignal=1;
-
-factors.push({
-text:"Стохастик: разворот вверх из перепроданности",
-type:"good"
-});
-
-}else if(crossDown && stoch.k>70){
-
-score-=9;
-stochSignal=-1;
-
-factors.push({
-text:"Стохастик: разворот вниз из перекупленности",
-type:"bad"
-});
-
-}else{
-
-factors.push({
-text:"Стохастик: нет сигнала",
-type:"neutral"
-});
-
-}
-
-}
-
-
-/* 4. RSI */
-
-const rsiValue=
-rsi(closes,14);
-
-if(rsiValue<30){
-
-score+=6;
-
-factors.push({
-text:"RSI: перепродан",
-type:"good"
-});
-
-}else if(rsiValue>70){
-
-score-=6;
-
-factors.push({
-text:"RSI: перекуплен",
-type:"bad"
-});
-
-}else if(rsiValue>50){
-
-score+=2;
-
-factors.push({
-text:"RSI: бычий",
-type:"good"
-});
-
-}else{
-
-score-=2;
-
-factors.push({
-text:"RSI: медвежий",
-type:"bad"
-});
-
-}
-
-
-/* 5. MACD */
-
-const macdData=
-macd(closes);
-
-if(macdData.macd>macdData.signal){
-
-score+=7;
-
-factors.push({
-text:"MACD: бычий",
-type:"good"
-});
-
-}else{
-
-score-=7;
-
-factors.push({
-text:"MACD: медвежий",
-type:"bad"
-});
-
-}
-
-
-/* 6. Структура рынка */
-
-const structure=
-marketStructure(data);
-
-score+=structure.score;
-
-factors.push({
-
-text:structure.text,
-
-type:
-structure.score>0
-?"good"
-:structure.score<0
-?"bad"
-:"neutral"
-
-});
-
-
-/* 7. Ордер-блоки */
-
-const ob=
-orderBlockAnalysis(data);
-
-score+=ob.score;
-
-factors.push({
-
-text:ob.text,
-
-type:
-ob.score>0
-?"good"
-:ob.score<0
-?"bad"
-:"neutral"
-
-});
-
-
-/* 8. Уровни поддержки/сопротивления */
-
-const levels=
-findLevels(data);
-
-const nearSupport=
-Math.abs(last-levels.support)/last<0.004;
-
-const nearResistance=
-Math.abs(last-levels.resistance)/last<0.004;
-
-if(nearSupport){
-
-score+=6;
-
-factors.push({
-text:"Цена у поддержки",
-type:"good"
-});
-
-}else if(nearResistance){
-
-score-=6;
-
-factors.push({
-text:"Цена у сопротивления",
-type:"bad"
-});
-
-}else{
-
-factors.push({
-text:"Уровни: свободная зона",
-type:"neutral"
-});
-
-}
-
-
-/* 9. Фракталы Вильямса */
-
-const fractal=
-findLastFractal(data);
-
-let fractalSignal=0;
-
-if(fractal && fractal.barsAgo<=6){
-
-if(fractal.type==="low" && last>fractal.price){
-
-score+=7;
-fractalSignal=1;
-
-factors.push({
-text:"Фрактал: разворот от минимума",
-type:"good"
-});
-
-}else if(fractal.type==="high" && last<fractal.price){
-
-score-=7;
-fractalSignal=-1;
-
-factors.push({
-text:"Фрактал: разворот от максимума",
-type:"bad"
-});
-
-}
-
-}
-
-
-/* 10. RSI-дивергенция — лучший фактор по накопленной статистике */
-
-const divergence=
-detectRsiDivergence(data);
-
-if(divergence==="bullish"){
-
-score+=16;
-
-factors.push({
-text:"Дивергенция: бычья",
-type:"good"
-});
-
-}else if(divergence==="bearish"){
-
-score-=16;
-
-factors.push({
-text:"Дивергенция: медвежья",
-type:"bad"
-});
-
-}
-
-
-/* 11. Свечной разворотный паттерн — бонус за конфлюэнс с п.2/3/8 */
-
-const lastCandle=
-data[data.length-1];
-
-const body=
-Math.abs(lastCandle.close-lastCandle.open);
-
-const isBullishReversal=
-lastCandle.close>lastCandle.open &&
-(lastCandle.open-lastCandle.low)>body*1.5;
-
-const isBearishReversal=
-lastCandle.close<lastCandle.open &&
-(lastCandle.high-lastCandle.open)>body*1.5;
-
-if(isBullishReversal){
-
-const confirmed=
-nearSupport || bbSignal===1 || stochSignal===1;
-
-score+=confirmed?9:5;
-
-factors.push({
-text:
-"Свеча: бычий разворот"+
-(confirmed?" (подтверждён)":""),
-type:"good"
-});
-
-}else if(isBearishReversal){
-
-const confirmed=
-nearResistance || bbSignal===-1 || stochSignal===-1;
-
-score-=confirmed?9:5;
-
-factors.push({
-text:
-"Свеча: медвежий разворот"+
-(confirmed?" (подтверждён)":""),
-type:"bad"
-});
-
-}
-
-
-score=
-Math.max(0,Math.min(100,score));
-
-
-/* ADX — только метка, на score не влияет (урок из статистики) */
-
-const adxValue=
-calculateADX(data,14);
-
-if(adxValue!==null){
+if(ctx.adxValue!==null){
 
 factors.push({
 
 text:
-"ADX "+Math.round(adxValue)+
+"ADX "+Math.round(ctx.adxValue)+
 " ("+
 (
-adxValue>=25
+ctx.adxValue>=25
 ?"тренд"
-:adxValue<20
+:ctx.adxValue<20
 ?"флэт"
 :"нейтрально"
 )+
@@ -5502,31 +6020,20 @@ let signal="WAIT";
 
 if(
 score>=MIN_SIGNAL_SCORE &&
-structure.direction!=="BEAR"
+ctx.structure.direction!=="BEAR"
 ){
 
 signal="BUY";
 
 }else if(
 score<=100-MIN_SIGNAL_SCORE &&
-structure.direction!=="BULL"
+ctx.structure.direction!=="BULL"
 ){
 
 signal="SELL";
 
 }
 
-
-/* Длительность сделки — по относительной волатильности (ATR)
-   и числу согласных факторов (конфлюэнс), а не по фиксированному
-   ТФ монитора. Всплеск волатильности — движение уже идёт быстро,
-   экспирацию короче. Вялый рынок — движению нужно больше времени. */
-
-const atrValue=
-atr(data,14);
-
-const atrPct=
-last>0?atrValue/last*100:0;
 
 const historicalAtrSamples=[];
 
@@ -5552,19 +6059,13 @@ histAtr/data[i].close*100
 const avgAtrPct=
 historicalAtrSamples.length
 ?historicalAtrSamples.reduce((a,b)=>a+b,0)/historicalAtrSamples.length
-:atrPct;
+:ctx.atrPct;
 
 const volRatio=
-avgAtrPct>0?atrPct/avgAtrPct:1;
+avgAtrPct>0?ctx.atrPct/avgAtrPct:1;
 
 const confluenceCount=
-[
-trendDir!=="NEUTRAL",
-bbSignal!==0,
-stochSignal!==0,
-fractalSignal!==0,
-!!divergence
-].filter(Boolean).length;
+confluenceCountOf(ctx);
 
 let durationMinutes;
 
@@ -5593,19 +6094,101 @@ signal,
 score:Math.round(score),
 
 info:
-`Сила ${Math.round(score)}/100 • RSI ${rsiValue.toFixed(1)} • ATR ${atrPct.toFixed(2)}% • реком. время ${durationMinutes} мин`,
+`[${strategyDef.label}] Сила ${Math.round(score)}/100 • RSI ${ctx.rsiValue.toFixed(1)} • ATR ${ctx.atrPct.toFixed(2)}% • реком. время ${durationMinutes} мин`,
 
 factors,
 
 duration:durationMinutes*60*1000,
 
-atrValue,
+atrValue:ctx.atrValue,
 
-levels
+levels:ctx.levels,
+
+strategy:getActiveStrategy()
 
 };
 
 }
+
+
+/* =========================================================
+   МОДАЛКА ВЫБОРА СТРАТЕГИИ
+========================================================= */
+
+function renderStrategyList(){
+
+const list=
+document.getElementById("strategyList");
+
+if(!list)
+return;
+
+const current=
+getActiveStrategy();
+
+list.innerHTML=
+Object.keys(STRATEGIES).map(id=>{
+
+const s=STRATEGIES[id];
+
+const active=
+id===current;
+
+return `
+<div class="strategy-option${active?" active":""}" onclick="chooseStrategy('${id}')">
+<div class="strategy-option-name">${active?"✓ ":""}${s.label}</div>
+<div class="strategy-option-desc">${s.desc}</div>
+</div>
+`;
+
+}).join("");
+
+}
+
+
+function chooseStrategy(id){
+
+setActiveStrategy(id);
+
+renderStrategyList();
+
+if(typeof createCards==="function" && typeof cards==="object"){
+
+Object.keys(cards).forEach(index=>{
+
+if(typeof loadSignal==="function"){
+
+loadSignal(index);
+
+}
+
+});
+
+}
+
+}
+
+
+function openStrategyModal(){
+
+renderStrategyList();
+
+document.getElementById(
+"strategyModal"
+).classList.add("open");
+
+}
+
+
+function closeStrategyModal(){
+
+document.getElementById(
+"strategyModal"
+).classList.remove("open");
+
+}
+
+
 
 
 /* =========================================================
@@ -8556,11 +9139,13 @@ let points;
 
 if(
 trade.pricePath &&
-trade.pricePath.length>=2
+trade.pricePath.length>=1
 ){
 
 points=
-trade.pricePath.map(p=>p.p);
+[trade.entry].concat(
+trade.pricePath.map(p=>p.p)
+);
 
 if(trade.closed && trade.exit!=null){
 
@@ -8580,11 +9165,14 @@ trade.closed
 
 const w=100,h=26,pad=3;
 
+const allValues=
+points.concat([trade.entry]);
+
 const min=
-Math.min(...points);
+Math.min(...allValues);
 
 const max=
-Math.max(...points);
+Math.max(...allValues);
 
 const range=
 (max-min)||1e-9;
@@ -8594,39 +9182,62 @@ points.length>1
 ?(w-pad*2)/(points.length-1)
 :0;
 
-const coords=
-points
-.map((p,i)=>{
+function toXY(p,i){
 
-const x=
-pad+i*stepX;
+return[
 
-const y=
-h-pad-((p-min)/range)*(h-pad*2);
+pad+i*stepX,
 
-return x.toFixed(1)+","+y.toFixed(1);
+h-pad-((p-min)/range)*(h-pad*2)
 
-})
-.join(" ");
+];
 
-const color=
-trade.closed
-?(
-trade.result==="WIN"
-?"#2BC482"
-:trade.result==="LOSS"
-?"#E5484D"
-:"#8B9099"
-)
-:(
+}
+
+/*
+   Цвет сегмента зависит не от направления сделки
+   самого по себе, а от того, в плюсе она сейчас в
+   этой точке или в минусе относительно цены входа —
+   линия меняет цвет по ходу движения цены.
+*/
+
+function colorFor(p){
+
+if(p===trade.entry)
+return"#8B9099";
+
+const winning=
 trade.direction==="BUY"
-?"#2BC482"
-:"#E5484D"
+?p>trade.entry
+:p<trade.entry;
+
+return winning?"#2BC482":"#E5484D";
+
+}
+
+const segments=[];
+
+for(let i=1;i<points.length;i++){
+
+const[x1,y1]=
+toXY(points[i-1],i-1);
+
+const[x2,y2]=
+toXY(points[i],i);
+
+segments.push(
+`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${colorFor(points[i])}" stroke-width="1.6" stroke-linecap="round"/>`
 );
+
+}
+
+const[,entryY]=
+toXY(trade.entry,0);
 
 return `
 <svg class="trade-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-<polyline points="${coords}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+<line x1="0" y1="${entryY.toFixed(1)}" x2="${w}" y2="${entryY.toFixed(1)}" stroke="#20242B" stroke-width="1" stroke-dasharray="2,2"/>
+${segments.join("")}
 </svg>
 `;
 
