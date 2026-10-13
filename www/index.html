@@ -2658,58 +2658,33 @@ document
 
 
 function savePocketSSIDFromInput(){
-
-const input=
-document.getElementById(
-"pocketSsidInput"
-);
-
-const value=
-(input.value||"").trim();
-
-if(!value)
-return;
-
-savePocketSSID(value);
-
-input.value="";
-
-renderPocketStatus();
-
-poEndpointIndex=0;
-
-connectPocketOption();
-
+  const input = document.getElementById("pocketSsidInput");
+  const value = (input && input.value || "").trim();
+  if (!value) {
+    setPocketDiagnostic("Сначала вставь SSID.");
+    return;
+  }
+  savePocketSSID(value);
+  if (input) input.value = "";
+  poManualDisconnect = false;
+  poEndpointIndex = 0;
+  poLastError = "";
+  connectPocketOption();
 }
-
 
 function renderPocketStatus(){
-
-const el=
-document.getElementById(
-"pocketStatus"
-);
-
-if(!el)
-return;
-
-const ssid=
-getPocketSSID();
-
-if(!ssid){
-
-el.textContent=
-"Ключ не добавлен";
-
-return;
-
-}
-
-el.textContent=
-poConnected
-?"🟢 Подключено, пар получено: "+poPairs.length
-:"🔴 Не подключено (ключ есть, соединения нет)";
-
+  const el = document.getElementById("pocketStatus");
+  if (!el) return;
+  const ssid = getPocketSSID();
+  if (!ssid) {
+    el.textContent = "Ключ не добавлен";
+    return;
+  }
+  if (poConnected) {
+    el.textContent = "🟢 Подключено, пар получено: " + poPairs.length;
+    return;
+  }
+  el.textContent = "🔴 " + (poLastError || "SSID сохранён, соединения нет.");
 }
 
 
@@ -4174,161 +4149,178 @@ let poConnected=false;
 let poPairs=[];
 let poCandleCache={};
 let poPendingRequests={};
-
+let poLastError="";
+let poReconnectTimer=null;
+let poAuthTimer=null;
+let poConnectAttempt=0;
+let poManualDisconnect=false;
 
 function getPocketSSID(){
-
-return localStorage.getItem(
-"cryptoScreenPocketSSID"
-)||"";
-
+  try { return (localStorage.getItem("cryptoScreenPocketSSID") || "").trim(); }
+  catch(e) { return ""; }
 }
-
 
 function savePocketSSID(value){
-
-localStorage.setItem(
-"cryptoScreenPocketSSID",
-value
-);
-
+  localStorage.setItem("cryptoScreenPocketSSID", String(value || "").trim());
 }
 
-
+// Accept a complete Socket.IO auth frame (42["auth",{...}]),
+// a JSON array/object, or a JSON string containing the frame.
 function parsePocketAuthFrame(raw){
+  if (raw == null) return null;
+  if (typeof raw === "object") return raw;
+  let text = String(raw).trim();
+  if (!text) return null;
 
-const match=
-raw.match(/42\["auth",(.+)\]\s*$/);
+  // Some copied values are quoted/escaped JSON strings.
+  try {
+    const decoded = JSON.parse(text);
+    if (typeof decoded === "string") text = decoded.trim();
+    else if (Array.isArray(decoded)) {
+      if (decoded[0] === "auth" && decoded.length > 1) return decoded[1];
+      return decoded;
+    } else if (decoded && typeof decoded === "object") {
+      return decoded;
+    }
+  } catch(e) {}
 
-if(!match)
-return null;
-
-try{
-
-return JSON.parse(match[1]);
-
-}catch(e){
-
-return null;
-
+  // Socket.IO event packet: 42["auth", { ... }]
+  const frame = text.match(/^42\s*(\[[\s\S]*\])$/);
+  if (frame) {
+    try {
+      const packet = JSON.parse(frame[1]);
+      if (Array.isArray(packet) && packet[0] === "auth" && packet.length > 1) return packet[1];
+    } catch(e) { return null; }
+  }
+  return null;
 }
 
+function setPocketDiagnostic(message){
+  poLastError = message || "";
+  renderPocketStatus();
 }
 
+function schedulePocketReconnect(delay){
+  if (poManualDisconnect || poReconnectTimer) return;
+  poReconnectTimer = setTimeout(() => {
+    poReconnectTimer = null;
+    connectPocketOption();
+  }, delay);
+}
 
 function connectPocketOption(){
+  const ssid = getPocketSSID();
+  if (!ssid) {
+    setPocketDiagnostic("Вставь SSID в настройках API.");
+    return;
+  }
+  if (typeof io === "undefined") {
+    setPocketDiagnostic("Не загружена библиотека Socket.IO (io). Проверь интернет/скрипт.");
+    return;
+  }
 
-const ssid=
-getPocketSSID();
+  if (poReconnectTimer) { clearTimeout(poReconnectTimer); poReconnectTimer = null; }
+  if (poAuthTimer) { clearTimeout(poAuthTimer); poAuthTimer = null; }
+  if (poSocket) {
+    const oldSocket = poSocket;
+    poSocket = null;
+    try { oldSocket.removeAllListeners(); oldSocket.disconnect(); } catch(e) {}
+  }
 
-if(!ssid || typeof io==="undefined")
-return;
+  poConnected = false;
+  poConnectAttempt++;
+  const url = PO_ENDPOINTS[poEndpointIndex % PO_ENDPOINTS.length];
+  setPocketDiagnostic("Подключение к серверу " + (poEndpointIndex + 1) + "/" + PO_ENDPOINTS.length + "…");
 
-if(poSocket){
+  try {
+    poSocket = io(url, {
+      transports: ["websocket"],
+      reconnection: false,
+      timeout: 10000
+    });
+  } catch (e) {
+    setPocketDiagnostic("Не удалось создать соединение: " + (e && e.message ? e.message : "ошибка Socket.IO"));
+    poEndpointIndex = (poEndpointIndex + 1) % PO_ENDPOINTS.length;
+    schedulePocketReconnect(2500);
+    return;
+  }
 
-try{
-poSocket.disconnect();
-}catch(e){}
+  const socket = poSocket;
+  socket.on("connect", () => {
+    if (socket !== poSocket) return;
+    const payload = parsePocketAuthFrame(ssid);
+    if (payload == null) {
+      setPocketDiagnostic('SSID сохранён, но формат не распознан. Вставь полный кадр 42["auth",{...}] или JSON-объект авторизации.');
+      return;
+    }
 
-poSocket=null;
+    setPocketDiagnostic("Сокет подключён; проверяю авторизацию…");
+    try {
+      socket.emit("auth", payload);
+    } catch (e) {
+      setPocketDiagnostic("Ошибка отправки авторизации: " + (e && e.message ? e.message : "неизвестная ошибка"));
+      try { socket.disconnect(); } catch(err) {}
+      return;
+    }
 
+    // If the server never confirms auth, show a useful diagnostic and rotate endpoint.
+    poAuthTimer = setTimeout(() => {
+      if (socket !== poSocket || poConnected) return;
+      setPocketDiagnostic("Сервер не подтвердил авторизацию за 12 секунд. SSID может быть устаревшим либо протокол/сервер изменился.");
+      poEndpointIndex = (poEndpointIndex + 1) % PO_ENDPOINTS.length;
+      try { socket.disconnect(); } catch(e) {}
+      schedulePocketReconnect(1500);
+    }, 12000);
+  });
+
+  socket.on("successauth", () => {
+    if (socket !== poSocket) return;
+    if (poAuthTimer) { clearTimeout(poAuthTimer); poAuthTimer = null; }
+    poConnected = true;
+    setPocketDiagnostic("");
+    updateApiStatusBadge();
+    renderPocketStatus();
+    requestPocketPairs();
+  });
+
+  socket.on("auth", (data) => {
+    // Some server versions reply with an auth status event rather than successauth.
+    if (socket !== poSocket || poConnected) return;
+    if (data && (data.success === true || data.status === "success")) {
+      if (poAuthTimer) { clearTimeout(poAuthTimer); poAuthTimer = null; }
+      poConnected = true;
+      setPocketDiagnostic("");
+      updateApiStatusBadge();
+      renderPocketStatus();
+      requestPocketPairs();
+    } else if (data && (data.success === false || data.status === "error")) {
+      setPocketDiagnostic("Сервер отклонил авторизацию. Обнови SSID в браузере Pocket Option.");
+    }
+  });
+
+  socket.on("disconnect", (reason) => {
+    if (socket !== poSocket) return;
+    if (poAuthTimer) { clearTimeout(poAuthTimer); poAuthTimer = null; }
+    poConnected = false;
+    if (!poLastError) setPocketDiagnostic("Соединение закрыто" + (reason ? ": " + reason : "."));
+    renderPocketStatus();
+    poEndpointIndex = (poEndpointIndex + 1) % PO_ENDPOINTS.length;
+    schedulePocketReconnect(2500);
+  });
+
+  socket.on("connect_error", (err) => {
+    if (socket !== poSocket) return;
+    const message = err && err.message ? err.message : "неизвестная ошибка";
+    setPocketDiagnostic("Ошибка соединения: " + message + ". Пробую другой сервер…");
+    poEndpointIndex = (poEndpointIndex + 1) % PO_ENDPOINTS.length;
+    try { socket.disconnect(); } catch(e) {}
+    schedulePocketReconnect(2500);
+  });
+
+  socket.onAny((eventName, data) => {
+    if (socket === poSocket) handlePocketOptionEvent(eventName, data);
+  });
 }
-
-poConnected=false;
-
-const url=
-PO_ENDPOINTS[poEndpointIndex%PO_ENDPOINTS.length];
-
-poSocket=
-io(url,{
-
-transports:["websocket"],
-reconnection:false
-
-});
-
-
-poSocket.on("connect",()=>{
-
-const payload=
-parsePocketAuthFrame(ssid);
-
-if(payload){
-
-poSocket.emit("auth",payload);
-
-}else{
-
-/*
-   Если вставили не целиком "42[...]", а что-то
-   другое — пробуем отправить как есть, вдруг это
-   уже готовый объект авторизации.
-*/
-
-try{
-
-poSocket.emit(
-"auth",
-JSON.parse(ssid)
-);
-
-}catch(e){}
-
-}
-
-});
-
-
-poSocket.on("successauth",()=>{
-
-poConnected=true;
-
-updateApiStatusBadge();
-
-renderPocketStatus();
-
-requestPocketPairs();
-
-});
-
-
-poSocket.on("disconnect",()=>{
-
-poConnected=false;
-
-renderPocketStatus();
-
-poEndpointIndex++;
-
-setTimeout(connectPocketOption,2000);
-
-});
-
-
-poSocket.on("connect_error",()=>{
-
-poEndpointIndex++;
-
-setTimeout(connectPocketOption,2000);
-
-});
-
-
-/*
-   Слушаем всё подряд, пока не знаем точных имён
-   событий со свечами/списком пар — так в Console
-   будет видно, что реально прилетает, и можно будет
-   подставить правильные обработчики.
-*/
-
-poSocket.onAny((eventName,data)=>{
-
-handlePocketOptionEvent(eventName,data);
-
-});
-
-}
-
 
 function requestPocketPairs(){
 
