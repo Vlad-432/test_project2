@@ -8,6 +8,8 @@
 
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
 <meta name="application-name" content="CryptoScr">
 <meta name="apple-mobile-web-app-title" content="CryptoScr">
 
@@ -1710,6 +1712,42 @@ id="twelvedataKeyList">
 </div>
 
 
+<div class="api-service-block">
+
+<div class="api-service-title">
+Pocket Option <span>· свой счёт, неофициально</span>
+</div>
+
+<div class="api-settings-note" style="margin-top:0;">
+Вставь целиком строку с auth-фреймом (начинается на
+<code>42["auth",...</code>), которую достал из своего
+браузера. Включается на отдельных карточках кнопкой 📡.
+</div>
+
+<div class="api-key-input-row" style="margin-top:8px;">
+
+<input
+class="modal-input"
+id="pocketSsidInput"
+placeholder='42["auth",{"session":...}]'
+>
+
+<button
+class="apply-btn"
+onclick="savePocketSSIDFromInput()">
+✓
+</button>
+
+</div>
+
+<div
+id="pocketStatus"
+style="margin-top:6px;font-size:9px;color:#8B9099;">
+</div>
+
+</div>
+
+
 <div class="api-settings-note">
 Ключи хранятся только в этом браузере. При сбое текущий
 ключ автоматически заменяется следующим по кругу, а через
@@ -2610,10 +2648,67 @@ function openApiSettingsModal(){
 
 renderApiKeyList("finnhub");
 renderApiKeyList("twelvedata");
+renderPocketStatus();
 
 document
 .getElementById("apiSettingsModal")
 .classList.add("open");
+
+}
+
+
+function savePocketSSIDFromInput(){
+
+const input=
+document.getElementById(
+"pocketSsidInput"
+);
+
+const value=
+(input.value||"").trim();
+
+if(!value)
+return;
+
+savePocketSSID(value);
+
+input.value="";
+
+renderPocketStatus();
+
+poEndpointIndex=0;
+
+connectPocketOption();
+
+}
+
+
+function renderPocketStatus(){
+
+const el=
+document.getElementById(
+"pocketStatus"
+);
+
+if(!el)
+return;
+
+const ssid=
+getPocketSSID();
+
+if(!ssid){
+
+el.textContent=
+"Ключ не добавлен";
+
+return;
+
+}
+
+el.textContent=
+poConnected
+?"🟢 Подключено, пар получено: "+poPairs.length
+:"🔴 Не подключено (ключ есть, соединения нет)";
 
 }
 
@@ -3003,6 +3098,14 @@ onclick="openAlertModal(${index})">
 🔔
 </button>
 
+<button
+class="alert-btn"
+id="sourceBtn-${index}"
+onclick="toggleCardSource(${index})"
+title="Источник данных">
+📡
+</button>
+
 </div>
 
 </div>
@@ -3014,6 +3117,24 @@ onclick="openAlertModal(${index})">
 class="timeframe"
 onclick="changeTimeframe(${index},'1',this)">
 1м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'2',this)">
+2м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'3',this)">
+3м
+</button>
+
+<button
+class="timeframe"
+onclick="changeTimeframe(${index},'4',this)">
+4м
 </button>
 
 <button
@@ -3120,6 +3241,8 @@ forex
 :"crypto",
 
 interval:"5",
+
+source:"std",
 
 lastCandles:null,
 lastResult:null,
@@ -4023,7 +4146,348 @@ const SYNTHETIC_TF_FACTORS={
 };
 
 
-async function getSmartKlines(type,symbol,interval){
+/* =========================================================
+   POCKET OPTION — неофициальное подключение по SSID
+
+   У Pocket Option нет официального API и нет открытого
+   описания протокола — это лучшее приближение по образцу
+   неофициальных клиентов (socket.io, несколько региональных
+   эндпоинтов с ротацией при обрыве). Имена событий для
+   запроса свечей/списка пар ("changeSymbol","loadHistoryPeriod"
+   и т.п.) — рабочее предположение по распространённому
+   паттерну таких платформ, НЕ проверено на реальном трафике.
+   Если подключение есть, а свечи не идут — нужно поймать
+   реальный обмен сообщениями (так же, как ловили auth-фрейм)
+   и поправить имена событий здесь.
+========================================================= */
+
+const PO_ENDPOINTS=[
+"wss://api-spb.po.market",
+"wss://api-msk.po.market",
+"wss://api-us-south.po.market",
+"wss://api-us-north.po.market"
+];
+
+let poSocket=null;
+let poEndpointIndex=0;
+let poConnected=false;
+let poPairs=[];
+let poCandleCache={};
+let poPendingRequests={};
+
+
+function getPocketSSID(){
+
+return localStorage.getItem(
+"cryptoScreenPocketSSID"
+)||"";
+
+}
+
+
+function savePocketSSID(value){
+
+localStorage.setItem(
+"cryptoScreenPocketSSID",
+value
+);
+
+}
+
+
+function parsePocketAuthFrame(raw){
+
+const match=
+raw.match(/42\["auth",(.+)\]\s*$/);
+
+if(!match)
+return null;
+
+try{
+
+return JSON.parse(match[1]);
+
+}catch(e){
+
+return null;
+
+}
+
+}
+
+
+function connectPocketOption(){
+
+const ssid=
+getPocketSSID();
+
+if(!ssid || typeof io==="undefined")
+return;
+
+if(poSocket){
+
+try{
+poSocket.disconnect();
+}catch(e){}
+
+poSocket=null;
+
+}
+
+poConnected=false;
+
+const url=
+PO_ENDPOINTS[poEndpointIndex%PO_ENDPOINTS.length];
+
+poSocket=
+io(url,{
+
+transports:["websocket"],
+reconnection:false
+
+});
+
+
+poSocket.on("connect",()=>{
+
+const payload=
+parsePocketAuthFrame(ssid);
+
+if(payload){
+
+poSocket.emit("auth",payload);
+
+}else{
+
+/*
+   Если вставили не целиком "42[...]", а что-то
+   другое — пробуем отправить как есть, вдруг это
+   уже готовый объект авторизации.
+*/
+
+try{
+
+poSocket.emit(
+"auth",
+JSON.parse(ssid)
+);
+
+}catch(e){}
+
+}
+
+});
+
+
+poSocket.on("successauth",()=>{
+
+poConnected=true;
+
+updateApiStatusBadge();
+
+renderPocketStatus();
+
+requestPocketPairs();
+
+});
+
+
+poSocket.on("disconnect",()=>{
+
+poConnected=false;
+
+renderPocketStatus();
+
+poEndpointIndex++;
+
+setTimeout(connectPocketOption,2000);
+
+});
+
+
+poSocket.on("connect_error",()=>{
+
+poEndpointIndex++;
+
+setTimeout(connectPocketOption,2000);
+
+});
+
+
+/*
+   Слушаем всё подряд, пока не знаем точных имён
+   событий со свечами/списком пар — так в Console
+   будет видно, что реально прилетает, и можно будет
+   подставить правильные обработчики.
+*/
+
+poSocket.onAny((eventName,data)=>{
+
+handlePocketOptionEvent(eventName,data);
+
+});
+
+}
+
+
+function requestPocketPairs(){
+
+if(!poSocket || !poConnected)
+return;
+
+/* рабочее предположение об имени события */
+
+poSocket.emit("getAssets",{});
+
+}
+
+
+function handlePocketOptionEvent(eventName,data){
+
+const name=
+(eventName||"").toLowerCase();
+
+if(
+name.includes("asset") ||
+name.includes("pairs") ||
+name.includes("symbol")
+){
+
+if(Array.isArray(data)){
+
+poPairs=data;
+
+}
+
+}
+
+if(
+name.includes("candle") ||
+name.includes("history") ||
+name.includes("chart")
+){
+
+const req=
+data && data.asset
+?poPendingRequests[data.asset]
+:null;
+
+if(req && data.candles){
+
+req.resolve(
+normalizePocketCandles(data.candles)
+);
+
+delete poPendingRequests[data.asset];
+
+}
+
+}
+
+}
+
+
+function normalizePocketCandles(raw){
+
+return raw.map(c=>({
+
+time:
+(c.time||c.t)*
+(String(c.time||c.t).length>10?1:1000),
+
+open:c.open!==undefined?c.open:c.o,
+high:c.high!==undefined?c.high:c.h,
+low:c.low!==undefined?c.low:c.l,
+close:c.close!==undefined?c.close:c.c,
+
+volume:
+c.volume!==undefined
+?c.volume
+:(c.v||0)
+
+}));
+
+}
+
+
+async function getPocketOptionKlines(symbol,interval){
+
+if(!poSocket || !poConnected){
+
+throw new Error(
+"Pocket Option не подключен — проверь SSID в настройках API"
+);
+
+}
+
+const cacheKey=
+symbol+"_"+interval;
+
+const cached=
+poCandleCache[cacheKey];
+
+if(
+cached &&
+Date.now()-cached.time<15000
+){
+
+return cached.candles;
+
+}
+
+return new Promise((resolve,reject)=>{
+
+poPendingRequests[symbol]={
+resolve:(candles)=>{
+
+poCandleCache[cacheKey]={
+candles,
+time:Date.now()
+};
+
+resolve(candles);
+
+},
+reject
+};
+
+/* рабочее предположение об имени/формате события */
+
+poSocket.emit("loadHistoryPeriod",{
+
+asset:symbol,
+period:timeframeMinutes(interval)*60,
+count:ANALYSIS_CANDLES
+
+});
+
+setTimeout(()=>{
+
+if(poPendingRequests[symbol]){
+
+delete poPendingRequests[symbol];
+
+reject(
+new Error("Pocket Option не ответил со свечами")
+);
+
+}
+
+},8000);
+
+});
+
+}
+
+
+async function getSmartKlines(type,symbol,interval,source){
+
+if(source==="pocket"){
+
+return getPocketOptionKlines(symbol,interval);
+
+}
+
 
 const factor=
 SYNTHETIC_TF_FACTORS[interval];
@@ -7595,7 +8059,8 @@ candles=
 await getSmartKlines(
 card.type,
 card.symbol,
-card.interval
+card.interval,
+card.source
 );
 
 
@@ -10332,6 +10797,46 @@ active
 }
 
 
+function toggleCardSource(index){
+
+if(!cards[index])
+return;
+
+cards[index].source=
+cards[index].source==="pocket"
+?"std"
+:"pocket";
+
+const btn=
+document.getElementById(
+`sourceBtn-${index}`
+);
+
+if(btn){
+
+btn.classList.toggle(
+"has-alert",
+cards[index].source==="pocket"
+);
+
+btn.title=
+cards[index].source==="pocket"
+?"Источник: Pocket Option"
+:"Источник: Binance/Finnhub/Twelve Data";
+
+}
+
+if(cards[index].source==="pocket" && !poConnected){
+
+connectPocketOption();
+
+}
+
+loadSignal(index);
+
+}
+
+
 function toggleFavorite(index){
 
 if(!cards[index])
@@ -12134,6 +12639,13 @@ setupKeyboardFix();
 ========================================================= */
 
 updateApiStatusBadge();
+
+
+if(getPocketSSID()){
+
+connectPocketOption();
+
+}
 
 
 createCards();
