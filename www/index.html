@@ -1040,6 +1040,7 @@ header{
     border-radius:16px;
     padding:14px;
     box-shadow:0 12px 40px rgba(0,0,0,.5);
+    position:relative;
 }
 
 .modal-title{
@@ -1145,8 +1146,78 @@ header{
 }
 
 .api-settings-box{
-    max-height:68vh;
+    max-height:78vh;
     overflow-y:auto;
+    position:relative;
+}
+
+.cs-tabs{
+    display:flex;
+    gap:4px;
+    background:#0A0B0E;
+    border:1px solid #242830;
+    border-radius:9px;
+    padding:3px;
+    margin:8px 0 4px;
+}
+
+.cs-tab-btn{
+    flex:1;
+    border:0;
+    background:transparent;
+    color:#767C87;
+    border-radius:7px;
+    padding:7px 4px;
+    font-size:10px;
+    font-weight:700;
+    cursor:pointer;
+}
+
+.cs-tab-btn.active{
+    background:#E8A33D;
+    color:#1A1203;
+}
+
+.cs-tab-content{
+    max-height:48vh;
+    overflow-y:auto;
+}
+
+.cs-color-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#0A0B0E;
+    border:1px solid #1e2530;
+    border-radius:8px;
+    padding:8px 10px;
+}
+
+.cs-color-row input[type="color"]{
+    width:36px;
+    height:28px;
+    border:1px solid #242830;
+    border-radius:6px;
+    background:none;
+    padding:0;
+}
+
+.modal-close-x{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:26px;
+    height:26px;
+    border-radius:8px;
+    border:1px solid #242830;
+    background:#0A0B0E;
+    color:#8B9099;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .api-service-block{
@@ -1328,8 +1399,8 @@ onclick="openApiSettingsModal()">
 
 <button
 class="settings-btn"
-onclick="openStrategyModal()">
-📐 Стратегия
+onclick="openChartSettingsModal()">
+🎨 Настройки графика
 </button>
 
 <span
@@ -1523,6 +1594,8 @@ id="monitorModal">
 
 <div class="modal-box">
 
+
+<button class="modal-close-x" onclick="closeMonitorModal()">✕</button>
 <div class="modal-title">
 Добавить пару в мониторинг
 </div>
@@ -1601,6 +1674,8 @@ id="alertModal">
 
 <div class="modal-box">
 
+
+<button class="modal-close-x" onclick="closeAlertModal()">✕</button>
 <div class="modal-title">
 🔔 Ценовой алерт — <span id="alertModalSymbol">—</span>
 </div>
@@ -1660,6 +1735,8 @@ id="apiSettingsModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeApiSettingsModal()">✕</button>
 <div class="modal-title">
 ⚙ Настройки API
 </div>
@@ -1738,7 +1815,10 @@ Pocket Option <span>· свой счёт, неофициально</span>
 браузера. Включается на отдельных карточках кнопкой 📡.
 </div>
 
-<div class="api-key-input-row" style="margin-top:8px;">
+<div
+id="pocketSsidForm"
+class="api-key-input-row"
+style="margin-top:8px;">
 
 <input
 class="modal-input"
@@ -1752,6 +1832,12 @@ onclick="savePocketSSIDFromInput()">
 ✓
 </button>
 
+</div>
+
+<div
+id="pocketSsidList"
+class="api-key-list"
+style="margin-top:8px;">
 </div>
 
 <div
@@ -1788,6 +1874,8 @@ id="factorStatsModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeFactorStatsModal()">✕</button>
 <div class="modal-title">
 📊 Статистика по факторам
 </div>
@@ -1812,19 +1900,31 @@ class="factor-stats-body">
 
 <div
 class="modal"
-id="strategyModal">
+id="chartSettingsModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeChartSettingsModal()">✕</button>
 <div class="modal-title">
-📐 Стратегия анализа
+🎨 Настройки графика
 </div>
+
+<div class="cs-tabs">
+
+<button class="cs-tab-btn active" id="csTabBtn-analysis" onclick="showChartSettingsTab('analysis')">Анализ</button>
+<button class="cs-tab-btn" id="csTabBtn-markers" onclick="showChartSettingsTab('markers')">SMC-метки</button>
+<button class="cs-tab-btn" id="csTabBtn-appearance" onclick="showChartSettingsTab('appearance')">Вид</button>
+
+</div>
+
+
+<div id="csTab-analysis" class="cs-tab-content">
 
 <div class="api-settings-note">
 Можно выбрать сразу несколько — тапай, чтобы включить/выключить
-(минимум одна должна остаться). Если выбрано несколько, их score
-усредняется, а факторы объединяются без повторов. Применяется
-сразу везде — и на карточках «Графики», и в «Сигналы».
+(минимум одна должна остаться). Score усредняется, факторы
+объединяются без повторов. Применяется везде — и «Графики», и «Сигналы».
 </div>
 
 <div
@@ -1832,15 +1932,48 @@ id="strategyList"
 style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
 </div>
 
+</div>
+
+
+<div id="csTab-markers" class="cs-tab-content" style="display:none;">
+
+<div class="api-settings-note">
+Что рисовать поверх свечей. Макросы — подсвечивают
+стандартные ICT-окна времени (по Нью-Йорку) прямо во время
+их хода. Order Flow — упрощённый прокси по телу свечей
+(настоящей дельты объёма по тикам у нас нет).
+</div>
+
+<div id="smcMarkerList" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+
+</div>
+
+
+<div id="csTab-appearance" class="cs-tab-content" style="display:none;">
+
+<div class="api-settings-note" style="margin-bottom:8px;">
+Цвета свечей и фона графика — любые, через стандартный
+выбор цвета телефона.
+</div>
+
+<div id="chartColorList" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+<button class="apply-btn" style="width:100%;margin-top:10px;padding:9px;" onclick="resetChartColors()">
+↺ Сбросить цвета по умолчанию
+</button>
+
+</div>
+
+
 <div class="modal-actions">
 
-<button onclick="closeStrategyModal()">
+<button onclick="closeChartSettingsModal()">
 Отмена
 </button>
 
 <button
 class="save"
-onclick="applyStrategySelection()">
+onclick="applyChartSettings()">
 ✓ Применить
 </button>
 
@@ -1857,6 +1990,8 @@ id="backtestModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeBacktestModal()">✕</button>
 <div class="modal-title">
 🧪 Бэктест стратегии
 </div>
@@ -1928,6 +2063,8 @@ id="tradeMenuModal">
 
 <div class="modal-box">
 
+
+<button class="modal-close-x" onclick="closeTradeMenuModal()">✕</button>
 <div class="modal-title">
 Действия со сделкой
 </div>
@@ -1999,6 +2136,8 @@ id="tradeRecommendationModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeTradeRecommendationModal()">✕</button>
 <div
 class="modal-title"
 id="tradeRecommendationTitle">
@@ -2029,6 +2168,8 @@ id="journalPairModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeJournalPairModal()">✕</button>
 <div
 class="modal-title"
 id="journalPairTitle">
@@ -2097,6 +2238,8 @@ id="tfStatsModal">
 
 <div class="modal-box api-settings-box">
 
+
+<button class="modal-close-x" onclick="closeTfStatsModal()">✕</button>
 <div class="modal-title">
 📈 Статистика по таймфреймам
 </div>
@@ -2703,32 +2846,86 @@ connectPocketOption();
 }
 
 
-function renderPocketStatus(){
+function removePocketSSID(){
 
-const el=
-document.getElementById(
-"pocketStatus"
+localStorage.removeItem(
+"cryptoScreenPocketSSID"
 );
 
-if(!el)
-return;
+if(poSocket){
+
+try{
+poSocket.disconnect();
+}catch(e){}
+
+poSocket=null;
+
+}
+
+poConnected=false;
+
+renderPocketStatus();
+
+updateApiStatusBadge();
+
+}
+
+
+function renderPocketStatus(){
 
 const ssid=
 getPocketSSID();
 
+const form=
+document.getElementById(
+"pocketSsidForm"
+);
+
+const list=
+document.getElementById(
+"pocketSsidList"
+);
+
+const status=
+document.getElementById(
+"pocketStatus"
+);
+
+if(!list || !form || !status)
+return;
+
 if(!ssid){
 
-el.textContent=
-"Ключ не добавлен";
+form.style.display="flex";
+
+list.innerHTML=
+`<div class="empty">Нет сохранённого SSID</div>`;
+
+status.textContent="";
 
 return;
 
 }
 
-el.textContent=
+form.style.display="none";
+
+const statusText=
 poConnected
-?"🟢 Подключено, пар получено: "+poPairs.length
-:"🔴 Не подключено (ключ есть, соединения нет)";
+?"🟢 Подключено • пар: "+poPairs.length
+:"🔴 Не подключено";
+
+list.innerHTML=
+`
+<div class="api-key-item">
+<div class="api-key-info">
+<span class="api-key-value">${maskApiKey(ssid)}</span>
+<span class="api-key-status">${statusText}</span>
+</div>
+<button class="api-key-remove" onclick="removePocketSSID()">✕</button>
+</div>
+`;
+
+status.textContent="";
 
 }
 
@@ -6756,7 +6953,7 @@ renderStrategyList();
 }
 
 
-function applyStrategySelection(){
+function refreshAllCardSignals(){
 
 if(typeof cards==="object"){
 
@@ -6772,27 +6969,65 @@ loadSignal(index);
 
 }
 
-closeStrategyModal();
+}
+
+
+function showChartSettingsTab(name){
+
+["analysis","markers","appearance"].forEach(t=>{
+
+const content=
+document.getElementById("csTab-"+t);
+
+const btn=
+document.getElementById("csTabBtn-"+t);
+
+if(content)
+content.style.display=
+t===name?"block":"none";
+
+if(btn)
+btn.classList.toggle("active",t===name);
+
+});
 
 }
 
 
-function openStrategyModal(){
+function openChartSettingsModal(){
 
 renderStrategyList();
+renderSmcMarkerList();
+renderChartColorList();
+
+showChartSettingsTab("analysis");
 
 document.getElementById(
-"strategyModal"
+"chartSettingsModal"
 ).classList.add("open");
 
 }
 
 
-function closeStrategyModal(){
+function closeChartSettingsModal(){
 
 document.getElementById(
-"strategyModal"
+"chartSettingsModal"
 ).classList.remove("open");
+
+}
+
+
+function applyChartSettings(){
+
+saveSmcMarkerSettings();
+saveChartColorSettings();
+
+refreshAllCardSignals();
+
+applyChartColorsToAllCharts();
+
+closeChartSettingsModal();
 
 }
 
@@ -8252,7 +8487,7 @@ const chart=
 LightweightCharts.createChart(container,{
 
 layout:{
-background:{color:"#0A0B0E"},
+background:{color:chartColorSettings.background},
 textColor:"#8B9099",
 fontSize:10
 },
@@ -8278,15 +8513,28 @@ autoSize:true
 
 });
 
+const precision=
+cards[index] && cards[index].type==="forex"
+?5
+:(cards[index] && /JPY/.test(cards[index].symbol)?3:2);
+
 const series=
 chart.addCandlestickSeries({
 
-upColor:"#2BC482",
-downColor:"#E5484D",
-borderUpColor:"#2BC482",
-borderDownColor:"#E5484D",
-wickUpColor:"#2BC482",
-wickDownColor:"#E5484D"
+upColor:chartColorSettings.upColor,
+downColor:chartColorSettings.downColor,
+borderUpColor:chartColorSettings.borderUp,
+borderDownColor:chartColorSettings.borderDown,
+wickUpColor:chartColorSettings.wickUp,
+wickDownColor:chartColorSettings.wickDown,
+
+priceFormat:{
+
+type:"price",
+precision,
+minMove:1/Math.pow(10,precision)
+
+}
 
 });
 
@@ -8394,6 +8642,453 @@ instance.series.setMarkers([]);
 }
 
 
+/* =========================================================
+   НАСТРОЙКИ МЕТОК SMC/ICT И ЦВЕТОВ ГРАФИКА
+========================================================= */
+
+const SMC_MARKER_DEFS=[
+{id:"orderBlocks",label:"Order Block",desc:"Зоны крупных ордер-блоков (уже есть в движке)."},
+{id:"mitigationBlocks",label:"Mitigation Block",desc:"Ордер-блок, в который цена уже вернулась и протестировала."},
+{id:"imbalance",label:"Imbalance / FVG",desc:"Fair Value Gap — зоны резкого движения без торговли."},
+{id:"liquidity",label:"Ликвидность (equal highs/lows)",desc:"Близкие по цене максимумы/минимумы — зоны скопления стопов."},
+{id:"choch",label:"CHoCH",desc:"Change of Character — смена характера движения (ранний признак разворота)."},
+{id:"bos",label:"BOS",desc:"Break of Structure — пробой структуры по тренду."},
+{id:"macros",label:"Macro-окна (ICT)",desc:"Подсветка стандартных временных окон ICT, пока они идут."},
+{id:"orderFlow",label:"Order Flow (прокси)",desc:"Упрощённая оценка давления покупателей/продавцов по телам свечей."}
+];
+
+function loadSmcMarkerSettings(){
+
+try{
+
+const stored=
+JSON.parse(
+localStorage.getItem("cryptoScreenSmcMarkers")
+);
+
+if(stored)
+return stored;
+
+}catch(e){}
+
+return{
+
+orderBlocks:true,
+mitigationBlocks:false,
+imbalance:true,
+liquidity:false,
+choch:false,
+bos:false,
+macros:false,
+orderFlow:false
+
+};
+
+}
+
+let smcMarkerSettings=
+loadSmcMarkerSettings();
+
+function saveSmcMarkerSettings(){
+
+localStorage.setItem(
+"cryptoScreenSmcMarkers",
+JSON.stringify(smcMarkerSettings)
+);
+
+}
+
+function toggleSmcMarker(id){
+
+smcMarkerSettings[id]=
+!smcMarkerSettings[id];
+
+renderSmcMarkerList();
+
+}
+
+function renderSmcMarkerList(){
+
+const list=
+document.getElementById("smcMarkerList");
+
+if(!list)
+return;
+
+list.innerHTML=
+SMC_MARKER_DEFS.map(def=>{
+
+const active=
+!!smcMarkerSettings[def.id];
+
+return `
+<div class="strategy-option${active?" active":""}" onclick="toggleSmcMarker('${def.id}')">
+<div class="strategy-option-name">${active?"☑ ":"☐ "}${def.label}</div>
+<div class="strategy-option-desc">${def.desc}</div>
+</div>
+`;
+
+}).join("");
+
+}
+
+
+const DEFAULT_CHART_COLORS={
+
+upColor:"#2BC482",
+downColor:"#E5484D",
+borderUp:"#2BC482",
+borderDown:"#E5484D",
+wickUp:"#2BC482",
+wickDown:"#E5484D",
+background:"#0A0B0E"
+
+};
+
+function loadChartColorSettings(){
+
+try{
+
+const stored=
+JSON.parse(
+localStorage.getItem("cryptoScreenChartColors")
+);
+
+if(stored)
+return{...DEFAULT_CHART_COLORS,...stored};
+
+}catch(e){}
+
+return{...DEFAULT_CHART_COLORS};
+
+}
+
+let chartColorSettings=
+loadChartColorSettings();
+
+function saveChartColorSettings(){
+
+localStorage.setItem(
+"cryptoScreenChartColors",
+JSON.stringify(chartColorSettings)
+);
+
+}
+
+function resetChartColors(){
+
+chartColorSettings=
+{...DEFAULT_CHART_COLORS};
+
+renderChartColorList();
+
+}
+
+const CHART_COLOR_LABELS=[
+{id:"upColor",label:"Тело бычьей свечи"},
+{id:"downColor",label:"Тело медвежьей свечи"},
+{id:"borderUp",label:"Контур бычьей свечи"},
+{id:"borderDown",label:"Контур медвежьей свечи"},
+{id:"wickUp",label:"Тень бычьей свечи"},
+{id:"wickDown",label:"Тень медвежьей свечи"},
+{id:"background",label:"Фон графика"}
+];
+
+function renderChartColorList(){
+
+const list=
+document.getElementById("chartColorList");
+
+if(!list)
+return;
+
+list.innerHTML=
+CHART_COLOR_LABELS.map(c=>`
+<div class="cs-color-row">
+<span>${c.label}</span>
+<input type="color" value="${chartColorSettings[c.id]}" oninput="setChartColor('${c.id}',this.value)">
+</div>
+`).join("");
+
+}
+
+function setChartColor(id,value){
+
+chartColorSettings[id]=value;
+
+}
+
+function applyChartColorsToAllCharts(){
+
+Object.keys(chartInstances).forEach(index=>{
+
+const instance=
+chartInstances[index];
+
+if(!instance)
+return;
+
+instance.series.applyOptions({
+
+upColor:chartColorSettings.upColor,
+downColor:chartColorSettings.downColor,
+borderUpColor:chartColorSettings.borderUp,
+borderDownColor:chartColorSettings.borderDown,
+wickUpColor:chartColorSettings.wickUp,
+wickDownColor:chartColorSettings.wickDown
+
+});
+
+instance.chart.applyOptions({
+
+layout:{
+background:{color:chartColorSettings.background}
+}
+
+});
+
+});
+
+}
+
+
+/* =========================================================
+   ДЕТЕКТОРЫ ДЛЯ ОТРИСОВКИ SMC/ICT-МЕТОК
+
+   Это отдельная, упрощённая логика именно для рисования на
+   графике (не трогает основной движок расчёта сигнала выше).
+   Order Block / Mitigation Block ищутся одним проходом по
+   последним ~40 свечам: база — свеча "против" последующего
+   резкого импульса; если после неё цена туда ещё раз
+   вернулась — это уже Mitigation Block, если ещё нет —
+   свежий Order Block.
+========================================================= */
+
+function findOrderBlockZones(candles){
+
+const n=candles.length;
+
+if(n<10)
+return{fresh:null,mitigated:null};
+
+for(let i=n-4;i>=Math.max(2,n-40);i--){
+
+const base=candles[i];
+const next=candles[i+1];
+
+const baseRange=
+Math.max(base.high-base.low,1e-9);
+
+const impulseUp=
+next.close>next.open &&
+(next.close-next.open)>baseRange*1.3;
+
+const impulseDown=
+next.close<next.open &&
+(next.open-next.close)>baseRange*1.3;
+
+if(impulseUp && base.close<base.open){
+
+const zone={
+type:"bullish",
+top:base.high,
+bottom:base.low
+};
+
+for(let j=i+2;j<n;j++){
+
+if(candles[j].low<=zone.top && candles[j].low>=zone.bottom){
+
+return{fresh:null,mitigated:zone};
+
+}
+
+}
+
+return{fresh:zone,mitigated:null};
+
+}
+
+if(impulseDown && base.close>base.open){
+
+const zone={
+type:"bearish",
+top:base.high,
+bottom:base.low
+};
+
+for(let j=i+2;j<n;j++){
+
+if(candles[j].high>=zone.bottom && candles[j].high<=zone.top){
+
+return{fresh:null,mitigated:zone};
+
+}
+
+}
+
+return{fresh:zone,mitigated:null};
+
+}
+
+}
+
+return{fresh:null,mitigated:null};
+
+}
+
+
+function findLiquidityLevels(candles){
+
+const n=candles.length;
+
+const lookback=
+candles.slice(Math.max(0,n-50));
+
+const tol=
+lookback[lookback.length-1].close*0.0007;
+
+let bestHigh=null;
+let bestLow=null;
+
+for(let i=0;i<lookback.length;i++){
+
+for(let j=i+3;j<lookback.length;j++){
+
+if(Math.abs(lookback[i].high-lookback[j].high)<tol){
+
+bestHigh=(lookback[i].high+lookback[j].high)/2;
+
+}
+
+if(Math.abs(lookback[i].low-lookback[j].low)<tol){
+
+bestLow=(lookback[i].low+lookback[j].low)/2;
+
+}
+
+}
+
+}
+
+return{high:bestHigh,low:bestLow};
+
+}
+
+
+function detectStructureEvent(ctx,candles){
+
+if(!ctx.fractal)
+return null;
+
+const bullishTrend=
+ctx.ema9>ctx.ema21 && ctx.ema21>ctx.ema50;
+
+const bearishTrend=
+ctx.ema9<ctx.ema21 && ctx.ema21<ctx.ema50;
+
+const lastClose=
+candles[candles.length-1].close;
+
+const f=ctx.fractal;
+
+if(f.type==="low" && bullishTrend && lastClose>f.price){
+
+return{label:"BOS",direction:"bullish",price:f.price};
+
+}
+
+if(f.type==="high" && bullishTrend && lastClose<f.price){
+
+return{label:"CHoCH",direction:"bearish",price:f.price};
+
+}
+
+if(f.type==="high" && bearishTrend && lastClose<f.price){
+
+return{label:"BOS",direction:"bearish",price:f.price};
+
+}
+
+if(f.type==="low" && bearishTrend && lastClose>f.price){
+
+return{label:"CHoCH",direction:"bullish",price:f.price};
+
+}
+
+return null;
+
+}
+
+
+const ICT_MACRO_WINDOWS=[
+{startH:9,startM:50,endH:10,endM:10},
+{startH:10,startM:50,endH:11,endM:10},
+{startH:11,startM:50,endH:12,endM:10},
+{startH:13,startM:10,endH:13,endM:40},
+{startH:15,startM:15,endH:15,endM:45}
+];
+
+function getActiveMacroWindow(){
+
+const parts=
+new Intl.DateTimeFormat("en-US",{
+
+timeZone:"America/New_York",
+hour:"numeric",
+minute:"numeric",
+hour12:false
+
+}).formatToParts(new Date());
+
+const h=
+Number(parts.find(p=>p.type==="hour").value);
+
+const m=
+Number(parts.find(p=>p.type==="minute").value);
+
+const nowMin=h*60+m;
+
+return ICT_MACRO_WINDOWS.find(w=>{
+
+const start=w.startH*60+w.startM;
+const end=w.endH*60+w.endM;
+
+return nowMin>=start && nowMin<=end;
+
+})||null;
+
+}
+
+
+function orderFlowProxy(candles){
+
+const slice=
+candles.slice(-10);
+
+let body=0;
+let range=0;
+
+slice.forEach(c=>{
+
+body+=(c.close-c.open);
+range+=Math.max(c.high-c.low,1e-9);
+
+});
+
+const ratio=body/range;
+
+if(ratio>0.15)
+return"bullish";
+
+if(ratio<-0.15)
+return"bearish";
+
+return"neutral";
+
+}
+
+
 function updateChartMarkers(index,result){
 
 const instance=
@@ -8446,11 +9141,7 @@ title:"Сопротивление"
 const activeIds=
 result.activeStrategies||[];
 
-const smartMoneyActive=
-activeIds.includes("smart_money") ||
-activeIds.includes("combined");
-
-if(smartMoneyActive && result.imbalanceZone){
+if(smcMarkerSettings.imbalance && result.imbalanceZone){
 
 const z=result.imbalanceZone;
 
@@ -8486,10 +9177,165 @@ title:"FVG"
 }
 
 
+if(
+(smcMarkerSettings.orderBlocks || smcMarkerSettings.mitigationBlocks) &&
+instance.lastCandles &&
+instance.lastCandles.length>10
+){
+
+const zones=
+findOrderBlockZones(instance.lastCandles);
+
+if(smcMarkerSettings.orderBlocks && zones.fresh){
+
+const color=
+zones.fresh.type==="bullish"?"#2BC482":"#E5484D";
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:zones.fresh.top,color,lineWidth:1,lineStyle:1,
+axisLabelVisible:false,title:"OB"
+})
+);
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:zones.fresh.bottom,color,lineWidth:1,lineStyle:1,
+axisLabelVisible:false,title:"OB"
+})
+);
+
+}
+
+if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
+
+const color=
+zones.mitigated.type==="bullish"?"#2BC482":"#E5484D";
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:zones.mitigated.top,color,lineWidth:1,lineStyle:0,
+axisLabelVisible:false,title:"Mitigation"
+})
+);
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:zones.mitigated.bottom,color,lineWidth:1,lineStyle:0,
+axisLabelVisible:false,title:"Mitigation"
+})
+);
+
+}
+
+}
+
+
+if(
+smcMarkerSettings.liquidity &&
+instance.lastCandles &&
+instance.lastCandles.length>10
+){
+
+const liq=
+findLiquidityLevels(instance.lastCandles);
+
+if(liq.high){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:liq.high,color:"#F0C14B",lineWidth:1,lineStyle:3,
+axisLabelVisible:false,title:"Ликвидность"
+})
+);
+
+}
+
+if(liq.low){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+price:liq.low,color:"#F0C14B",lineWidth:1,lineStyle:3,
+axisLabelVisible:false,title:"Ликвидность"
+})
+);
+
+}
+
+}
+
+
+if(
+(smcMarkerSettings.choch || smcMarkerSettings.bos) &&
+instance.lastCandles
+){
+
+const structEvent=
+detectStructureEvent(
+buildIndicatorContext(
+instance.lastCandles.slice(-ANALYSIS_CANDLES)
+),
+instance.lastCandles
+);
+
+if(
+structEvent &&
+(
+(structEvent.label==="BOS" && smcMarkerSettings.bos) ||
+(structEvent.label==="CHoCH" && smcMarkerSettings.choch)
+)
+){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:structEvent.price,
+color:
+structEvent.direction==="bullish"?"#2BC482":"#E5484D",
+lineWidth:2,
+lineStyle:0,
+axisLabelVisible:true,
+title:structEvent.label
+
+})
+);
+
+}
+
+}
+
+
+if(smcMarkerSettings.macros){
+
+const macro=
+getActiveMacroWindow();
+
+if(macro){
+
+instance.priceLines.push(
+instance.series.createPriceLine({
+
+price:instance.lastCandles[instance.lastCandles.length-1].close,
+color:"#8B9099",
+lineWidth:1,
+lineStyle:2,
+axisLabelVisible:false,
+title:`Macro ${String(macro.startH).padStart(2,"0")}:${String(macro.startM).padStart(2,"0")}-${String(macro.endH).padStart(2,"0")}:${String(macro.endM).padStart(2,"0")} (NY)`
+
+})
+);
+
+}
+
+}
+
+
 const fractalFamily=
 activeIds.includes("reversal") ||
 activeIds.includes("smart_money") ||
 activeIds.includes("combined");
+
+const chartMarkers=[];
 
 if(
 fractalFamily &&
@@ -8510,7 +9356,7 @@ candles[idx];
 
 if(c){
 
-instance.series.setMarkers([{
+chartMarkers.push({
 
 time:Math.floor(c.time/1000),
 
@@ -8531,9 +9377,56 @@ result.fractal.type==="low"
 
 text:"фрактал"
 
-}]);
+});
 
 }
+
+}
+
+
+if(
+smcMarkerSettings.orderFlow &&
+instance.lastCandles &&
+instance.lastCandles.length>=10
+){
+
+const flow=
+orderFlowProxy(instance.lastCandles);
+
+if(flow!=="neutral"){
+
+const last=
+instance.lastCandles[instance.lastCandles.length-1];
+
+chartMarkers.push({
+
+time:Math.floor(last.time/1000),
+
+position:
+flow==="bullish"?"belowBar":"aboveBar",
+
+color:
+flow==="bullish"?"#2BC482":"#E5484D",
+
+shape:"circle",
+
+text:
+flow==="bullish"
+?"Order Flow: покупатели"
+:"Order Flow: продавцы"
+
+});
+
+}
+
+}
+
+
+if(chartMarkers.length){
+
+chartMarkers.sort((a,b)=>a.time-b.time);
+
+instance.series.setMarkers(chartMarkers);
 
 }
 
