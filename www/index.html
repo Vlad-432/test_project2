@@ -486,13 +486,20 @@ header{
 
 .timeframe{
     flex:0 0 auto;
+    box-sizing:border-box;
     border:1px solid #242830;
     background:#0A0B0E;
     color:#8B9099;
     border-radius:5px;
-    padding:5px 7px;
+    padding:5px 8px;
     cursor:pointer;
-    font-size:9px;
+    font-size:10px;
+    white-space:nowrap;
+    min-width:30px;
+}
+
+.timeframes{
+    box-sizing:border-box;
 }
 
 .timeframe.active{
@@ -5888,7 +5895,9 @@ if(c1.high<c3.low){
 zones.push({
 type:"bullish",
 top:c3.low,
-bottom:c1.high
+bottom:c1.high,
+idx:i,
+time:c3.time
 });
 
 }else if(c1.low>c3.high){
@@ -5896,7 +5905,9 @@ bottom:c1.high
 zones.push({
 type:"bearish",
 top:c1.low,
-bottom:c3.high
+bottom:c3.high,
+idx:i,
+time:c3.time
 });
 
 }
@@ -5904,6 +5915,44 @@ bottom:c3.high
 }
 
 return zones;
+
+}
+
+
+/*
+   Для отрисовки на графике нужны ВСЕ ещё не закрытые
+   имбалансы за недавнюю историю, а не только тот, в котором
+   сейчас сидит цена (это нужно только для score). "Закрыта"
+   зона — когда более поздняя свеча уже полностью прошла её
+   насквозь (цена "залила" гэп).
+*/
+
+function findUnfilledImbalanceZones(candles){
+
+const zones=
+findImbalances(candles,60);
+
+return zones.filter(z=>{
+
+for(let j=z.idx+1;j<candles.length;j++){
+
+if(z.type==="bullish" && candles[j].low<=z.bottom){
+
+return false;
+
+}
+
+if(z.type==="bearish" && candles[j].high>=z.top){
+
+return false;
+
+}
+
+}
+
+return true;
+
+}).slice(-4);
 
 }
 
@@ -8562,6 +8611,42 @@ e.message;
 const chartInstances={};
 
 
+/*
+   Lightweight Charts по умолчанию рисует время на шкале в
+   часовом поясе браузера (или UTC), и настройка часового
+   пояса из "Настроек графика" раньше вообще на это не
+   влияла — трогала только расчёт macro-окон "за кулисами".
+   Эта функция форматирует время под выбранный пояс и
+   передаётся самому графику, чтобы шкала и подписи реально
+   менялись при переключении.
+*/
+
+function formatChartTime(timeSec){
+
+try{
+
+return new Date(timeSec*1000).toLocaleTimeString("ru-RU",{
+
+timeZone:smcMarkerSettings.timezone||"UTC",
+hour:"2-digit",
+minute:"2-digit"
+
+});
+
+}catch(e){
+
+return new Date(timeSec*1000).toLocaleTimeString("ru-RU",{
+
+hour:"2-digit",
+minute:"2-digit"
+
+});
+
+}
+
+}
+
+
 function ensureChartInstance(index,container){
 
 const existing=
@@ -8601,10 +8686,15 @@ rightPriceScale:{
 borderColor:"#20242B"
 },
 
+localization:{
+timeFormatter:(t)=>formatChartTime(t)
+},
+
 timeScale:{
 borderColor:"#20242B",
 timeVisible:true,
-secondsVisible:false
+secondsVisible:false,
+tickMarkFormatter:(t)=>formatChartTime(t)
 },
 
 crosshair:{mode:0},
@@ -8644,6 +8734,7 @@ chart,
 series,
 container,
 priceLines:[],
+zoneSeries:[],
 lastCandles:null
 
 };
@@ -8738,6 +8829,102 @@ instance.series.removePriceLine(line);
 instance.priceLines=[];
 
 instance.series.setMarkers([]);
+
+clearZoneBoxes(instance);
+
+}
+
+
+function clearZoneBoxes(instance){
+
+instance.zoneSeries.forEach(s=>{
+
+try{
+
+instance.chart.removeSeries(s);
+
+}catch(e){}
+
+});
+
+instance.zoneSeries=[];
+
+}
+
+
+/*
+   Настоящая закрашенная зона (не линии) — area-серия,
+   залитая от price2 (линия) до price1 (baseValue). Полностью
+   своя, без сторонних плагинов — поэтому чистится без следа
+   на каждое обновление через clearZoneBoxes() выше, и не
+   накапливается при частом обновлении карточки.
+*/
+
+function zoneLabelMarker(candles,timeMs,text,color,position){
+
+const match=
+candles.find(c=>c.time===timeMs);
+
+if(!match)
+return null;
+
+return{
+
+time:Math.floor(match.time/1000),
+position:position||"aboveBar",
+color,
+shape:"square",
+text
+
+};
+
+}
+
+
+function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs){
+
+if(!candles || !candles.length)
+return;
+
+const data=
+candles
+.filter(c=>
+c.time>=fromTimeMs &&
+(toTimeMs===undefined || c.time<=toTimeMs)
+)
+.map(c=>({
+
+time:Math.floor(c.time/1000),
+value:top
+
+}));
+
+if(data.length<2)
+return;
+
+const areaSeries=
+instance.chart.addAreaSeries({
+
+lineColor:"rgba(0,0,0,0)",
+lineWidth:0,
+topColor:color,
+bottomColor:color,
+priceLineVisible:false,
+lastValueVisible:false,
+crosshairMarkerVisible:false,
+baseLineVisible:false
+
+});
+
+areaSeries.applyOptions({
+
+baseValue:{type:"price",price:bottom}
+
+});
+
+areaSeries.setData(data);
+
+instance.zoneSeries.push(areaSeries);
 
 }
 
@@ -8980,6 +9167,14 @@ instance.chart.applyOptions({
 
 layout:{
 background:{color:chartColorSettings.background}
+},
+
+localization:{
+timeFormatter:(t)=>formatChartTime(t)
+},
+
+timeScale:{
+tickMarkFormatter:(t)=>formatChartTime(t)
 }
 
 });
@@ -9029,7 +9224,8 @@ if(impulseUp && base.close<base.open){
 const zone={
 type:"bullish",
 top:base.high,
-bottom:base.low
+bottom:base.low,
+time:base.time
 };
 
 for(let j=i+2;j<n;j++){
@@ -9051,7 +9247,8 @@ if(impulseDown && base.close>base.open){
 const zone={
 type:"bearish",
 top:base.high,
-bottom:base.low
+bottom:base.low,
+time:base.time
 };
 
 for(let j=i+2;j<n;j++){
@@ -9087,6 +9284,8 @@ lookback[lookback.length-1].close*0.0007;
 
 let bestHigh=null;
 let bestLow=null;
+let bestHighTime=null;
+let bestLowTime=null;
 
 for(let i=0;i<lookback.length;i++){
 
@@ -9095,12 +9294,14 @@ for(let j=i+3;j<lookback.length;j++){
 if(Math.abs(lookback[i].high-lookback[j].high)<tol){
 
 bestHigh=(lookback[i].high+lookback[j].high)/2;
+bestHighTime=lookback[j].time;
 
 }
 
 if(Math.abs(lookback[i].low-lookback[j].low)<tol){
 
 bestLow=(lookback[i].low+lookback[j].low)/2;
+bestLowTime=lookback[j].time;
 
 }
 
@@ -9108,7 +9309,10 @@ bestLow=(lookback[i].low+lookback[j].low)/2;
 
 }
 
-return{high:bestHigh,low:bestLow};
+return{
+high:bestHigh,low:bestLow,
+highTime:bestHighTime,lowTime:bestLowTime
+};
 
 }
 
@@ -9131,25 +9335,25 @@ const f=ctx.fractal;
 
 if(f.type==="low" && bullishTrend && lastClose>f.price){
 
-return{label:"BOS",direction:"bullish",price:f.price};
+return{label:"BOS",direction:"bullish",price:f.price,barsAgo:f.barsAgo};
 
 }
 
 if(f.type==="high" && bullishTrend && lastClose<f.price){
 
-return{label:"CHoCH",direction:"bearish",price:f.price};
+return{label:"CHoCH",direction:"bearish",price:f.price,barsAgo:f.barsAgo};
 
 }
 
 if(f.type==="high" && bearishTrend && lastClose<f.price){
 
-return{label:"BOS",direction:"bearish",price:f.price};
+return{label:"BOS",direction:"bearish",price:f.price,barsAgo:f.barsAgo};
 
 }
 
 if(f.type==="low" && bearishTrend && lastClose>f.price){
 
-return{label:"CHoCH",direction:"bullish",price:f.price};
+return{label:"CHoCH",direction:"bullish",price:f.price,barsAgo:f.barsAgo};
 
 }
 
@@ -9166,17 +9370,17 @@ const ICT_MACRO_WINDOWS=[
 {startH:15,startM:15,endH:15,endM:45}
 ];
 
-function getActiveMacroWindow(){
+function minutesInTimezone(timeMs,timezone){
 
 const parts=
 new Intl.DateTimeFormat("en-US",{
 
-timeZone:smcMarkerSettings.timezone||"America/New_York",
+timeZone:timezone,
 hour:"numeric",
 minute:"numeric",
 hour12:false
 
-}).formatToParts(new Date());
+}).formatToParts(new Date(timeMs));
 
 const h=
 Number(parts.find(p=>p.type==="hour").value);
@@ -9184,16 +9388,73 @@ Number(parts.find(p=>p.type==="hour").value);
 const m=
 Number(parts.find(p=>p.type==="minute").value);
 
-const nowMin=h*60+m;
+return h*60+m;
 
-return ICT_MACRO_WINDOWS.find(w=>{
+}
+
+
+/*
+   Ищем, где в УЖЕ ПРОШЕДШЕЙ истории свечей проходили
+   macro-окна — не только "идёт прямо сейчас", иначе метка
+   почти всегда пустая и выглядит как будто не работает.
+*/
+
+function findMacroOccurrences(candles,timezone){
+
+const occurrences=[];
+
+let runStart=null;
+let runWindow=null;
+
+candles.forEach((c,i)=>{
+
+const nowMin=
+minutesInTimezone(c.time,timezone);
+
+const win=
+ICT_MACRO_WINDOWS.find(w=>{
 
 const start=w.startH*60+w.startM;
 const end=w.endH*60+w.endM;
 
 return nowMin>=start && nowMin<=end;
 
-})||null;
+});
+
+if(win){
+
+if(runStart===null){
+
+runStart=i;
+runWindow=win;
+
+}
+
+}else if(runStart!==null){
+
+occurrences.push({
+startIdx:runStart,
+endIdx:i-1,
+window:runWindow
+});
+
+runStart=null;
+
+}
+
+});
+
+if(runStart!==null){
+
+occurrences.push({
+startIdx:runStart,
+endIdx:candles.length-1,
+window:runWindow
+});
+
+}
+
+return occurrences.slice(-3);
 
 }
 
@@ -9356,6 +9617,8 @@ return;
 
 clearChartMarkers(instance);
 
+const chartMarkers=[];
+
 if(result.levels){
 
 if(isFinite(result.levels.support)){
@@ -9398,38 +9661,41 @@ title:"Сопротивление"
 const activeIds=
 result.activeStrategies||[];
 
-if(smcMarkerSettings.imbalance && result.imbalanceZone){
+if(
+smcMarkerSettings.imbalance &&
+instance.lastCandles &&
+instance.lastCandles.length>10
+){
 
-const z=result.imbalanceZone;
+findUnfilledImbalanceZones(instance.lastCandles).forEach(z=>{
 
-const color=
+const solidColor=
 z.type==="bullish"?"#2BC482":"#E5484D";
 
-instance.priceLines.push(
-instance.series.createPriceLine({
+const color=
+z.type==="bullish"
+?"rgba(43,196,130,0.22)"
+:"rgba(229,72,77,0.22)";
 
-price:z.top,
-color,
-lineWidth:1,
-lineStyle:3,
-axisLabelVisible:false,
-title:"FVG"
-
-})
+drawZoneBox(
+instance,
+instance.lastCandles,
+z.time,
+z.top,
+z.bottom,
+color
 );
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-
-price:z.bottom,
-color,
-lineWidth:1,
-lineStyle:3,
-axisLabelVisible:false,
-title:"FVG"
-
-})
+const m=
+zoneLabelMarker(
+instance.lastCandles,z.time,"FVG",solidColor,
+z.type==="bullish"?"belowBar":"aboveBar"
 );
+
+if(m)
+chartMarkers.push(m);
+
+});
 
 }
 
@@ -9445,43 +9711,61 @@ findOrderBlockZones(instance.lastCandles);
 
 if(smcMarkerSettings.orderBlocks && zones.fresh){
 
-const color=
+const solidColor=
 zones.fresh.type==="bullish"?"#2BC482":"#E5484D";
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:zones.fresh.top,color,lineWidth:1,lineStyle:1,
-axisLabelVisible:false,title:"OB"
-})
+const color=
+zones.fresh.type==="bullish"
+?"rgba(43,196,130,0.3)"
+:"rgba(229,72,77,0.3)";
+
+drawZoneBox(
+instance,
+instance.lastCandles,
+zones.fresh.time,
+zones.fresh.top,
+zones.fresh.bottom,
+color
 );
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:zones.fresh.bottom,color,lineWidth:1,lineStyle:1,
-axisLabelVisible:false,title:"OB"
-})
+const m=
+zoneLabelMarker(
+instance.lastCandles,zones.fresh.time,"OB",solidColor,
+zones.fresh.type==="bullish"?"belowBar":"aboveBar"
 );
+
+if(m)
+chartMarkers.push(m);
 
 }
 
 if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
 
-const color=
+const solidColor=
 zones.mitigated.type==="bullish"?"#2BC482":"#E5484D";
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:zones.mitigated.top,color,lineWidth:1,lineStyle:0,
-axisLabelVisible:false,title:"Mitigation"
-})
+const color=
+zones.mitigated.type==="bullish"
+?"rgba(43,196,130,0.45)"
+:"rgba(229,72,77,0.45)";
+
+drawZoneBox(
+instance,
+instance.lastCandles,
+zones.mitigated.time,
+zones.mitigated.top,
+zones.mitigated.bottom,
+color
 );
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:zones.mitigated.bottom,color,lineWidth:1,lineStyle:0,
-axisLabelVisible:false,title:"Mitigation"
-})
+const m=
+zoneLabelMarker(
+instance.lastCandles,zones.mitigated.time,"OB-",solidColor,
+zones.mitigated.type==="bullish"?"belowBar":"aboveBar"
 );
+
+if(m)
+chartMarkers.push(m);
 
 }
 
@@ -9501,10 +9785,18 @@ if(liq.high){
 
 instance.priceLines.push(
 instance.series.createPriceLine({
-price:liq.high,color:"#F0C14B",lineWidth:1,lineStyle:3,
-axisLabelVisible:false,title:"Ликвидность"
+price:liq.high,color:"#F0C14B",lineWidth:1,lineStyle:2,
+axisLabelVisible:true,title:"EQH"
 })
 );
+
+const m=
+zoneLabelMarker(
+instance.lastCandles,liq.highTime,"EQH","#F0C14B","aboveBar"
+);
+
+if(m)
+chartMarkers.push(m);
 
 }
 
@@ -9512,10 +9804,54 @@ if(liq.low){
 
 instance.priceLines.push(
 instance.series.createPriceLine({
-price:liq.low,color:"#F0C14B",lineWidth:1,lineStyle:3,
-axisLabelVisible:false,title:"Ликвидность"
+price:liq.low,color:"#F0C14B",lineWidth:1,lineStyle:2,
+axisLabelVisible:true,title:"EQL"
 })
 );
+
+const m=
+zoneLabelMarker(
+instance.lastCandles,liq.lowTime,"EQL","#F0C14B","belowBar"
+);
+
+if(m)
+chartMarkers.push(m);
+
+}
+
+}
+
+
+/*
+   Liquidity Grab / Sweep — как в LuxAlgo: крестик (×) там,
+   где цена вынесла недавний хай/лоу фитилём и закрылась
+   обратно внутри диапазона. Используем тот же детектор,
+   что уже считает score в Smart Money стратегии.
+*/
+
+if(
+smcMarkerSettings.liquidity &&
+instance.lastCandles &&
+instance.lastCandles.length>21
+){
+
+const sweep=
+liquiditySweep(instance.lastCandles);
+
+if(sweep!==0){
+
+const lastCandle=
+instance.lastCandles[instance.lastCandles.length-1];
+
+chartMarkers.push({
+
+time:Math.floor(lastCandle.time/1000),
+position:sweep===-1?"aboveBar":"belowBar",
+color:"#F0C14B",
+shape:"circle",
+text:"× Liquidity Grab"
+
+});
 
 }
 
@@ -9543,46 +9879,108 @@ structEvent &&
 )
 ){
 
+/*
+   Как в LuxAlgo SMC: BOS красится по направлению (зелёный/
+   красный) — это продолжение тренда. CHoCH — отдельным,
+   контрастным цветом (фиолетовый), вне зависимости от
+   направления — это сигнал "смена характера", он должен
+   бросаться в глаза отдельно от обычных бычьих/медвежьих
+   меток.
+*/
+
+const isBos=
+structEvent.label==="BOS";
+
+const lineColor=
+isBos
+?(structEvent.direction==="bullish"?"#2BC482":"#E5484D")
+:"#B47EE8";
+
 instance.priceLines.push(
 instance.series.createPriceLine({
 
 price:structEvent.price,
-color:
-structEvent.direction==="bullish"?"#2BC482":"#E5484D",
-lineWidth:2,
-lineStyle:0,
+color:lineColor,
+lineWidth:isBos?2:1,
+lineStyle:isBos?0:2,
 axisLabelVisible:true,
 title:structEvent.label
 
 })
 );
 
+if(
+structEvent.barsAgo!==undefined &&
+structEvent.barsAgo<=20 &&
+instance.lastCandles
+){
+
+const idx=
+instance.lastCandles.length-1-structEvent.barsAgo;
+
+const c=
+instance.lastCandles[idx];
+
+if(c){
+
+chartMarkers.push({
+
+time:Math.floor(c.time/1000),
+
+position:
+structEvent.direction==="bullish"?"belowBar":"aboveBar",
+
+color:lineColor,
+
+shape:"square",
+
+text:structEvent.label
+
+});
+
+}
+
 }
 
 }
 
+}
 
-if(smcMarkerSettings.macros){
 
-const macro=
-getActiveMacroWindow();
+if(
+smcMarkerSettings.macros &&
+instance.lastCandles &&
+instance.lastCandles.length>5
+){
 
-if(macro){
+findMacroOccurrences(
+instance.lastCandles,
+smcMarkerSettings.timezone||"America/New_York"
+).forEach(occ=>{
 
-instance.priceLines.push(
-instance.series.createPriceLine({
+const slice=
+instance.lastCandles.slice(occ.startIdx,occ.endIdx+1);
 
-price:instance.lastCandles[instance.lastCandles.length-1].close,
-color:"#8B9099",
-lineWidth:1,
-lineStyle:2,
-axisLabelVisible:false,
-title:`Macro ${String(macro.startH).padStart(2,"0")}:${String(macro.startM).padStart(2,"0")}-${String(macro.endH).padStart(2,"0")}:${String(macro.endM).padStart(2,"0")} (NY)`
+if(!slice.length)
+return;
 
-})
+const top=
+Math.max(...slice.map(c=>c.high));
+
+const bottom=
+Math.min(...slice.map(c=>c.low));
+
+drawZoneBox(
+instance,
+instance.lastCandles,
+slice[0].time,
+top,
+bottom,
+"rgba(139,144,153,0.16)",
+slice[slice.length-1].time
 );
 
-}
+});
 
 }
 
@@ -9592,7 +9990,7 @@ activeIds.includes("reversal") ||
 activeIds.includes("smart_money") ||
 activeIds.includes("combined");
 
-const chartMarkers=[];
+
 
 if(
 fractalFamily &&
