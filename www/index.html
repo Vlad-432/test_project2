@@ -6397,6 +6397,106 @@ score-=14;
 factors.push({text:"Дивергенция: медвежья",type:"bad"});
 }
 
+/*
+   Mitigation Block / свежий Order Block отдельной зоной,
+   CHoCH/BOS по структуре, скопления ликвидности и Order Flow —
+   те же детекторы, что рисуют метки на графике, здесь
+   используются как полноценные факторы в самом score.
+*/
+
+const zones=
+findOrderBlockZones(ctx.data);
+
+if(zones.mitigated){
+
+const bullish=
+zones.mitigated.type==="bullish";
+
+score+=bullish?10:-10;
+
+factors.push({
+text:
+"Mitigation Block: цена вернулась в "+
+(bullish?"бычью":"медвежью")+" зону",
+type:bullish?"good":"bad"
+});
+
+}else if(zones.fresh){
+
+factors.push({
+text:
+"Свежий Order Block ("+
+(zones.fresh.type==="bullish"?"бычий":"медвежий")+
+"), ещё не протестирован",
+type:"neutral"
+});
+
+}
+
+const structEvent=
+detectStructureEvent(ctx,ctx.data);
+
+if(structEvent){
+
+const bullish=
+structEvent.direction==="bullish";
+
+score+=
+structEvent.label==="CHoCH"
+?(bullish?16:-16)
+:(bullish?10:-10);
+
+factors.push({
+text:structEvent.label+": "+(bullish?"бычий":"медвежий")+" сценарий",
+type:bullish?"good":"bad"
+});
+
+}
+
+const liq=
+findLiquidityLevels(ctx.data);
+
+if(liq.high || liq.low){
+
+const nearHigh=
+liq.high && Math.abs(ctx.last-liq.high)/ctx.last<0.0015;
+
+const nearLow=
+liq.low && Math.abs(ctx.last-liq.low)/ctx.last<0.0015;
+
+if(nearHigh){
+
+score-=8;
+
+factors.push({text:"Рядом скопление ликвидности сверху",type:"bad"});
+
+}else if(nearLow){
+
+score+=8;
+
+factors.push({text:"Рядом скопление ликвидности снизу",type:"good"});
+
+}
+
+}
+
+const flow=
+orderFlowProxy(ctx.data);
+
+if(flow==="bullish"){
+
+score+=7;
+
+factors.push({text:"Order Flow: перевес покупателей",type:"good"});
+
+}else if(flow==="bearish"){
+
+score-=7;
+
+factors.push({text:"Order Flow: перевес продавцов",type:"bad"});
+
+}
+
 const cf=
 candleFactor(
 ctx,
@@ -8653,9 +8753,27 @@ const SMC_MARKER_DEFS=[
 {id:"liquidity",label:"Ликвидность (equal highs/lows)",desc:"Близкие по цене максимумы/минимумы — зоны скопления стопов."},
 {id:"choch",label:"CHoCH",desc:"Change of Character — смена характера движения (ранний признак разворота)."},
 {id:"bos",label:"BOS",desc:"Break of Structure — пробой структуры по тренду."},
+{id:"structure",label:"Структура HH/HL/LH/LL",desc:"Подписи на каждом свинге: выше/ниже предыдущего такого же типа."},
+{id:"sessions",label:"Торговые сессии",desc:"Метки начала Сиднея/Азии/Лондона/Нью-Йорка, у каждой свой цвет."},
 {id:"macros",label:"Macro-окна (ICT)",desc:"Подсветка стандартных временных окон ICT, пока они идут."},
 {id:"orderFlow",label:"Order Flow (прокси)",desc:"Упрощённая оценка давления покупателей/продавцов по телам свечей."}
 ];
+
+const DEFAULT_SMC_SETTINGS={
+
+orderBlocks:true,
+mitigationBlocks:false,
+imbalance:true,
+liquidity:false,
+choch:false,
+bos:false,
+structure:false,
+sessions:false,
+macros:false,
+orderFlow:false,
+timezone:"America/New_York"
+
+};
 
 function loadSmcMarkerSettings(){
 
@@ -8667,22 +8785,11 @@ localStorage.getItem("cryptoScreenSmcMarkers")
 );
 
 if(stored)
-return stored;
+return{...DEFAULT_SMC_SETTINGS,...stored};
 
 }catch(e){}
 
-return{
-
-orderBlocks:true,
-mitigationBlocks:false,
-imbalance:true,
-liquidity:false,
-choch:false,
-bos:false,
-macros:false,
-orderFlow:false
-
-};
+return{...DEFAULT_SMC_SETTINGS};
 
 }
 
@@ -8707,6 +8814,20 @@ renderSmcMarkerList();
 
 }
 
+const TIMEZONE_OPTIONS=[
+{id:"America/New_York",label:"Нью-Йорк (ICT)"},
+{id:"Europe/London",label:"Лондон"},
+{id:"Europe/Moscow",label:"Москва"},
+{id:"Asia/Tokyo",label:"Токио"},
+{id:"UTC",label:"UTC"}
+];
+
+function setChartTimezone(value){
+
+smcMarkerSettings.timezone=value;
+
+}
+
 function renderSmcMarkerList(){
 
 const list=
@@ -8715,7 +8836,23 @@ document.getElementById("smcMarkerList");
 if(!list)
 return;
 
+const tzRow=
+`
+<div class="cs-color-row" style="margin-bottom:8px;">
+<span>Часовой пояс для Macro-окон</span>
+<select
+class="modal-input"
+style="width:auto;padding:6px 8px;"
+onchange="setChartTimezone(this.value)">
+${TIMEZONE_OPTIONS.map(tz=>
+`<option value="${tz.id}" ${smcMarkerSettings.timezone===tz.id?"selected":""}>${tz.label}</option>`
+).join("")}
+</select>
+</div>
+`;
+
 list.innerHTML=
+tzRow+
 SMC_MARKER_DEFS.map(def=>{
 
 const active=
@@ -9034,7 +9171,7 @@ function getActiveMacroWindow(){
 const parts=
 new Intl.DateTimeFormat("en-US",{
 
-timeZone:"America/New_York",
+timeZone:smcMarkerSettings.timezone||"America/New_York",
 hour:"numeric",
 minute:"numeric",
 hour12:false
@@ -9057,6 +9194,126 @@ const end=w.endH*60+w.endM;
 return nowMin>=start && nowMin<=end;
 
 })||null;
+
+}
+
+
+function detectSwingStructure(candles){
+
+const swings=[];
+
+for(let i=2;i<candles.length-2;i++){
+
+const c=candles[i];
+
+const isHigh=
+c.high>candles[i-1].high &&
+c.high>candles[i-2].high &&
+c.high>candles[i+1].high &&
+c.high>candles[i+2].high;
+
+const isLow=
+c.low<candles[i-1].low &&
+c.low<candles[i-2].low &&
+c.low<candles[i+1].low &&
+c.low<candles[i+2].low;
+
+if(isHigh){
+
+swings.push({idx:i,type:"high",price:c.high,time:c.time});
+
+}
+
+if(isLow){
+
+swings.push({idx:i,type:"low",price:c.low,time:c.time});
+
+}
+
+}
+
+const labeled=[];
+
+let lastHigh=null;
+let lastLow=null;
+
+swings.forEach(s=>{
+
+if(s.type==="high"){
+
+if(lastHigh!==null){
+
+labeled.push({
+...s,
+label:s.price>lastHigh?"HH":"LH"
+});
+
+}
+
+lastHigh=s.price;
+
+}else{
+
+if(lastLow!==null){
+
+labeled.push({
+...s,
+label:s.price>lastLow?"HL":"LL"
+});
+
+}
+
+lastLow=s.price;
+
+}
+
+});
+
+return labeled.slice(-8);
+
+}
+
+
+const TRADING_SESSIONS=[
+{id:"sydney",label:"Сидней",color:"#9B7EDE",startH:21},
+{id:"asian",label:"Азия",color:"#4FA3E3",startH:23},
+{id:"london",label:"Лондон",color:"#F0C14B",startH:7},
+{id:"newyork",label:"Нью-Йорк",color:"#E8745C",startH:12}
+];
+
+function findSessionStarts(candles){
+
+const markers=[];
+
+for(let i=1;i<candles.length;i++){
+
+const prevH=
+new Date(candles[i-1].time).getUTCHours();
+
+const curH=
+new Date(candles[i].time).getUTCHours();
+
+TRADING_SESSIONS.forEach(s=>{
+
+if(curH===s.startH && prevH!==s.startH){
+
+markers.push({
+
+time:Math.floor(candles[i].time/1000),
+position:"aboveBar",
+color:s.color,
+shape:"circle",
+text:s.label
+
+});
+
+}
+
+});
+
+}
+
+return markers.slice(-12);
 
 }
 
@@ -9418,6 +9675,50 @@ flow==="bullish"
 });
 
 }
+
+}
+
+
+if(
+smcMarkerSettings.structure &&
+instance.lastCandles &&
+instance.lastCandles.length>10
+){
+
+detectSwingStructure(instance.lastCandles).forEach(s=>{
+
+chartMarkers.push({
+
+time:Math.floor(s.time/1000),
+
+position:
+s.type==="high"?"aboveBar":"belowBar",
+
+color:
+(s.label==="HH"||s.label==="HL")?"#2BC482":"#E5484D",
+
+shape:"square",
+
+text:s.label
+
+});
+
+});
+
+}
+
+
+if(
+smcMarkerSettings.sessions &&
+instance.lastCandles &&
+instance.lastCandles.length>10
+){
+
+findSessionStarts(instance.lastCandles).forEach(m=>{
+
+chartMarkers.push(m);
+
+});
 
 }
 
