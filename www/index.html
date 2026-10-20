@@ -1946,9 +1946,11 @@ style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
 
 <div class="api-settings-note">
 Что рисовать поверх свечей. Макросы — подсвечивают
-стандартные ICT-окна времени (по Нью-Йорку) прямо во время
-их хода. Order Flow — упрощённый прокси по телу свечей
-(настоящей дельты объёма по тикам у нас нет).
+прошедшие ICT-окна времени на истории свечей. Order Flow —
+упрощённый прокси по телу свечей (настоящей дельты объёма по
+тикам у нас нет). Если включить сразу всё — график станет
+нечитаемым, зоны и подписи полезут друг на друга. Рекомендую
+включать по 2-3 за раз, под то, что сейчас анализируешь.
 </div>
 
 <div id="smcMarkerList" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
@@ -3347,24 +3349,6 @@ title="Источник данных">
 class="timeframe"
 onclick="changeTimeframe(${index},'1',this)">
 1м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'2',this)">
-2м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'3',this)">
-3м
-</button>
-
-<button
-class="timeframe"
-onclick="changeTimeframe(${index},'4',this)">
-4м
 </button>
 
 <button
@@ -5952,7 +5936,7 @@ return false;
 
 return true;
 
-}).slice(-4);
+}).slice(-1);
 
 }
 
@@ -9203,7 +9187,23 @@ const n=candles.length;
 if(n<10)
 return{fresh:null,mitigated:null};
 
+/*
+   Раньше функция останавливалась на первом же найденном
+   блоке, сканируя от самого свежего назад — из-за этого
+   Mitigation Block почти никогда не показывался: если самый
+   свежий блок ещё не протестирован, до более старого (уже
+   митигированного) дело просто не доходило. Теперь сканируем
+   весь диапазон и запоминаем лучший (самый свежий) пример
+   каждого вида отдельно.
+*/
+
+let fresh=null;
+let mitigated=null;
+
 for(let i=n-4;i>=Math.max(2,n-40);i--){
+
+if(fresh && mitigated)
+break;
 
 const base=candles[i];
 const next=candles[i+1];
@@ -9228,17 +9228,30 @@ bottom:base.low,
 time:base.time
 };
 
+let touched=false;
+
 for(let j=i+2;j<n;j++){
 
 if(candles[j].low<=zone.top && candles[j].low>=zone.bottom){
 
-return{fresh:null,mitigated:zone};
+touched=true;
+break;
 
 }
 
 }
 
-return{fresh:zone,mitigated:null};
+if(touched){
+
+if(!mitigated)
+mitigated=zone;
+
+}else{
+
+if(!fresh)
+fresh=zone;
+
+}
 
 }
 
@@ -9251,23 +9264,36 @@ bottom:base.low,
 time:base.time
 };
 
+let touched=false;
+
 for(let j=i+2;j<n;j++){
 
 if(candles[j].high>=zone.bottom && candles[j].high<=zone.top){
 
-return{fresh:null,mitigated:zone};
+touched=true;
+break;
 
 }
 
 }
 
-return{fresh:zone,mitigated:null};
+if(touched){
+
+if(!mitigated)
+mitigated=zone;
+
+}else{
+
+if(!fresh)
+fresh=zone;
 
 }
 
 }
 
-return{fresh:null,mitigated:null};
+}
+
+return{fresh,mitigated};
 
 }
 
@@ -9454,7 +9480,7 @@ window:runWindow
 
 }
 
-return occurrences.slice(-3);
+return occurrences.slice(-1);
 
 }
 
@@ -9530,7 +9556,7 @@ lastLow=s.price;
 
 });
 
-return labeled.slice(-8);
+return labeled.slice(-4);
 
 }
 
@@ -9574,7 +9600,7 @@ text:s.label
 
 }
 
-return markers.slice(-12);
+return markers.slice(-6);
 
 }
 
