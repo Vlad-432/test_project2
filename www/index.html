@@ -8889,50 +8889,47 @@ return candles[endIdx].time;
 }
 
 
-function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs){
+function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs,label){
 
-if(!candles || !candles.length)
-return;
+/*
+   ВАЖНО: пробовал настоящую заливку через area-серию — она
+   в этой библиотеке красит не между top и bottom, а от top
+   до самого НИЗА графика целиком, границы снизу игнорирует.
+   Это и объясняло гигантское зелёное пятно. Откатываюсь на
+   две границы-линии (верх/низ) — они у Поддержки/Сопротивления
+   уже доказанно работают верно и ограничены по цене. Не
+   заливка, но честно и без глюков.
+*/
 
-const data=
-candles
-.filter(c=>
-c.time>=fromTimeMs &&
-(toTimeMs===undefined || c.time<=toTimeMs)
-)
-.map(c=>({
+instance.priceLines.push(
 
-time:Math.floor(c.time/1000),
-value:top
+instance.series.createPriceLine({
 
-}));
+price:top,
+color,
+lineWidth:1,
+lineStyle:1,
+axisLabelVisible:false,
+title:label||""
 
-if(data.length<2)
-return;
+})
 
-const areaSeries=
-instance.chart.addAreaSeries({
+);
 
-lineColor:"rgba(0,0,0,0)",
-lineWidth:0,
-topColor:color,
-bottomColor:color,
-priceLineVisible:false,
-lastValueVisible:false,
-crosshairMarkerVisible:false,
-baseLineVisible:false
+instance.priceLines.push(
 
-});
+instance.series.createPriceLine({
 
-areaSeries.applyOptions({
+price:bottom,
+color,
+lineWidth:1,
+lineStyle:1,
+axisLabelVisible:false,
+title:""
 
-baseValue:{type:"price",price:bottom}
+})
 
-});
-
-areaSeries.setData(data);
-
-instance.zoneSeries.push(areaSeries);
+);
 
 }
 
@@ -9722,19 +9719,15 @@ findUnfilledImbalanceZones(instance.lastCandles).forEach(z=>{
 const solidColor=
 z.type==="bullish"?"#2BC482":"#E5484D";
 
-const color=
-z.type==="bullish"
-?"rgba(43,196,130,0.22)"
-:"rgba(229,72,77,0.22)";
-
 drawZoneBox(
 instance,
 instance.lastCandles,
 z.time,
 z.top,
 z.bottom,
-color,
-capZoneEndTime(instance.lastCandles,z.time,20)
+solidColor,
+undefined,
+"FVG"
 );
 
 const m=
@@ -9765,19 +9758,15 @@ if(smcMarkerSettings.orderBlocks && zones.fresh){
 const solidColor=
 zones.fresh.type==="bullish"?"#2BC482":"#E5484D";
 
-const color=
-zones.fresh.type==="bullish"
-?"rgba(43,196,130,0.3)"
-:"rgba(229,72,77,0.3)";
-
 drawZoneBox(
 instance,
 instance.lastCandles,
 zones.fresh.time,
 zones.fresh.top,
 zones.fresh.bottom,
-color,
-capZoneEndTime(instance.lastCandles,zones.fresh.time,20)
+solidColor,
+undefined,
+"OB"
 );
 
 const m=
@@ -9796,19 +9785,15 @@ if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
 const solidColor=
 zones.mitigated.type==="bullish"?"#2BC482":"#E5484D";
 
-const color=
-zones.mitigated.type==="bullish"
-?"rgba(43,196,130,0.45)"
-:"rgba(229,72,77,0.45)";
-
 drawZoneBox(
 instance,
 instance.lastCandles,
 zones.mitigated.time,
 zones.mitigated.top,
 zones.mitigated.bottom,
-color,
-capZoneEndTime(instance.lastCandles,zones.mitigated.time,20)
+solidColor,
+undefined,
+"OB-"
 );
 
 const m=
@@ -10017,21 +10002,34 @@ instance.lastCandles.slice(occ.startIdx,occ.endIdx+1);
 if(!slice.length)
 return;
 
-const top=
-Math.max(...slice.map(c=>c.high));
+/*
+   Macro ограничен по времени по смыслу — линия на весь
+   график для него не подходит, поэтому просто отмечаем
+   начало и конец окна точками-маркерами на нужных свечах.
+*/
 
-const bottom=
-Math.min(...slice.map(c=>c.low));
-
-drawZoneBox(
-instance,
-instance.lastCandles,
-slice[0].time,
-top,
-bottom,
-"rgba(139,144,153,0.16)",
-slice[slice.length-1].time
+const startMarker=
+zoneLabelMarker(
+instance.lastCandles,slice[0].time,
+`Macro ${String(occ.window.startH).padStart(2,"0")}:${String(occ.window.startM).padStart(2,"0")}`,
+"#8B9099","aboveBar"
 );
+
+if(startMarker)
+chartMarkers.push(startMarker);
+
+if(slice.length>1){
+
+const endMarker=
+zoneLabelMarker(
+instance.lastCandles,slice[slice.length-1].time,
+"Macro end","#8B9099","belowBar"
+);
+
+if(endMarker)
+chartMarkers.push(endMarker);
+
+}
 
 });
 
