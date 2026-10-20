@@ -8865,6 +8865,30 @@ text
 }
 
 
+/*
+   Зона не должна тянуться до самого текущего момента — на
+   маленьком мобильном графике это превращает соседние зоны
+   (OB рядом с FVG от одного и того же импульса) в одно
+   сплошное пятно на весь график. Ограничиваем правый край
+   зоны разумным числом свечей вперёд от её появления.
+*/
+
+function capZoneEndTime(candles,fromTimeMs,maxBars){
+
+const idx=
+candles.findIndex(c=>c.time===fromTimeMs);
+
+if(idx===-1)
+return undefined;
+
+const endIdx=
+Math.min(idx+maxBars,candles.length-1);
+
+return candles[endIdx].time;
+
+}
+
+
 function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs){
 
 if(!candles || !candles.length)
@@ -9709,7 +9733,8 @@ instance.lastCandles,
 z.time,
 z.top,
 z.bottom,
-color
+color,
+capZoneEndTime(instance.lastCandles,z.time,20)
 );
 
 const m=
@@ -9751,7 +9776,8 @@ instance.lastCandles,
 zones.fresh.time,
 zones.fresh.top,
 zones.fresh.bottom,
-color
+color,
+capZoneEndTime(instance.lastCandles,zones.fresh.time,20)
 );
 
 const m=
@@ -9781,7 +9807,8 @@ instance.lastCandles,
 zones.mitigated.time,
 zones.mitigated.top,
 zones.mitigated.bottom,
-color
+color,
+capZoneEndTime(instance.lastCandles,zones.mitigated.time,20)
 );
 
 const m=
