@@ -6437,6 +6437,8 @@ factors.push({text:"Дивергенция: медвежья",type:"bad"});
    используются как полноценные факторы в самом score.
 */
 
+try{
+
 const zones=
 findOrderBlockZones(ctx.data);
 
@@ -6466,6 +6468,10 @@ type:"neutral"
 
 }
 
+}catch(e){}
+
+try{
+
 const structEvent=
 detectStructureEvent(ctx,ctx.data);
 
@@ -6485,6 +6491,10 @@ type:bullish?"good":"bad"
 });
 
 }
+
+}catch(e){}
+
+try{
 
 const liq=
 findLiquidityLevels(ctx.data);
@@ -6513,6 +6523,10 @@ factors.push({text:"Рядом скопление ликвидности сни�
 
 }
 
+}catch(e){}
+
+try{
+
 const flow=
 orderFlowProxy(ctx.data);
 
@@ -6529,6 +6543,8 @@ score-=7;
 factors.push({text:"Order Flow: перевес продавцов",type:"bad"});
 
 }
+
+}catch(e){}
 
 const cf=
 candleFactor(
@@ -9666,6 +9682,8 @@ clearChartMarkers(instance);
 
 const chartMarkers=[];
 
+try{
+
 if(result.levels){
 
 if(isFinite(result.levels.support)){
@@ -10179,6 +10197,8 @@ chartMarkers.sort((a,b)=>a.time-b.time);
 instance.series.setMarkers(chartMarkers);
 
 }
+
+}catch(e){}
 
 }
 
