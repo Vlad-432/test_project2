@@ -8688,8 +8688,26 @@ return null;
 
 container.innerHTML="";
 
+/*
+   Раньше был autoSize:true — он сам следит за размером
+   родителя через ResizeObserver внутри библиотеки, но именно
+   это не раз давало сбои именно в этом WebView (то высота
+   съедала место под шкалу времени, то наоборот). Теперь
+   меряем контейнер сами и задаём размер явно — надёжнее и
+   предсказуемее, чем полагаться на магию внутри библиотеки.
+*/
+
+const initialWidth=
+container.clientWidth||300;
+
+const initialHeight=
+container.clientHeight||280;
+
 const chart=
 LightweightCharts.createChart(container,{
+
+width:initialWidth,
+height:initialHeight,
 
 layout:{
 background:{color:chartColorSettings.background},
@@ -8717,11 +8735,43 @@ secondsVisible:false,
 tickMarkFormatter:(t)=>formatChartTime(t)
 },
 
-crosshair:{mode:0},
-
-autoSize:true
+crosshair:{mode:0}
 
 });
+
+
+let resizeObserver=null;
+
+if(typeof ResizeObserver!=="undefined"){
+
+resizeObserver=
+new ResizeObserver(entries=>{
+
+for(const entry of entries){
+
+const w=
+Math.floor(entry.contentRect.width);
+
+const h=
+Math.floor(entry.contentRect.height);
+
+if(w>0 && h>0){
+
+try{
+
+chart.resize(w,h);
+
+}catch(e){}
+
+}
+
+}
+
+});
+
+resizeObserver.observe(container);
+
+}
 
 const precision=
 cards[index] && cards[index].type==="forex"
@@ -8755,7 +8805,8 @@ series,
 container,
 priceLines:[],
 zoneSeries:[],
-lastCandles:null
+lastCandles:null,
+resizeObserver
 
 };
 
@@ -8773,6 +8824,16 @@ chartInstances[index];
 
 if(!instance)
 return;
+
+if(instance.resizeObserver){
+
+try{
+
+instance.resizeObserver.disconnect();
+
+}catch(e){}
+
+}
 
 try{
 
