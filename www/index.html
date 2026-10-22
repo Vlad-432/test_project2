@@ -8730,6 +8730,7 @@ borderColor:"#20242B"
 */
 
 timeScale:{
+visible:true,
 borderColor:"#20242B",
 timeVisible:true,
 secondsVisible:false
@@ -8740,6 +8741,31 @@ crosshair:{mode:0},
 autoSize:true
 
 });
+
+/*
+   Похоже, при самом первом создании autoSize один раз
+   неверно меряет контейнер (карточка в этот момент ещё не
+   до конца "устаканилась" после своего же появления) и дальше
+   сам себя не перепроверяет, если свежих изменений размера
+   больше не происходит — отсюда обрезанная снизу шкала
+   времени на каждом графике стабильно, а не время от времени.
+   Форсируем один late-пересчёт через время: читаем offsetHeight
+   (это заставляет браузer сделать свежий замер) и дёргаем
+   событие resize — для autoSize этого обычно достаточно,
+   чтобы он сам переспросил размер ещё раз.
+*/
+
+setTimeout(()=>{
+
+try{
+
+void container.offsetHeight;
+
+window.dispatchEvent(new Event("resize"));
+
+}catch(e){}
+
+},400);
 
 const resizeObserver=null;
 
@@ -8859,6 +8885,20 @@ return true;
 });
 
 instance.series.setData(chartData);
+
+/*
+   Этого вызова не было вообще — без него шкала времени
+   может не досчитать свой видимый диапазон после загрузки
+   свечей и просто не нарисовать подписи. Стандартный вызов
+   из документации библиотеки, который должен идти сразу
+   после setData().
+*/
+
+try{
+
+instance.chart.timeScale().fitContent();
+
+}catch(e){}
 
 instance.lastCandles=candles;
 
