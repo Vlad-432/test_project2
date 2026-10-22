@@ -571,7 +571,7 @@ header{
 
 .chart{
     flex:1 1 auto;
-    min-height:280px;
+    min-height:320px;
     width:100%;
     border-top:1px solid #20242B;
     background:#0A0B0E;
@@ -586,7 +586,7 @@ header{
 .chart-widget{
     width:100%;
     height:100%;
-    min-height:280px;
+    min-height:320px;
     overflow:hidden;
     contain:layout paint;
 }
@@ -615,13 +615,13 @@ header{
 .chart-widget > div{
     width:100% !important;
     height:100% !important;
-    min-height:280px;
+    min-height:320px;
 }
 
 .chart iframe{
     width:100% !important;
     height:100% !important;
-    min-height:280px;
+    min-height:320px;
     display:block;
     border:0;
 }
@@ -8701,7 +8701,7 @@ const initialWidth=
 container.clientWidth||300;
 
 const initialHeight=
-container.clientHeight||280;
+container.clientHeight||320;
 
 const chart=
 LightweightCharts.createChart(container,{
@@ -8741,6 +8741,8 @@ crosshair:{mode:0}
 
 
 let resizeObserver=null;
+let lastAppliedWidth=initialWidth;
+let lastAppliedHeight=initialHeight;
 
 if(typeof ResizeObserver!=="undefined"){
 
@@ -8755,13 +8757,32 @@ Math.floor(entry.contentRect.width);
 const h=
 Math.floor(entry.contentRect.height);
 
-if(w>0 && h>0){
+/*
+   Наблюдатель часто сразу же срабатывает один раз
+   с теми же размерами, что мы и так уже задали при
+   создании — повторный resize() сразу после создания
+   с теми же цифрами ничего не меняет по сути, но может
+   дёргать внутреннюю перерисовку лишний раз. Пропускаем,
+   если размер реально не изменился.
+*/
+
+if(
+w>0 && h>0 &&
+(w!==lastAppliedWidth || h!==lastAppliedHeight)
+){
+
+lastAppliedWidth=w;
+lastAppliedHeight=h;
+
+requestAnimationFrame(()=>{
 
 try{
 
 chart.resize(w,h);
 
 }catch(e){}
+
+});
 
 }
 
