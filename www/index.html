@@ -8719,15 +8719,20 @@ rightPriceScale:{
 borderColor:"#20242B"
 },
 
-localization:{
-timeFormatter:(t)=>formatChartTime(t)
-},
+/*
+   Убрал свой tickMarkFormatter/timeFormatter полностью —
+   несколько попыток починить показ времени через размер
+   контейнера не сработали, значит дело может быть именно в
+   этой самописной функции форматирования, а не в размере.
+   Встроенное форматирование библиотеки само справляется с
+   timeVisible/secondsVisible без кастомного кода — проверяем,
+   появится ли время хотя бы в таком, базовом виде.
+*/
 
 timeScale:{
 borderColor:"#20242B",
 timeVisible:true,
-secondsVisible:false,
-tickMarkFormatter:(t)=>formatChartTime(t)
+secondsVisible:false
 },
 
 crosshair:{mode:0},
@@ -9296,14 +9301,6 @@ instance.chart.applyOptions({
 
 layout:{
 background:{color:chartColorSettings.background}
-},
-
-localization:{
-timeFormatter:(t)=>formatChartTime(t)
-},
-
-timeScale:{
-tickMarkFormatter:(t)=>formatChartTime(t)
 }
 
 });
