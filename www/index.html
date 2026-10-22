@@ -612,19 +612,15 @@ header{
     padding:0;
 }
 
-.chart-widget > div{
-    width:100% !important;
-    height:100% !important;
-    min-height:320px;
-}
-
-.chart iframe{
-    width:100% !important;
-    height:100% !important;
-    min-height:320px;
-    display:block;
-    border:0;
-}
+/*
+   Старое правило под TradingView-iframe (мы на нём больше
+   не работаем с момента перехода на Lightweight Charts) тут
+   стояло и форсировало height:100% !important на ЛЮБОМ
+   внутреннем div графика — включая те, что сама библиотека
+   создаёт под отдельные слои (свечи отдельно, полоска времени
+   снизу отдельно). Это ломало её собственный расчёт высоты
+   этих слоёв и отжимало место у шкалы времени. Убрано.
+*/
 
 
 /* =========================================================
@@ -3571,9 +3567,7 @@ parseFloat(data.c)
 
 updateChartLastPrice(
 index,
-parseFloat(data.c),
-parseFloat(data.h),
-parseFloat(data.l)
+parseFloat(data.c)
 );
 
 }
@@ -3957,8 +3951,6 @@ formatPrice(price,"forex");
 
 updateChartLastPrice(
 index,
-price,
-price,
 price
 );
 
@@ -8923,9 +8915,18 @@ instance.lastCandles=candles;
    и ощущение "график стоит, цифры бегут". Здесь — дешёвое
    обновление ТОЛЬКО последней свечи, без полной перерисовки,
    ровно под то, для чего в библиотеке есть series.update().
+
+   ВАЖНО: сюда НЕЛЬЗЯ передавать h/l из 24-часового тикера
+   Binance (поля "h"/"l" в @ticker-потоке — это суточные
+   максимум/минимум, а не диапазон текущей свечи). Раньше
+   именно так и было — из-за этого последняя свеча "растягивала"
+   свой фитиль на весь суточный диапазон, это и был тот самый
+   гигантский фитиль через весь график. Теперь обновляем только
+   цену закрытия; реальный high/low текущей свечи досчитает
+   следующий полный loadSignal.
 */
 
-function updateChartLastPrice(index,price,high,low){
+function updateChartLastPrice(index,price){
 
 const instance=
 chartInstances[index];
@@ -8933,7 +8934,8 @@ chartInstances[index];
 if(
 !instance ||
 !instance.lastCandles ||
-!instance.lastCandles.length
+!instance.lastCandles.length ||
+!isFinite(price)
 )
 return;
 
@@ -8945,11 +8947,11 @@ candles[candles.length-1];
 
 last.close=price;
 
-if(isFinite(high))
-last.high=Math.max(last.high,high);
+if(price>last.high)
+last.high=price;
 
-if(isFinite(low))
-last.low=Math.min(last.low,low);
+if(price<last.low)
+last.low=price;
 
 try{
 
