@@ -589,6 +589,10 @@ header{
     min-height:320px;
     overflow:hidden;
     contain:layout paint;
+    transform:translateZ(0);
+    will-change:transform;
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
 }
 
 .chart-symbol-label{
