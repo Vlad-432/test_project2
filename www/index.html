@@ -9107,41 +9107,20 @@ function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs,label
    ВАЖНО: пробовал настоящую заливку через area-серию — она
    в этой библиотеке красит не между top и bottom, а от top
    до самого НИЗА графика целиком, границы снизу игнорирует.
-   Это и объясняло гигантское зелёное пятно. Откатываюсь на
-   две границы-линии (верх/низ) — они у Поддержки/Сопротивления
-   уже доказанно работают верно и ограничены по цене. Не
-   заливка, но честно и без глюков.
+   Это и объясняло гигантское зелёное пятно. Откатился на
+   границы-линии — но через createPriceLine они всегда на
+   всю ширину графика, а зона по смыслу — локальная область,
+   не на весь график. Используем тот же приём, что и для
+   ликвидности: короткий отрезок (LineSeries с двумя точками)
+   именно от появления зоны и на разумное число свечей вперёд,
+   а не через createPriceLine.
 */
 
-instance.priceLines.push(
+const endTime=
+toTimeMs||capZoneEndTime(candles,fromTimeMs,20);
 
-instance.series.createPriceLine({
-
-price:top,
-color,
-lineWidth:1,
-lineStyle:1,
-axisLabelVisible:false,
-title:label||""
-
-})
-
-);
-
-instance.priceLines.push(
-
-instance.series.createPriceLine({
-
-price:bottom,
-color,
-lineWidth:1,
-lineStyle:1,
-axisLabelVisible:false,
-title:""
-
-})
-
-);
+drawLiquiditySegment(instance,fromTimeMs,endTime,top);
+drawLiquiditySegment(instance,fromTimeMs,endTime,bottom);
 
 }
 
