@@ -9009,6 +9009,46 @@ instance.zoneSeries=[];
 
 
 /*
+   Короткий отрезок именно между двумя точками ликвидности
+   (не через весь график) — отдельная тонкая LineSeries с
+   двумя точками данных, а не createPriceLine (который всегда
+   на всю ширину).
+*/
+
+function drawLiquiditySegment(instance,fromTimeMs,toTimeMs,price){
+
+if(fromTimeMs===null || toTimeMs===null || fromTimeMs===undefined)
+return;
+
+try{
+
+const lineSeries=
+instance.chart.addLineSeries({
+
+color:"#F0C14B",
+lineWidth:1,
+lineStyle:2,
+priceLineVisible:false,
+lastValueVisible:false,
+crosshairMarkerVisible:false
+
+});
+
+lineSeries.setData([
+
+{time:Math.floor(fromTimeMs/1000),value:price},
+{time:Math.floor(toTimeMs/1000),value:price}
+
+]);
+
+instance.zoneSeries.push(lineSeries);
+
+}catch(e){}
+
+}
+
+
+/*
    Настоящая закрашенная зона (не линии) — area-серия,
    залитая от price2 (линия) до price1 (baseValue). Полностью
    своя, без сторонних плагинов — поэтому чистится без следа
@@ -9505,6 +9545,8 @@ let bestHigh=null;
 let bestLow=null;
 let bestHighTime=null;
 let bestLowTime=null;
+let bestHighStartTime=null;
+let bestLowStartTime=null;
 
 for(let i=0;i<lookback.length;i++){
 
@@ -9513,6 +9555,7 @@ for(let j=i+3;j<lookback.length;j++){
 if(Math.abs(lookback[i].high-lookback[j].high)<tol){
 
 bestHigh=(lookback[i].high+lookback[j].high)/2;
+bestHighStartTime=lookback[i].time;
 bestHighTime=lookback[j].time;
 
 }
@@ -9520,6 +9563,7 @@ bestHighTime=lookback[j].time;
 if(Math.abs(lookback[i].low-lookback[j].low)<tol){
 
 bestLow=(lookback[i].low+lookback[j].low)/2;
+bestLowStartTime=lookback[i].time;
 bestLowTime=lookback[j].time;
 
 }
@@ -9530,7 +9574,8 @@ bestLowTime=lookback[j].time;
 
 return{
 high:bestHigh,low:bestLow,
-highTime:bestHighTime,lowTime:bestLowTime
+highTime:bestHighTime,lowTime:bestLowTime,
+highStartTime:bestHighStartTime,lowStartTime:bestLowStartTime
 };
 
 }
@@ -9890,8 +9935,15 @@ instance.lastCandles.length>10
 
 findUnfilledImbalanceZones(instance.lastCandles).forEach(z=>{
 
-const solidColor=
-z.type==="bullish"?"#2BC482":"#E5484D";
+/*
+   FVG всегда синий, независимо от направления (как "IMB"
+   на твоём примере) — направление и так написано в тексте
+   фактора, а здесь важнее отличать ТИП зоны от Order Block
+   по цвету с одного взгляда, а не угадывать по оттенку
+   зелёного/красного.
+*/
+
+const solidColor="#4FA3E3";
 
 drawZoneBox(
 instance,
@@ -9956,8 +10008,13 @@ chartMarkers.push(m);
 
 if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
 
-const solidColor=
-zones.mitigated.type==="bullish"?"#2BC482":"#E5484D";
+/*
+   Mitigation Block — янтарный, независимо от направления:
+   сразу видно "эта зона уже протестирована", не путается
+   со свежим Order Block (зелёный/красный).
+*/
+
+const solidColor="#E8A33D";
 
 drawZoneBox(
 instance,
@@ -9995,11 +10052,8 @@ findLiquidityLevels(instance.lastCandles);
 
 if(liq.high){
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:liq.high,color:"#F0C14B",lineWidth:1,lineStyle:2,
-axisLabelVisible:true,title:"EQH"
-})
+drawLiquiditySegment(
+instance,liq.highStartTime,liq.highTime,liq.high
 );
 
 const m=
@@ -10014,11 +10068,8 @@ chartMarkers.push(m);
 
 if(liq.low){
 
-instance.priceLines.push(
-instance.series.createPriceLine({
-price:liq.low,color:"#F0C14B",lineWidth:1,lineStyle:2,
-axisLabelVisible:true,title:"EQL"
-})
+drawLiquiditySegment(
+instance,liq.lowStartTime,liq.lowTime,liq.low
 );
 
 const m=
