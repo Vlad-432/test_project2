@@ -5927,7 +5927,7 @@ return zones;
 function findUnfilledImbalanceZones(candles){
 
 const zones=
-findImbalances(candles,60);
+findImbalances(candles,250);
 
 return zones.filter(z=>{
 
@@ -5949,7 +5949,7 @@ return false;
 
 return true;
 
-}).slice(-1);
+}).slice(-8);
 
 }
 
@@ -8890,18 +8890,26 @@ return true;
 instance.series.setData(chartData);
 
 /*
-   Этого вызова не было вообще — без него шкала времени
-   может не досчитать свой видимый диапазон после загрузки
-   свечей и просто не нарисовать подписи. Стандартный вызов
-   из документации библиотеки, который должен идти сразу
-   после setData().
+   Предыдущая попытка (setVisibleRange на каждое обновление)
+   сделала хуже — она срабатывает на КАЖДОЕ периодическое
+   обновление карточки (каждые 15-20 сек), поэтому любая
+   попытка пролистать график назад тут же сбрасывалась
+   обратно. Подгоняем диапазон только ОДИН раз — при первом
+   заполнении этого графика данными, дальше руки пользователя
+   не трогаем.
 */
+
+if(!instance.hasFitRange && chartData.length){
 
 try{
 
 instance.chart.timeScale().fitContent();
 
 }catch(e){}
+
+instance.hasFitRange=true;
+
+}
 
 instance.lastCandles=candles;
 
@@ -9015,7 +9023,7 @@ instance.zoneSeries=[];
    на всю ширину).
 */
 
-function drawLiquiditySegment(instance,fromTimeMs,toTimeMs,price){
+function drawLiquiditySegment(instance,fromTimeMs,toTimeMs,price,color,lineStyle){
 
 if(fromTimeMs===null || toTimeMs===null || fromTimeMs===undefined)
 return;
@@ -9025,9 +9033,9 @@ try{
 const lineSeries=
 instance.chart.addLineSeries({
 
-color:"#F0C14B",
+color:color||"#F0C14B",
 lineWidth:1,
-lineStyle:2,
+lineStyle:lineStyle!==undefined?lineStyle:0,
 priceLineVisible:false,
 lastValueVisible:false,
 crosshairMarkerVisible:false
@@ -9066,10 +9074,17 @@ return null;
 
 return{
 
+/*
+   size:0 — у библиотеки нет варианта "только текст, без
+   формы", но есть размер метки. Сводим саму фигуру почти
+   к нулю, остаётся читаемым только текст.
+*/
+
 time:Math.floor(match.time/1000),
 position:position||"aboveBar",
 color,
-shape:"square",
+shape:"circle",
+size:0,
 text
 
 };
@@ -9116,11 +9131,21 @@ function drawZoneBox(instance,candles,fromTimeMs,top,bottom,color,toTimeMs,label
    а не через createPriceLine.
 */
 
-const endTime=
-toTimeMs||capZoneEndTime(candles,fromTimeMs,20);
+/*
+   Раньше тянули на фиксированные 30 свечей вперёд от начала
+   зоны — у свежих зон просто не было столько места до конца
+   доступных данных, обрезались короче, а у старых зон было
+   куда тянуться, и выходило длиннее. Тянем до последней
+   доступной свечи у всех — правый край теперь у всех
+   одинаковый, разная только левая точка (где зона реально
+   появилась), что и корректно.
+*/
 
-drawLiquiditySegment(instance,fromTimeMs,endTime,top);
-drawLiquiditySegment(instance,fromTimeMs,endTime,bottom);
+const endTime=
+toTimeMs||(candles.length?candles[candles.length-1].time:undefined);
+
+drawLiquiditySegment(instance,fromTimeMs,endTime,top,color,0);
+drawLiquiditySegment(instance,fromTimeMs,endTime,bottom,color,0);
 
 }
 
@@ -9392,6 +9417,77 @@ tickMarkFormatter:(t)=>formatChartTime(t)
    свежий Order Block.
 ========================================================= */
 
+/*
+   Раньше импульс сравнивался только с размахом ОДНОЙ соседней
+   свечи (1.3x её же диапазона) — порог слишком мягкий, ловил
+   обычные колебания, а не реально значимые развороты, отсюда
+   и ощущение "на бум". Сравниваем со средней волатильностью
+   последних свечей (как ATR) — так "резкий разворот" значит
+   резкий относительно обычного хода цены на этом участке, а
+   не просто чуть больше соседа.
+*/
+
+function avgCandleRange(candles,uptoIdx,lookback){
+
+const start=
+Math.max(0,uptoIdx-lookback);
+
+let sum=0;
+let count=0;
+
+for(let k=start;k<uptoIdx;k++){
+
+sum+=(candles[k].high-candles[k].low);
+count++;
+
+}
+
+return count>0
+?sum/count
+:Math.max(candles[uptoIdx].high-candles[uptoIdx].low,1e-9);
+
+}
+
+
+/*
+   Главное обязательное условие, которого не хватало: валидный
+   Order Block — это не просто "последняя противоположная свеча
+   перед большим движением", а перед движением, которое РЕАЛЬНО
+   ПРОБИВАЕТ СТРУКТУРУ (BOS) — обновляет недавний хай/лоу. Без
+   этого условия любое локально крупное движение считалось
+   ордер-блоком, даже если оно никуда не пробивало — отсюда и
+   метки на случайных свечах. Источники по ICT прямым текстом:
+   "No BOS = no order block".
+*/
+
+function impulseBreaksStructure(candles,impulseIdx,direction,lookback){
+
+const start=
+Math.max(0,impulseIdx-lookback);
+
+let refLevel=
+direction==="up"?-Infinity:Infinity;
+
+for(let k=start;k<impulseIdx;k++){
+
+if(direction==="up"){
+refLevel=Math.max(refLevel,candles[k].high);
+}else{
+refLevel=Math.min(refLevel,candles[k].low);
+}
+
+}
+
+const impulseCandle=
+candles[impulseIdx];
+
+return direction==="up"
+?impulseCandle.close>refLevel
+:impulseCandle.close<refLevel;
+
+}
+
+
 function findOrderBlockZones(candles){
 
 const n=candles.length;
@@ -9420,16 +9516,18 @@ break;
 const base=candles[i];
 const next=candles[i+1];
 
-const baseRange=
-Math.max(base.high-base.low,1e-9);
+const avgRange=
+avgCandleRange(candles,i,14);
 
 const impulseUp=
 next.close>next.open &&
-(next.close-next.open)>baseRange*1.3;
+(next.close-next.open)>avgRange*1.8 &&
+impulseBreaksStructure(candles,i+1,"up",20);
 
 const impulseDown=
 next.close<next.open &&
-(next.open-next.close)>baseRange*1.3;
+(next.open-next.close)>avgRange*1.8 &&
+impulseBreaksStructure(candles,i+1,"down",20);
 
 if(impulseUp && base.close<base.open){
 
@@ -9510,12 +9608,116 @@ return{fresh,mitigated};
 }
 
 
+/*
+   Для score в стратегии хватает одного самого актуального
+   примера каждого вида (findOrderBlockZones выше) — а вот для
+   отрисовки на графике хотим видеть несколько штук в истории,
+   не только ближайшую. Та же логика поиска, но без остановки
+   после первого найденного блока каждого вида.
+*/
+
+function findOrderBlockZonesMultiple(candles,maxEach){
+
+const n=candles.length;
+
+if(n<10)
+return{fresh:[],mitigated:[]};
+
+const fresh=[];
+const mitigated=[];
+
+for(let i=n-4;i>=Math.max(2,n-250);i--){
+
+if(fresh.length>=maxEach && mitigated.length>=maxEach)
+break;
+
+const base=candles[i];
+const next=candles[i+1];
+
+const avgRange=
+avgCandleRange(candles,i,14);
+
+const impulseUp=
+next.close>next.open &&
+(next.close-next.open)>avgRange*1.8 &&
+impulseBreaksStructure(candles,i+1,"up",20);
+
+const impulseDown=
+next.close<next.open &&
+(next.open-next.close)>avgRange*1.8 &&
+impulseBreaksStructure(candles,i+1,"down",20);
+
+if(impulseUp && base.close<base.open){
+
+const zone={type:"bullish",top:base.high,bottom:base.low,time:base.time};
+
+let touched=false;
+
+for(let j=i+2;j<n;j++){
+
+if(candles[j].low<=zone.top && candles[j].low>=zone.bottom){
+touched=true;
+break;
+}
+
+}
+
+if(touched){
+
+if(mitigated.length<maxEach)
+mitigated.push(zone);
+
+}else{
+
+if(fresh.length<maxEach)
+fresh.push(zone);
+
+}
+
+}
+
+if(impulseDown && base.close>base.open){
+
+const zone={type:"bearish",top:base.high,bottom:base.low,time:base.time};
+
+let touched=false;
+
+for(let j=i+2;j<n;j++){
+
+if(candles[j].high>=zone.bottom && candles[j].high<=zone.top){
+touched=true;
+break;
+}
+
+}
+
+if(touched){
+
+if(mitigated.length<maxEach)
+mitigated.push(zone);
+
+}else{
+
+if(fresh.length<maxEach)
+fresh.push(zone);
+
+}
+
+}
+
+}
+
+return{fresh,mitigated};
+
+}
+
+
 function findLiquidityLevels(candles){
 
 const n=candles.length;
 
 const lookback=
-candles.slice(Math.max(0,n-50));
+candles.slice(Math.max(0,n-250));
 
 const tol=
 lookback[lookback.length-1].close*0.0007;
@@ -9704,37 +9906,89 @@ return occurrences.slice(-1);
 
 function detectSwingStructure(candles){
 
-const swings=[];
+/*
+   Раньше искали ЛЮБЫЕ локальные пики по хаям и лоям отдельно
+   друг от друга — из-за этого на одном и том же отрезке
+   движения вверх могло найтись сразу несколько "хаёв" подряд
+   без единого "лоу" между ними, и метки выглядели хаотично,
+   не как настоящая структура рынка. Правильно — зигзагом: 
+   после хая считается только следующий лоу (а не ещё один
+   хай), и наоборот. Плюс окно пивота шире (5 свечей по
+   бокам, не 2) — чтобы не ловить вообще каждую мелкую
+   свечу, только значимые развороты.
+*/
 
-for(let i=2;i<candles.length-2;i++){
+const PIVOT_WINDOW=5;
+
+const rawSwings=[];
+
+for(let i=PIVOT_WINDOW;i<candles.length-PIVOT_WINDOW;i++){
 
 const c=candles[i];
 
-const isHigh=
-c.high>candles[i-1].high &&
-c.high>candles[i-2].high &&
-c.high>candles[i+1].high &&
-c.high>candles[i+2].high;
+let isHigh=true;
+let isLow=true;
 
-const isLow=
-c.low<candles[i-1].low &&
-c.low<candles[i-2].low &&
-c.low<candles[i+1].low &&
-c.low<candles[i+2].low;
+for(let k=1;k<=PIVOT_WINDOW;k++){
 
-if(isHigh){
+if(c.high<=candles[i-k].high || c.high<=candles[i+k].high)
+isHigh=false;
 
-swings.push({idx:i,type:"high",price:c.high,time:c.time});
+if(c.low>=candles[i-k].low || c.low>=candles[i+k].low)
+isLow=false;
 
 }
 
-if(isLow){
+if(isHigh)
+rawSwings.push({idx:i,type:"high",price:c.high,time:c.time});
 
-swings.push({idx:i,type:"low",price:c.low,time:c.time});
+if(isLow)
+rawSwings.push({idx:i,type:"low",price:c.low,time:c.time});
 
 }
 
+rawSwings.sort((a,b)=>a.idx-b.idx);
+
+const swings=[];
+
+rawSwings.forEach(s=>{
+
+const lastSwing=
+swings[swings.length-1];
+
+if(!lastSwing){
+
+swings.push(s);
+return;
+
 }
+
+if(lastSwing.type===s.type){
+
+/*
+   Два хая (или два лоя) подряд без разворота между ними —
+   оставляем только более крайний, остальное это один и
+   тот же откат, не два отдельных события.
+*/
+
+const moreExtreme=
+s.type==="high"
+?s.price>lastSwing.price
+:s.price<lastSwing.price;
+
+if(moreExtreme){
+
+swings[swings.length-1]=s;
+
+}
+
+}else{
+
+swings.push(s);
+
+}
+
+});
 
 const labeled=[];
 
@@ -9773,7 +10027,7 @@ lastLow=s.price;
 
 });
 
-return labeled.slice(-4);
+return labeled.slice(-8);
 
 }
 
@@ -9956,19 +10210,21 @@ instance.lastCandles.length>10
 ){
 
 const zones=
-findOrderBlockZones(instance.lastCandles);
+findOrderBlockZonesMultiple(instance.lastCandles,8);
 
-if(smcMarkerSettings.orderBlocks && zones.fresh){
+if(smcMarkerSettings.orderBlocks){
+
+zones.fresh.forEach(z=>{
 
 const solidColor=
-zones.fresh.type==="bullish"?"#2BC482":"#E5484D";
+z.type==="bullish"?"#2BC482":"#E5484D";
 
 drawZoneBox(
 instance,
 instance.lastCandles,
-zones.fresh.time,
-zones.fresh.top,
-zones.fresh.bottom,
+z.time,
+z.top,
+z.bottom,
 solidColor,
 undefined,
 "OB"
@@ -9976,16 +10232,18 @@ undefined,
 
 const m=
 zoneLabelMarker(
-instance.lastCandles,zones.fresh.time,"OB",solidColor,
-zones.fresh.type==="bullish"?"belowBar":"aboveBar"
+instance.lastCandles,z.time,"OB",solidColor,
+z.type==="bullish"?"belowBar":"aboveBar"
 );
 
 if(m)
 chartMarkers.push(m);
 
+});
+
 }
 
-if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
+if(smcMarkerSettings.mitigationBlocks){
 
 /*
    Mitigation Block — янтарный, независимо от направления:
@@ -9993,14 +10251,16 @@ if(smcMarkerSettings.mitigationBlocks && zones.mitigated){
    со свежим Order Block (зелёный/красный).
 */
 
+zones.mitigated.forEach(z=>{
+
 const solidColor="#E8A33D";
 
 drawZoneBox(
 instance,
 instance.lastCandles,
-zones.mitigated.time,
-zones.mitigated.top,
-zones.mitigated.bottom,
+z.time,
+z.top,
+z.bottom,
 solidColor,
 undefined,
 "OB-"
@@ -10008,12 +10268,14 @@ undefined,
 
 const m=
 zoneLabelMarker(
-instance.lastCandles,zones.mitigated.time,"OB-",solidColor,
-zones.mitigated.type==="bullish"?"belowBar":"aboveBar"
+instance.lastCandles,z.time,"OB-",solidColor,
+z.type==="bullish"?"belowBar":"aboveBar"
 );
 
 if(m)
 chartMarkers.push(m);
+
+});
 
 }
 
@@ -10138,18 +10400,39 @@ isBos
 ?(structEvent.direction==="bullish"?"#2BC482":"#E5484D")
 :"#B47EE8";
 
-instance.priceLines.push(
-instance.series.createPriceLine({
+/*
+   Было через createPriceLine — всегда на всю ширину графика.
+   BOS/CHoCH по смыслу тоже локальное событие в конкретной
+   точке, не действует вечно вправо — короткий отрезок от
+   места пробоя, тем же приёмом, что и зоны.
+*/
 
-price:structEvent.price,
-color:lineColor,
-lineWidth:isBos?2:1,
-lineStyle:isBos?0:2,
-axisLabelVisible:true,
-title:structEvent.label
+if(
+structEvent.barsAgo!==undefined &&
+instance.lastCandles &&
+instance.lastCandles.length
+){
 
-})
+const eventIdx=
+instance.lastCandles.length-1-structEvent.barsAgo;
+
+const eventCandle=
+instance.lastCandles[eventIdx];
+
+if(eventCandle){
+
+drawLiquiditySegment(
+instance,
+eventCandle.time,
+capZoneEndTime(instance.lastCandles,eventCandle.time,30),
+structEvent.price,
+lineColor,
+isBos?0:2
 );
+
+}
+
+}
 
 if(
 structEvent.barsAgo!==undefined &&
@@ -10174,7 +10457,8 @@ structEvent.direction==="bullish"?"belowBar":"aboveBar",
 
 color:lineColor,
 
-shape:"square",
+shape:
+structEvent.direction==="bullish"?"arrowUp":"arrowDown",
 
 text:structEvent.label
 
@@ -10350,7 +10634,8 @@ s.type==="high"?"aboveBar":"belowBar",
 color:
 (s.label==="HH"||s.label==="HL")?"#2BC482":"#E5484D",
 
-shape:"square",
+shape:
+s.type==="high"?"arrowUp":"arrowDown",
 
 text:s.label
 
