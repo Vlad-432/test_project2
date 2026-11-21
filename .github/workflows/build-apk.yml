@@ -30,15 +30,38 @@ jobs:
       - name: Add Android platform
         run: npx cap add android || npx cap sync android
 
+      - name: Install screen capture web UI
+        run: |
+          cp screen-capture.js www/screen-capture.js
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("www/index.html")
+          s = p.read_text(encoding="utf-8")
+
+          tag = '<script src="screen-capture.js"></script>'
+
+          if tag not in s:
+              if "</body>" in s:
+                  s = s.replace("</body>", tag + "\n</body>", 1)
+              else:
+                  s += "\n" + tag
+
+              p.write_text(s, encoding="utf-8")
+          PY
+
       - name: Sync web assets
         run: npx cap sync android
 
-      - name: Install Screen Capture module
+      - name: Install native screen capture module
         run: |
           mkdir -p /tmp/screen-module
+
           unzip CryptoScreen_ScreenCapture_Module_v2.zip -d /tmp/screen-module
 
           DEST="android/app/src/main/java/com/myapp/generated"
+
           mkdir -p "$DEST"
 
           cp /tmp/screen-module/com/myapp/generated/*.java "$DEST/"
@@ -47,7 +70,7 @@ jobs:
           from pathlib import Path
 
           p = Path("android/app/src/main/AndroidManifest.xml")
-          s = p.read_text()
+          s = p.read_text(encoding="utf-8")
 
           permissions = [
               '    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />',
@@ -55,7 +78,8 @@ jobs:
           ]
 
           for item in permissions:
-              if item.split('"')[1] not in s:
+              name = item.split('"')[1]
+              if name not in s:
                   s = s.replace('<application', item + '\n    <application', 1)
 
           service = '''
@@ -68,7 +92,7 @@ jobs:
           if "ScreenCaptureService" not in s:
               s = s.replace('</application>', service + '\n</application>', 1)
 
-          p.write_text(s)
+          p.write_text(s, encoding="utf-8")
           PY
 
       - name: Generate app icons
