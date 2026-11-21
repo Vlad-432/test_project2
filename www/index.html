@@ -1344,6 +1344,23 @@ header{
     }
 }
 
+
+/* SCREEN CHART ANALYZER */
+.screen-analyzer-btn{border:1px solid #2b684d;background:#102219;color:#55d99a;border-radius:7px;padding:6px 9px;font-size:10px;font-weight:800}
+.screen-analyzer{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:12px}
+.screen-analyzer.open{display:flex}
+.screen-analyzer-box{width:min(680px,100%);max-height:94%;overflow:auto;background:#11151b;border:1px solid #303842;border-radius:14px;padding:14px;box-shadow:0 15px 60px #000}
+.sa-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;font-size:15px}
+.sa-close{background:#252b33;color:#ddd;border:0;border-radius:7px;padding:7px 11px}
+.sa-status{margin:10px 0;padding:10px;border-radius:8px;background:#27191a;color:#ff6870;border:1px solid #633036;font-size:12px;font-weight:800}
+.sa-status.found{background:#10251b;color:#55d99a;border-color:#286346}
+.sa-note{font-size:10px;line-height:1.5;color:#9aa3ae;margin:8px 0}
+.sa-actions{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}
+.sa-actions button,.sa-actions label{border:1px solid #343c47;background:#1a2028;color:#e8edf2;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:700}
+.sa-actions input{display:none}
+#saCanvas{display:block;width:100%;height:auto;max-height:48vh;object-fit:contain;background:#080a0d;border:1px solid #29313b;border-radius:8px;touch-action:none}
+.sa-result{background:#0a0d11;border:1px solid #252d36;border-radius:8px;padding:10px;margin-top:9px;font-size:11px;line-height:1.5;color:#c6cdd6}
+
 </style>
 </head>
 
@@ -1412,6 +1429,8 @@ class="settings-btn"
 onclick="openChartSettingsModal()">
 🎨 Настройки графика
 </button>
+
+<button class="screen-analyzer-btn" onclick="openScreenAnalyzer()">👁 Анализатор графика</button>
 
 <span
 class="api-status"
@@ -2274,6 +2293,17 @@ class="factor-stats-body">
 </div>
 
 
+<div class="screen-analyzer" id="screenAnalyzer">
+ <div class="screen-analyzer-box">
+  <div class="sa-head"><span>👁 Экранный анализатор графика</span><button class="sa-close" onclick="closeScreenAnalyzer()">Закрыть ✕</button></div>
+  <div class="sa-status" id="saStatus">🔴 График не обнаружен</div>
+  <div class="sa-note">Загрузи скриншот Pocket Option, затем выдели пальцем только область свечного графика — без панели CALL/PUT, меню и кнопок. В обычном HTML внутри WebView нельзя автоматически захватывать экран другого приложения; для этого нужен Android MediaProjection и системный overlay.</div>
+  <div class="sa-actions"><label>📷 Загрузить скриншот<input id="saImageInput" type="file" accept="image/*" onchange="saLoadImage(event)"></label><button onclick="saResetSelection()">Сбросить область</button><button onclick="saAnalyzeSelection()">Анализировать график</button></div>
+  <canvas id="saCanvas" width="600" height="300"></canvas>
+  <div class="sa-result" id="saResult">Ожидаю скриншот. Зелёный статус появится только после обнаружения свечных цветных элементов в выделенной области.</div>
+ </div>
+</div>
+
 <script>
 
 /* =========================================================
@@ -2937,7 +2967,11 @@ list.innerHTML=
 </div>
 `;
 
-status.textContent="";
+status.textContent=
+poStatusDetail||"";
+
+status.style.color=
+poConnected?"#2BC482":"#E8A33D";
 
 }
 
@@ -4443,13 +4477,37 @@ return null;
 }
 
 
+let poStatusDetail="";
+let poConnectAttempts=0;
+let poAuthTimeout=null;
+
+
+function setPoStatus(text){
+
+poStatusDetail=text;
+
+renderPocketStatus();
+
+}
+
+
 function connectPocketOption(){
 
 const ssid=
 getPocketSSID();
 
-if(!ssid || typeof io==="undefined")
+if(!ssid)
 return;
+
+if(typeof io==="undefined"){
+
+setPoStatus(
+"Библиотека подключения не загрузилась — проверь интернет у приложения"
+);
+
+return;
+
+}
 
 if(poSocket){
 
@@ -4461,10 +4519,21 @@ poSocket=null;
 
 }
 
+if(poAuthTimeout){
+
+clearTimeout(poAuthTimeout);
+poAuthTimeout=null;
+
+}
+
 poConnected=false;
 
 const url=
 PO_ENDPOINTS[poEndpointIndex%PO_ENDPOINTS.length];
+
+setPoStatus(
+"Подключаюсь к "+url+"…"
+);
 
 poSocket=
 io(url,{
@@ -4476,6 +4545,12 @@ reconnection:false
 
 
 poSocket.on("connect",()=>{
+
+poConnectAttempts=0;
+
+setPoStatus(
+"Соединение есть, отправляю авторизацию…"
+);
 
 const payload=
 parsePocketAuthFrame(ssid);
@@ -4499,9 +4574,36 @@ poSocket.emit(
 JSON.parse(ssid)
 );
 
-}catch(e){}
+}catch(e){
+
+setPoStatus(
+"Не удалось разобрать SSID — проверь, что скопировал всю строку целиком, от 42[ до ] включительно"
+);
+
+return;
 
 }
+
+}
+
+/*
+   Если соединение есть, но за 10 сек не пришёл ответ
+   "успешная авторизация" — скорее всего SSID протух,
+   нужен новый. Раньше это просто молча висело вечно.
+*/
+
+poAuthTimeout=
+setTimeout(()=>{
+
+if(!poConnected){
+
+setPoStatus(
+"Подключились, но авторизация не прошла за 10 сек — похоже, SSID устарел, достань новый"
+);
+
+}
+
+},10000);
 
 });
 
@@ -4510,9 +4612,16 @@ poSocket.on("successauth",()=>{
 
 poConnected=true;
 
+if(poAuthTimeout){
+
+clearTimeout(poAuthTimeout);
+poAuthTimeout=null;
+
+}
+
 updateApiStatusBadge();
 
-renderPocketStatus();
+setPoStatus("");
 
 requestPocketPairs();
 
@@ -4523,7 +4632,17 @@ poSocket.on("disconnect",()=>{
 
 poConnected=false;
 
-renderPocketStatus();
+poConnectAttempts++;
+
+if(poConnectAttempts>=PO_ENDPOINTS.length){
+
+setPoStatus(
+"Все "+PO_ENDPOINTS.length+" сервера Pocket Option недоступны — похоже, адреса поменялись или сервис сейчас не отвечает"
+);
+
+return;
+
+}
 
 poEndpointIndex++;
 
@@ -4533,6 +4652,18 @@ setTimeout(connectPocketOption,2000);
 
 
 poSocket.on("connect_error",()=>{
+
+poConnectAttempts++;
+
+if(poConnectAttempts>=PO_ENDPOINTS.length){
+
+setPoStatus(
+"Все "+PO_ENDPOINTS.length+" сервера Pocket Option недоступны — похоже, адреса поменялись или сервис сейчас не отвечает"
+);
+
+return;
+
+}
 
 poEndpointIndex++;
 
@@ -8890,16 +9021,20 @@ return true;
 instance.series.setData(chartData);
 
 /*
-   Предыдущая попытка (setVisibleRange на каждое обновление)
-   сделала хуже — она срабатывает на КАЖДОЕ периодическое
-   обновление карточки (каждые 15-20 сек), поэтому любая
-   попытка пролистать график назад тут же сбрасывалась
-   обратно. Подгоняем диапазон только ОДИН раз — при первом
-   заполнении этого графика данными, дальше руки пользователя
-   не трогаем.
+   Подгоняем диапазон только ОДИН раз — при первом заполнении
+   графика данными, дальше руки пользователя не трогаем (иначе
+   автообновление каждые 15-20 сек сбрасывает скролл). Но
+   делаем это с небольшой задержкой: на всех парах/таймфреймах
+   сразу — значит дело не в данных, а в том, что сама карточка
+   (её реальная ширина) может быть ещё не до конца "улеглась"
+   в вёрстке в момент самого первого вызова.
 */
 
 if(!instance.hasFitRange && chartData.length){
+
+instance.hasFitRange=true;
+
+setTimeout(()=>{
 
 try{
 
@@ -8907,7 +9042,7 @@ instance.chart.timeScale().fitContent();
 
 }catch(e){}
 
-instance.hasFitRange=true;
+},350);
 
 }
 
@@ -15016,6 +15151,36 @@ saveTrades();
 
 }
 );
+
+
+/* =========================================================
+   SCREEN CHART ANALYZER — screenshot input / chart-only crop
+   Reuses calculateSignal() and current active strategy selection.
+   Pure WebView cannot capture another Android app's screen.
+========================================================= */
+let saImage=null,saSelection=null,saDrag=null,saLastCandles=null;
+function openScreenAnalyzer(){document.getElementById('screenAnalyzer').classList.add('open');saSetStatus(false,'График не обнаружен');}
+function closeScreenAnalyzer(){document.getElementById('screenAnalyzer').classList.remove('open');}
+function saSetStatus(found,message){const el=document.getElementById('saStatus');el.classList.toggle('found',!!found);el.textContent=(found?'🟢 ':'🔴 ')+message;}
+function saLoadImage(ev){const file=ev.target.files&&ev.target.files[0];if(!file)return;const url=URL.createObjectURL(file);const im=new Image();im.onload=()=>{saImage=im;saSelection=null;const c=document.getElementById('saCanvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const ctx=c.getContext('2d');ctx.drawImage(im,0,0);saSetStatus(false,'График не обнаружен — выдели область свечей');document.getElementById('saResult').textContent='Изображение загружено. Проведи пальцем по области графика, чтобы выделить её.';URL.revokeObjectURL(url);};im.onerror=()=>{saSetStatus(false,'Не удалось прочитать изображение');URL.revokeObjectURL(url);};im.src=url;}
+function saCanvasPoint(ev){const c=document.getElementById('saCanvas'),r=c.getBoundingClientRect();return{x:(ev.clientX-r.left)*c.width/r.width,y:(ev.clientY-r.top)*c.height/r.height};}
+(function(){const c=document.getElementById('saCanvas');c.addEventListener('pointerdown',e=>{if(!saImage)return;saDrag=saCanvasPoint(e);c.setPointerCapture(e.pointerId);});c.addEventListener('pointerup',e=>{if(!saDrag)return;const p=saCanvasPoint(e);saSelection={x:Math.min(p.x,saDrag.x),y:Math.min(p.y,saDrag.y),w:Math.abs(p.x-saDrag.x),h:Math.abs(p.y-saDrag.y)};saDrag=null;saDrawSelection();saSetStatus(false,'График не обнаружен — нажми «Анализировать график»');});})();
+function saDrawSelection(){if(!saImage)return;const c=document.getElementById('saCanvas'),ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(saImage,0,0);if(saSelection){ctx.save();ctx.strokeStyle='#ffd166';ctx.lineWidth=Math.max(2,c.width/400);ctx.setLineDash([8,5]);ctx.strokeRect(saSelection.x,saSelection.y,saSelection.w,saSelection.h);ctx.fillStyle='rgba(255,209,102,.08)';ctx.fillRect(saSelection.x,saSelection.y,saSelection.w,saSelection.h);ctx.restore();}}
+function saResetSelection(){saSelection=null;saLastCandles=null;if(saImage)saDrawSelection();saSetStatus(false,'График не обнаружен');document.getElementById('saResult').textContent='Выделение сброшено. Выдели только область свечного графика.';}
+function saAnalyzeSelection(){
+ const out=document.getElementById('saResult');
+ if(!saImage||!saSelection||saSelection.w<100||saSelection.h<60){saSetStatus(false,'График не обнаружен');out.textContent='Сначала загрузи скриншот и выдели прямоугольником область свечного графика.';return;}
+ const c=document.createElement('canvas');c.width=Math.floor(saSelection.w);c.height=Math.floor(saSelection.h);const cx=c.getContext('2d',{willReadFrequently:true});cx.drawImage(saImage,saSelection.x,saSelection.y,saSelection.w,saSelection.h,0,0,c.width,c.height);const d=cx.getImageData(0,0,c.width,c.height).data;
+ const bins=120, candles=[];let detected=0;const yToPrice=y=>100+(c.height-y)/c.height*10;
+ for(let b=0;b<bins;b++){const x0=Math.floor(b*c.width/bins),x1=Math.max(x0+1,Math.floor((b+1)*c.width/bins));let minY=c.height,maxY=0,g=0,r=0,found=0;
+  for(let x=x0;x<x1;x++)for(let y=0;y<c.height;y++){const i=(y*c.width+x)*4,R=d[i],G=d[i+1],B=d[i+2];const green=G>85&&G>R*1.22&&G>B*1.05;const red=R>115&&R>G*1.25&&R>B*1.12;if(green||red){found++;if(green)g++;else r++;if(y<minY)minY=y;if(y>maxY)maxY=y;}}
+  if(found>=2&&maxY-minY>=2){detected++;const bull=g>=r;const top=yToPrice(minY),bottom=yToPrice(maxY);const span=Math.max(.015,top-bottom);const open=bull?bottom-span*.68:top-span*.68;const close=bull?top+span*.18:bottom-span*.18;const high=Math.max(top,open,close)+span*.08;const low=Math.min(bottom,open,close)-span*.08;candles.push({time:Math.floor(Date.now()/1000)-(bins-b)*60,open,high,low,close,volume:Math.max(1,found)});}
+ }
+ if(detected<25){saLastCandles=null;saSetStatus(false,'График не обнаружен');out.textContent='В выделенной области не удалось уверенно распознать свечи. Проверь, что выделен именно график, и попробуй скриншот с более чёткими зелёными/красными свечами.';return;}
+ saSetStatus(true,'График обнаружен');saLastCandles=candles;
+ if(candles.length<100){out.textContent='Область графика найдена, распознано примерно '+candles.length+' свечных столбцов. Для текущего движка CryptoScreen нужно не менее 100 свечей — сигнал не рассчитан (WAIT / недостаточно данных).';return;}
+ const result=calculateSignal(candles);const direction=result.signal==='BUY'?'CALL':result.signal==='SELL'?'PUT':'WAIT';const names=(getActiveStrategies()||[]).join(', ');out.innerHTML='<b>Результат существующего движка:</b> '+direction+'<br>Оценка: '+Math.round(result.score||50)+'/100<br>Распознано свечей: '+candles.length+'<br>Активные стратегии: '+(names||'не определены')+'<br><span style="color:#9aa3ae">'+(result.info||'Решение рассчитано выбранными стратегиями')+'</span><br><small>Свечи восстановлены приблизительно по пикселям скриншота; это экспериментальная оценка, не точные котировки и не гарантия результата.</small>';
+}
 
 </script>
 
