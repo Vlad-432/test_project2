@@ -36,7 +36,7 @@ jobs:
       - name: Install Screen Capture module
         run: |
           mkdir -p /tmp/screen-module
-          unzip CryptoScreen_ScreenCapture_Module.zip -d /tmp/screen-module
+          unzip CryptoScreen_ScreenCapture_Module_v2.zip -d /tmp/screen-module
 
           DEST="android/app/src/main/java/com/myapp/generated"
           mkdir -p "$DEST"
